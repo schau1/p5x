@@ -1,16 +1,7 @@
-﻿const ATK_BATTLE_CONST = 55;    // for whatever reason, we gain 55 points of atk in battle
+﻿const ATK_BATTLE_CONST = 0;// 55;    // for whatever reason, we gain 55 points of atk in battle
 const MIN_VARIANCE = 0.95;
 const MAX_VARIANCE = 1.05;
-const WINDSWEPT_VALUE = 0.12;
-
-// Awareness list
-const A0 = 0;
-const A1 = 1;
-const A2 = 2;
-const A3 = 3;
-const A4 = 4;
-const A5 = 5;
-const A6 = 6;
+const WINDSWEPT_VALUE = 12; // 12%
 
 // Buff/Debuffs label
 const EABILITY = Object.freeze({
@@ -54,38 +45,19 @@ const EABILITY = Object.freeze({
     E_PARTY_PIERCE_PERC: { name: "PARTY_PIERCE_PERC", value: "21" },
     E_ALLY_PIERCE_PERC: { name: "ALLY_PIERCE_PERC", value: "22" },
 
-    // Conditional buff
-    E_SELF_HL_BUFF_REQ: { name: "SELF_HL_BUFF_REQ", value: "23" },  // Required to have buff from using HL first
-
     // Damage Skill
+    E_DMG_SKILL_AOE: { name: "DMG_SKILL_AOE", value: "23" },
     E_DMG_SKILL_SINGLE: { name: "DMG_SKILL_SINGLE", value: "24" },
-    E_DMG_SKILL_AOE: { name: "DMG_SKILL_AOE", value: "25" },
 
-    // ------- EC value:: need replacement
-    E_TYPE_PABILITY_PERCENT: { name: "Boost Phys. Ability Pot.", value: "26" },
-    E_TYPE_MABILITY: { name: "Boost Mag. Ability Pot.", value: "27" },
-    E_TYPE_MABILITY_PERCENT: { name: "Boost Mag. Ability Pot.", value: "28" },
-    E_TYPE_ABILITY: { name: "Boost Ability Pot.", value: "29" },
-    E_TYPE_ABILITY_PERCENT: { name: "Boost Ability Pot.", value: "30" },
-    E_TYPE_PDEF: { name: "Boost PDEF", value: "31" },
-    E_TYPE_MDEF: { name: "Boost MDEF", value: "32" },
-    E_TYPE_DEFBUFF_EXT: { name: "Debuff Extension", value: "33" },
-    E_TYPE_BUFFDEBUFF_EXT: { name: "Buff/Debuff Extension", value: "34" },
-    E_TYPE_BUFFDEBUFF_EXT_PERCENT: { name: "Buff/Debuff Extension Percent", value: "35" },
-    E_TYPE_ATK_ALL: { name: "Boost ATK (All Allies)", value: "36" },
-    E_TYPE_ATK_ALL_PERCENT: { name: "Boost ATK (All Allies) Percent", value: "37" },
-    E_TYPE_PATK_ALL: { name: "Boost PATK (All Allies)", value: "38" },
-    E_TYPE_PATK_ALL_PERCENT: { name: "Boost PATK (All Allies) Percent", value: "39" },
-    E_TYPE_MATK_ALL: { name: "Boost MATK (All Allies)", value: "40" },
-    E_TYPE_MATK_ALL_PERCENT: { name: "Boost MATK (All Allies) Percent", value: "41" }
+    // Conditional buff
+    E_SELF_HL_BUFF_REQ: { name: "SELF_HL_BUFF_REQ", value: "25" },  // Required to have buff from using HL first
+    E_SEES_ALLY_REQ: { name: "SEES_ALLY_REQ", value: "26" },     // Required SEES Ally to activate
 });
-
-
 
 // ----------------- Awareness Cal --------------------------------------------//
 
 // R1, R3, R5 increase or R2, R4, R6 increase
-function calcWeaponBasedOnReforge(r0, r1, r2) {
+function calcWeaponBasedOnReforge(r0, r1, r2, reforgeLevel) {
     var delta = r0;
     var r3 = 0, r4 = 0, r5 = 0, r6 = 0;
 
@@ -111,13 +83,29 @@ function calcWeaponBasedOnReforge(r0, r1, r2) {
         // shouldn't happened. should have data, but since it doesn't, just return r0?
     }
 
-    return [r0.toFixed(2), r1.toFixed(2), r2.toFixed(2), r3.toFixed(2), r4.toFixed(2), r5.toFixed(2), r6.toFixed(2)];
+    switch (reforgeLevel) {
+        case 0:
+            return parseFloat(r0.toFixed(2));
+        case 1:
+            return parseFloat(r1.toFixed(2));
+        case 2:
+            return parseFloat(r2.toFixed(2));
+        case 3:
+            return parseFloat(r3.toFixed(2));
+        case 4:
+            return parseFloat(r4.toFixed(2));
+        case 5:
+            return parseFloat(r5.toFixed(2));
+        case 6:
+            return parseFloat(r6.toFixed(2));
+        default:
+            return parseFloat(r0.toFixed(2));
+    }
+
+//    return [r0.toFixed(2), r1.toFixed(2), r2.toFixed(2), r3.toFixed(2), r4.toFixed(2), r5.toFixed(2), r6.toFixed(2)];
 }
 
-
-
 // ----------------- Damage Calculation Support -------------------------------//
-
 function calculateDefenseReductionPerc() {
     // Card
     // Single   Control + Departure     23%         2 turns
@@ -265,15 +253,10 @@ function calculatePiercePerc() {
     // Self     A2                       35%         when dealing critical dmg
 }
 
-function calculateDefenseCoefficient(additionalDefCoef, piercePerc, defReductPerc) {
-    return (1 + additionalDefCoef) * (1 - piercePerc) - defReductPerc;
-}
-
-
 // × ⓒ 1 - {Enemy Defense Value × [(100% + Additional Defense Coefficient) × (100% - Pierce) - Defense Reduction] × (100% - Windswept 12%)}
 // ÷ {Enemy Defense Value ×[(100 % + Additional Defense Coefficient) × (100 % - Pierce) - Defense Reduction] × (100 % - Windswept 12 %) + 1400 }
 
-function calculateEnemyDefenseFinal(enemyDefValue, windSweptBool, defenseCoefficient) {
+function calculateEnemyDefenseFinal(enemyDefValue, additionalDefCoef, windSweptBool, pierceRate, defenseReduction) {
 
     if (windSweptBool) {
         windSwept = WINDSWEPT_VALUE;
@@ -282,13 +265,14 @@ function calculateEnemyDefenseFinal(enemyDefValue, windSweptBool, defenseCoeffic
         windSwept = 0;
     }
 
-    var value = (enemyDefValue * defenseCoefficient * (1 - windSwept));
+    var defenseCoefficient = (100 + additionalDefCoef) * (100 - pierceRate)/100 - defenseReduction;        
+    var value = (enemyDefValue * defenseCoefficient/100 * (100 - windSwept)/100);
 
     return (1 - value / (value + 1400));
 }
 
-function calculateDmgBonusFinal(dmgMult, elemDmgInc, DmgTakeInc) {
-    return (1 + dmgMult + elemDmgInc + DmgTakeInc);
+function calculateDmgBonusFinal(dmgMult) {
+    return (100 + dmgMult)/100;// + elemDmgInc + DmgTakeInc);
 }
 
 // Critical damage multiplies damage by the ‘Critical DMG(Mult)’ amount when critical hits occur.
@@ -298,15 +282,15 @@ function calculateDmgBonusFinal(dmgMult, elemDmgInc, DmgTakeInc) {
 // Critical Rate × (Critical DMG(Mult) - 100 %) :: Max Crit Rate is 100%
 // If you increase critical rate by 10%, increasing Critical DMG(Mult) by twice that amount (20%) is most efficient.
 function calculateCritStableDomain(critRate, critMult) {
-    if (critRate > 1) {
-        critRate = 1;
+    if (critRate > 100) {
+        critRate = 100;
     }
 
-    return (1 + critRate * (critMult - 1));
+    return (100 + critRate * (critMult - 100)/100)/100;
 }
 
 function calculateAtkFinal(base, flat, percent) {
-    return (base * (1 + percent) + flat + ATK_BATTLE_CONST);
+    return (base * (100 + percent)/100 + flat + ATK_BATTLE_CONST);
 }
 
 /*
@@ -342,9 +326,9 @@ function calculateSkillDamage(atkFinal, dmgMultFinal, enemyDefFinal, critMultFin
     var minSkillDamage;
     var maxSkillDamage;
 
-    var skillDmg = atkFinal * dmgMultFinal * enemyDefFinal * critMult * skillPerc * weakness * finalDmgBonus * others;
-    minSkillDamage = skillDmg * MIN_VARIANCE;
-    maxSkillDamage = skillDmg * MAX_VARIANCE;
+    var skillDmg = atkFinal * dmgMultFinal * enemyDefFinal * critMultFinal * skillPerc * weakness * finalDmgBonus * others;
+    minSkillDamage = Math.round(skillDmg * MIN_VARIANCE);
+    maxSkillDamage = Math.round(skillDmg * MAX_VARIANCE);
     var averageSkillDamage = Math.floor((minSkillDamage + maxSkillDamage) / 2);
 
     return [minSkillDamage, maxSkillDamage, averageSkillDamage];
