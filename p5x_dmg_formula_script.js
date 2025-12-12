@@ -28,6 +28,7 @@
 
 
 const ENEMY_DEFENSE_DEFAULT = 363.2;  // doesn't have it - use Dominion value instead
+const ENEMY_DEFENSE_ADDITIONAL_DEFAULT = 158.4; // doesn't have it - use NTMR value instead
 
 const FINAL_DMG_BONUS = 1.40;  // In certain gimmicks or boss battles, there are forms where final damage increases or decreases based on conditions. 
 const OTHER_DMG_BONUS = 1; // In certain gimmicks or boss battles, there are forms where final damage increases or decreases based on conditions. 
@@ -37,6 +38,7 @@ const CARD_FILE_NAME = "P5X database - card.csv";
 const SKILL_FILE_NAME = "P5X database - skill.csv";
 const WEAPON_FILE_NAME = "P5X database - weapon.csv";
 const WONDER_FILE_NAME = "P5X database - wonder.csv";
+const BOSS_FILE_NAME = "P5X database - boss.csv";
 const FILE_NUM_SKIP_LINE = 2;   // skip the first 2 lines of the csv file
 
 const NAV_BUFF_PERC = 0.20;     // Used for now. Once I do party member, I can remove this and get the correct value
@@ -64,6 +66,7 @@ let cardList = [];
 let skillList = [];  
 let weaponList = [];  
 let wonderList = [];
+let bossList = [];
 
 // stores info regard the main character to sim/calc for
 let iCharInfo = [];
@@ -76,6 +79,7 @@ readCardDatabase();
 readSkillDatabase();
 readWeaponDatabase();
 readWonderDatabase();
+readBossDatabase();
 
 function runCalculation() {
     readCharStatDatabase();
@@ -83,16 +87,25 @@ function runCalculation() {
     readSkillDatabase();
     readWeaponDatabase();
     readWonderDatabase();
+    readBossDatabase();
+
+    initializeData();
+    buffList = [];
 
     getHtmlInfo();
-
-    buffList = [];
 
     // Using weapon, add to the buff list
     addWeaponToBuffList(iCharInfo.charName, iCharInfo.weapon, 0);
 
     // Add buffs from skill to buff list
     var skillIndex = addSelfSkillBuffToBuffList(iCharInfo.charName, iCharInfo.skill, iCharInfo.awareness, SKILL_LEVEL_10);
+    iCharInfo.type = skillList[skillIndex].type;
+
+    // @todo need to add an entry to see if the skill is resonance or not
+
+
+    // Add buffs/debuffs from card set bonus
+    addCardToBuffList(iCharInfo.cardSet, iCharInfo.type, iCharInfo.role, iCharInfo.isResonance);
 
     console.log(buffList);
 
@@ -102,10 +115,10 @@ function runCalculation() {
             iCharInfo.hiddenAtk = charStatList[i].hiddenAtk;
             iCharInfo.hiddenCrit = charStatList[i].hiddenCrit;
             iCharInfo.hiddenCritMult = charStatList[i].hiddenCritMult;
+            iCharInfo.role = charStatList[i].role;
         }
     }
 
-    // I need to add hidden stats to these rate... Also should add weapon buffs too
     iCharInfo.atkFlat = iCharInfo.navAtk * NAV_BUFF_PERC + iCharInfo.atkFlat;
     iCharInfo.atkPerc = iCharInfo.hiddenAtk + iCharInfo.atkPerc;
     iCharInfo.dmgMult = iCharInfo.dmgMult;
@@ -125,11 +138,8 @@ function runCalculation() {
 
     iCharInfo.pierceRate = iCharInfo.pierceRate;
     iCharInfo.baseAtk = 0 + getAtkValueFromAwareness(charStatList[iCharInfo.indexOfCharStatList]) + getWeapAtkValueFromAwareness(charStatList[iCharInfo.indexOfCharStatList]);
-
-    iCharInfo.enemyDefense = ENEMY_DEFENSE_DEFAULT;
-    iCharInfo.additionalDefCoef = ENEMY_DEFENSE_DEFAULT;
-    iCharInfo.windswept = 0;    // yes = 0.12
-    iCharInfo.defenseReduction = 0;
+    iCharInfo.enemyDefense = convertEnemyNameToDefenseValue(iCharInfo.bossName);
+    iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
     // Add buffs and debuffs to everything
     let data = processDBuffList();
@@ -142,9 +152,8 @@ function runCalculation() {
     iCharInfo.defenseReduction += data.defenseReduction;
     iCharInfo.windswept = data.windswept;
 
-
     // testing:
-    iCharInfo.baseAtk = 1200 + 600;
+/*    iCharInfo.baseAtk = 1200 + 600;
     iCharInfo.atkFlat = 500;
     iCharInfo.atkPerc = 50;
     iCharInfo.dmgMult = 50 + 20 + 20;
@@ -156,28 +165,176 @@ function runCalculation() {
     iCharInfo.critRate = 40;
     iCharInfo.critMult = 220;
     iCharInfo.weakness = "Weakness";
+    iCharInfo.final_skillPerc[0].value = 1.2;
+    */
 
     iCharInfo.final_atk = calculateAtkFinal(iCharInfo.baseAtk, iCharInfo.atkFlat, iCharInfo.atkPerc);
     iCharInfo.final_dmgBonus = calculateDmgBonusFinal(iCharInfo.dmgMult);
     iCharInfo.critStableDomain = 1;
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
-    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex]);
+    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], SKILL_LEVEL_10);
+    iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
 
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
 
-    let dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc, convertEnemyWeaknessTextToValue(iCharInfo.weakness), FINAL_DMG_BONUS, OTHER_DMG_BONUS);
+    let dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[0].value, iCharInfo.final_weakness, FINAL_DMG_BONUS, OTHER_DMG_BONUS);
+    let dmgPerHit2 = [0,0,0];
 
+    if (iCharInfo.final_skillPerc[1].numHit > 0) {
+        dmgPerHit2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[1].value, iCharInfo.final_weakness, FINAL_DMG_BONUS, OTHER_DMG_BONUS);        
+    }
     // calculate the first dmg, // calculate 2nd dmg // output all those + total dmg
 
-    console.log(dmgPerHit);
+    displayResult(dmgPerHit, dmgPerHit2);
+    
     console.log(iCharInfo);
 }
 
-function calculateSkillPerc(skill) {
+function displayResult(dmgPerHit, dmgPerHit2) {
+    var element = document.getElementById("result");
+
+    element.innerHTML = "";
+
+    var item = document.createElement("p");
+    item.innerHTML = "Damage is: ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[0].numHit +
+        "x for a total of ~" + dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit;;
+    element.appendChild(item);
+
+    if (dmgPerHit2[0] > 0) {
+        item = document.createElement("p");
+        item.innerHTML = "In addition, the skill also deals ~" + dmgPerHit2[0] + " to ~" + dmgPerHit2[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[1].numHit +
+            "x for a total of ~" + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[1].numHit;
+        element.appendChild(item);
+    }
+}
+
+function initializeData(){
+    iCharInfo.baseAtk = 0;
+    iCharInfo.atkFlat = 0;
+    iCharInfo.atkPerc = 0;
+    iCharInfo.dmgMult = 0;
+    iCharInfo.enemyDefense = 0;
+    iCharInfo.additionalDefCoef = 0;
+    iCharInfo.pierceRate = 0;
+    iCharInfo.defenseReduction = 0;
+    iCharInfo.windswept = false;
+    iCharInfo.critRate = 0;
+    iCharInfo.critMult = 0;
+    iCharInfo.weakness = "";
+    iCharInfo.bossName = "";
+    iCharInfo.charName = "Makoto Yuki";
+    iCharInfo.skill = "";
+    iCharInfo.awareness = "";
+    iCharInfo.weapon = "";
+    iCharInfo.cardSet = "";
+    iCharInfo.navAtk = 0
+    iCharInfo.includeCrit = "";
+    iCharInfo.type = "";
+    iCharInfo.role = "";
+    iCharInfo.isResonance = false;
+    iCharInfo.final_weakness = 0;
+}
+// Return a list of skill percentage for the skill and its follow up
+// @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
+// @param   skill - item containing the skill from the database
+// @todo: Assuming the skill has only 2 parts at most. If it's more than 2, need to adjust this code
+function calculateSkillPerc(skill, skillLevel) {
     console.log(skill)
-    return 1.2;
+    
+    let skillPercList = [];
+    // The first one should be a skill percent. If it's not, screw you.
+    if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")) {
+        let data = [];
+        switch (skillLevel) {
+            case SKILL_LEVEL_10:
+                data.value = skill.e1Lvl10;
+                break;
+            case SKILL_LEVEL_10_MINDSCAPE_5:
+                data.value = skill.e1Lvl10m5;
+                break;
+            case SKILL_LEVEL_13:
+                data.value = skill.e1Lvl13;
+                break;
+            case SKILL_LEVEL_13_MINDSCAPE_5:
+                data.value = skill.e1Lvl13m5;
+                break;
+            default:
+                data.value = 0;
+                break;
+        }
+        data.value = data.value / 100;
+        data.numHit = skill.e1numHit;
+
+        skillPercList.push(data);
+    }
+    else {
+        let data = [];
+        data.value = 0;
+        data.numHit = 0;
+        skillPercList.push(data);
+        skillPercList.push(data);
+    }
+
+    if ((skill.e2dbuff == "DMG_SKILL_SINGLE") || (skill.e2dbuff == "DMG_SKILL_AOE")) {
+        let data = [];
+        data.value = 0;
+        data.numHit = 0;
+
+        // if the condition is not fulfilled, this dmg doesn't exist, just quit
+        if (!IsValidCondition(skill.e2condition)) {
+            skillPercList.push(data);
+        }
+        else {
+            switch (skillLevel) {
+                case SKILL_LEVEL_10:
+                    data.value = skill.e2Lvl10;
+                    break;
+                case SKILL_LEVEL_10_MINDSCAPE_5:
+                    data.value = skill.e2Lvl10m5;
+                    break;
+                case SKILL_LEVEL_13:
+                    data.value = skill.e2Lvl13;
+                    break;
+                case SKILL_LEVEL_13_MINDSCAPE_5:
+                    data.value = skill.e2Lvl13m5;
+                    break;
+                default:
+                    data.value = 0;
+                    break;
+            }
+            data.value = data.value / 100;
+            data.numHit = skill.e2numHit;
+
+            skillPercList.push(data);
+        }
+    }
+    else {
+        let data = [];
+        data.value = 0;
+        data.numHit = 0;
+        skillPercList.push(data);
+    }
+
+    return skillPercList;
+}
+
+function IsValidCondition(condition) {
+    if (condition != "") {
+        // this has a requirement, need to go through the buff to see if the user has the buff
+        for (var i = 0; i < buffList.length; i++) {
+            if (condition == buffList[i].buffName.slice(0, condition.length)){
+                return true;
+            }
+        }
+    }
+    else {
+        // it does not have a requirement, so it's fine.
+        return true;
+    }
+
+    return false;
 }
 
 // using the buff list to add up all the the values
@@ -250,22 +407,128 @@ function processDBuffList(skill) {
 // I guess I can add buffs from skill into this... like [Moon Phase],
 // and the user can remove it if they don't like it but it may be for another day
 // After the buff list is done, I will grab straight from it instead...
-function addPassiveSkillToHtmlBuffList() {
+function hmtl_addPassiveSkillToBuffList() {
 
 }
 
-function addCardToBuffList() {
-
-}
-
-function addWonderBuffToBuffList() {
+function hmtl_addWonderBuffToBuffList() {
     // when I do this, make sure I don't add anything that is self
 }
 
-function addOthersSkillBuffToBuffList(charName, skill, awareness, skillLevel) {
+function hmtl_addOthersSkillBuffToBuffList(charName, skill, awareness, skillLevel) {
     // Add other people buff to the list...
     // when I do this, make sure I don't add anything that is self
 
+}
+
+function addCardToBuffList(name, elem, role, isResonance) {
+    for (var i = 0; i < cardList.length; i++) {
+        if ((cardList[i].name == name)) {
+            var add = true;
+            if (cardList[i].e1dbuff != "") {
+                if ((cardList[i].e1roleCondition != "")
+                    && (cardList[i].e1roleCondition != role)) {
+                    add = false;
+                }
+
+                if ((cardList[i].e1ElemCondition != "")
+                    && (cardList[i].e1ElemCondition != elem)) {
+                    add = false;
+                }
+
+                if ((cardList[i].e1ReqResonance == "Yes") && !isResonance) {
+                    add = false;
+                }
+
+                if (add) {
+                    let data = [];
+                    data.buffName = cardList[i].name;    // where the buff is from
+                    data.value = cardList[i].e1rate;
+                    data.dbuff = cardList[i].e1dbuff;
+                    data.condition = "";
+                    buffList.push(data);
+                }
+            }
+
+            add = true;
+            if (cardList[i].e1dbuff != "") {
+                if ((cardList[i].e2roleCondition != "")
+                    && (cardList[i].e2roleCondition != role)) {
+                    add = false;
+                }
+
+                if ((cardList[i].e2ElemCondition != "")
+                    && (cardList[i].e2ElemCondition != elem)) {
+                    add = false;
+                }
+
+                if ((cardList[i].e2ReqResonance == "Yes") && !isResonance) {
+                    add = false;
+                }
+
+                if (add) {
+                    let data = [];
+                    data.buffName = cardList[i].name;    // where the buff is from
+                    data.value = cardList[i].e2rate;
+                    data.dbuff = cardList[i].e2dbuff;
+                    data.condition = "";
+                    buffList.push(data);
+                }
+
+                add = true;
+                if (cardList[i].s2dbuff != "") {
+                    if ((cardList[i].s2roleCondition != "")
+                        && (cardList[i].s2roleCondition != role)) {
+                        add = false;
+                    }
+
+                    if ((cardList[i].s2ElemCondition != "")
+                        && (cardList[i].s2ElemCondition != elem)) {
+                        add = false;
+                    }
+
+                    if ((cardList[i].s2ReqResonance == "Yes") && !isResonance) {
+                        add = false;
+                    }
+
+                    if (add) {
+                        let data = [];
+                        data.buffName = cardList[i].name;    // where the buff is from
+                        data.value = cardList[i].s2rate;
+                        data.dbuff = cardList[i].s2dbuff;
+                        data.condition = "";
+                        buffList.push(data);
+                    }
+                }
+                add = true;
+                if (cardList[i].s4dbuff != "") {
+                    if ((cardList[i].s4roleCondition != "")
+                        && (cardList[i].s4roleCondition != role)) {
+                        add = false;
+                    }
+
+                    if ((cardList[i].s4ElemCondition != "")
+                        && (cardList[i].s4ElemCondition != elem)) {
+                        add = false;
+                    }
+
+                    if ((cardList[i].s4ReqResonance == "Yes") && !isResonance) {
+                        add = false;
+                    }
+
+                    if (add) {
+                        let data = [];
+                        data.buffName = cardList[i].name;    // where the buff is from
+                        data.value = cardList[i].s4rate;
+                        data.dbuff = cardList[i].s4dbuff;
+                        data.condition = "";
+                        buffList.push(data);
+                    }
+                }
+            }
+
+        }
+    }
 }
 
 // Since I count by awarenss lowest to highest, the database better be in this order or it will break the code...
@@ -365,6 +628,7 @@ function composeBuffData(dbuff, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5
     return data;
 }
 
+
 // using the buff list, add value to it
 function addWeaponToBuffList(charName, rarity, reforge) {
     for (var i = 0; i < weaponList.length; i++) {
@@ -406,7 +670,7 @@ function addWeaponToBuffList(charName, rarity, reforge) {
                 data.condition = weaponList[i].e3acondition;
                 buffList.push(data);
             }
-//            console.log(buffList);
+
             return i;   // save the index
         }
     }    
@@ -458,7 +722,7 @@ function getHtmlInfo() {
 
     iCharInfo.weakness = document.getElementById('enemyElemWeakness').innerHTML;
     iCharInfo.includeCrit = document.getElementById('critChoice').innerHTML;
-    iCharInfo.bossName = document.getElementById('enemyChoice').innerHTML;
+    iCharInfo.bossName = document.getElementById('bossName').innerHTML;
 
     var ulElement = document.getElementById('defDebuffOutputDiv');
     el = ulElement.firstElementChild;
@@ -524,7 +788,7 @@ function convertEnemyWeaknessTextToValue(text) {
     switch (text) {
         case "Normal":
             return 1;
-        case "Resistance":
+        case "Resist":
             return 0.5;
         case "Weakness":
             return 1.2;
@@ -535,40 +799,27 @@ function convertEnemyWeaknessTextToValue(text) {
 }
 
 function convertEnemyNameToDefenseValue(text) {
-    switch (text) {
-        case "Sea of Souls 8 LV89":
-            return ENEMY_DEFENSE_DEFAULT; // Doesn't have it
-        case "Dominion":
-            return 363.2;
-        case "Atavaka":
-            return 1279.9;
-        case "Vishnu":
-            return 820.7;
-        case "Mini Vishnu":
-            return 363.2;
-        case "Yatsufusa":
-            return 1279.9;
-        default:
-            console.log("Code does not match html value.")
-            return ENEMY_DEFENSE_DEFAULT;
+    for (var i = 0; i < bossList.length; i++) {
+        if (text == bossList[i].name) {
+            return bossList[i].defense;
+        }
     }
+
+    console.log("convertEnemyNameToDefenseValue::Code does not match html value.")
+
+    return ENEMY_DEFENSE_DEFAULT;
 }
 
 function convertEnemyNameToAdditionaDefenseValue(text) {
-    switch (text) {
-        case "Sea of Souls 8 LV89":
-            return 1.632; // 163.2%
-        case "Dominion": // fall through
-        case "Atavaka":  // fall through
-        case "Vishnu":   // fall through
-        case "Mini Vishnu":
-            return 1.584; // 158.4%
-        case "Yatsufusa":
-            return 2.059; // 205.9%
-        default:
-            console.log("Code does not match html value.")
-            return 1.584;
+    for (var i = 0; i < bossList.length; i++) {
+        if (text == bossList[i].name) {
+            return bossList[i].addtionalDefense;
+        }
     }
+
+    console.log("convertEnemyNameToDefenseValue::Code does not match html value.")
+
+    return ENEMY_DEFENSE_ADDITIONAL_DEFAULT;
 }
 
 function fillCharacter(event) {
@@ -591,6 +842,70 @@ function fillCharacter(event) {
     document.getElementById("userFilterCharlist").value = '';
 }
 
+function outputCharName(event, dropdown, list, role) {
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].released == 'Y') {
+            if (isValidRole(list[i].role, role)) {
+                var item = document.createElement("a");
+                item.setAttribute('class', 'w3-bar-item w3-button');
+                item.innerHTML = list[i].charName;
+                item.onclick = function () {
+                    replaceHeaderWithName(this);
+                };
+
+                dropdown.appendChild(item);
+            }
+        }
+    }
+}
+
+function fillBoss(event) {
+    let dropdown = document.getElementById("bossListDiv");
+    readBossDatabase();
+
+    fillHtmlCommon("bossListDiv", "userFilterBosslist", bossList); 
+}
+function outputNameCommon(dropdown, list) {
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].name != "") {
+            var item = document.createElement("a");
+            item.setAttribute('class', 'w3-bar-item w3-button');
+            item.innerHTML = list[i].name;
+            item.onclick = function () {
+                replaceHeaderWithName(this);
+            };
+
+            dropdown.appendChild(item);
+        }
+    }
+}
+
+function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
+    let dropdown = document.getElementById(htmlDivId);
+    var firstChild = dropdown.children[0];  // Save the search Filter
+
+    dropdown.textContent = '';
+    dropdown.appendChild(firstChild);   //add back the search field
+
+    outputNameCommon(dropdown, list);
+
+    const targetElement = dropdown;
+    var x = targetElement.parentNode.firstElementChild.nextElementSibling;
+
+    x.className = x.className.replace(" w3-hide", "");
+
+    document.getElementById(filterHmtlId).value = '';
+}
+
+function fillCard(event) {
+    readCardDatabase();
+    fillHtmlCommon("cardListDiv", "userFilterCardlist", cardList); 
+}
+
+function filterFunctionBoss() {
+    filterFunction("userFilterBosslist", "bossListDiv", "a");
+}
+
 function filterFunctionName() {
     filterFunction("userFilterCharlist", "charListDiv", "a");
 }
@@ -609,23 +924,6 @@ function filterFunctionAtk() {
 
 function filterFunctionDmg() {
     filterFunction("userFilterDmgList", "dmgListDiv", "a");
-}
-
-function outputCharName(event, dropdown, list, role) {
-    for (var i = 0; i < list.length; i++) {
-        if (list[i].released == 'Y') {
-            if (isValidRole(list[i].role, role)) {
-                var item = document.createElement("a");
-                item.setAttribute('class', 'w3-bar-item w3-button');
-                item.innerHTML = list[i].charName;
-                item.onclick = function () {
-                    replaceHeaderWithName(this);
-                };
-
-                dropdown.appendChild(item);
-            }
-        }
-    }
 }
 
 function isValidRole(role, roleName) {
@@ -786,21 +1084,32 @@ function readCardDatabase() {
             let data = [];
             var j = 0;
 
+            // Space card bonus
             data.name = row[i][j++];
             data.e1rate = parseFloat(row[i][j++]);
-            data.e1dbcondition = row[i][j++];
+            data.e1ElemCondition = row[i][j++];     // character elemnt required
+            data.e1ReqResonance = row[i][j++];     // type of dmg required: resonance or not...
+            data.e1roleCondition = row[i][j++];     // character role required
             data.e1dbuff = row[i][j++];
 
             data.e2rate = parseFloat(row[i][j++]);
-            data.e2dbcondition = row[i][j++];
+            data.e2ElemCondition = row[i][j++];
+            data.e2ReqResonance = row[i][j++];
+            data.e2roleCondition = row[i][j++];
             data.e2dbuff = row[i][j++];
 
+            // 2 set bonus
             data.s2rate = parseFloat(row[i][j++]);
-            data.s2dbcondition = row[i][j++];
+            data.s2ElemCondition = row[i][j++];
+            data.s2ReqResonance = row[i][j++];
+            data.s2roleCondition = row[i][j++];
             data.s2dbuff = row[i][j++];
 
+            // 4 set bonus
             data.s4rate = parseFloat(row[i][j++]);
-            data.s4dbcondition = row[i][j++];
+            data.s4ElemCondition = row[i][j++];
+            data.s4ReqResonance = row[i][j++];
+            data.s4roleCondition = row[i][j++];
             data.s4dbuff = row[i][j++];
 
             cardList.push(data);
@@ -979,5 +1288,36 @@ function readWonderDatabase() {
     }
 
 //    console.log(wonderList);
+}
+
+function readBossDatabase() {
+    if (bossList[0] != null) {
+        return;
+    }
+
+    var location = window.location.href;
+    var directoryPath = location.substring(0, location.lastIndexOf("/") + 1);
+
+    var result = loadFile(directoryPath + BOSS_FILE_NAME);
+
+    if (result != null) {
+        // By lines
+        var lines = result.split('\n');
+
+        for (var line = FILE_NUM_SKIP_LINE; line < lines.length; line++) {
+            var row = CSVToArray(lines[line], ',');
+            var i = 0;
+            let data = [];
+            var j = 0;
+
+            data.name = row[i][j++];
+            data.stage = row[i][j++];
+            data.defense = parseFloat(row[i][j++]);
+            data.addtionalDefense = parseFloat(row[i][j++]);
+
+            bossList.push(data);
+        }
+    }
+    //    console.log(bossList);
 }
 

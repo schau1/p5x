@@ -106,7 +106,7 @@ function calcWeaponBasedOnReforge(r0, r1, r2, reforgeLevel) {
 }
 
 // ----------------- Damage Calculation Support -------------------------------//
-function calculateDefenseReductionPerc() {
+/*function calculateDefenseReductionPerc() {
     // Card
     // Single   Control + Departure     23%         2 turns
     // Single   Labor + Resolve         10%         2 turns
@@ -252,6 +252,7 @@ function calculatePiercePerc() {
     // Skull
     // Self     A2                       35%         when dealing critical dmg
 }
+*/
 
 // × ⓒ 1 - {Enemy Defense Value × [(100% + Additional Defense Coefficient) × (100% - Pierce) - Defense Reduction] × (100% - Windswept 12%)}
 // ÷ {Enemy Defense Value ×[(100 % + Additional Defense Coefficient) × (100 % - Pierce) - Defense Reduction] × (100 % - Windswept 12 %) + 1400 }

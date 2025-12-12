@@ -28,92 +28,62 @@
 	<div class="w3-margin">
 		<div class="w3-margin-top">
 			<div class="w3-row">
-				<div class="w3-container w3-third">
-					<h3 class="w3-green w3-center">Info</h3>
+                <div class="w3-container w3-third">
+                    <h3 class="w3-green w3-center">Info</h3>
 
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Select the character
-						<button class="w3-button w3-white w3-block w3-left-align" id="charName" onmouseover="fillCharacter(event)">Makoto Yuki</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="charListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCharlist" onkeyup="filterFunctionName()">
-						</div>
-					</div>
+                    <div class="w3-dropdown-hover w3-block w3-margin-bottom">
+                        Select the character
+                        <button class="w3-button w3-white w3-block w3-left-align" id="charName" onmouseover="fillCharacter(event)">Makoto Yuki</button>
+                        <div class="w3-dropdown-content w3-bar-block w3-border" id="charListDiv">
+                            <input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCharlist" onkeyup="filterFunctionName()">
+                        </div>
+                    </div>
 
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Skill
-						<button class="w3-button w3-white w3-block w3-left-align" id="skillChoice" onmouseover="show(event)">S3</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Highlight/Theurgy</a>
-						</div>
-					</div>
+                    <div class="w3-dropdown-hover w3-block w3-margin-bottom">
+                        Skill
+                        <button class="w3-button w3-white w3-block w3-left-align" id="skillChoice" onmouseover="show(event)">S3</button>
+                        <div class="w3-dropdown-content w3-bar-block w3-border">
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S1</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S2</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S3</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Highlight/Theurgy</a>
+                        </div>
+                    </div>
 
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Awareness
-						<button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice" onmouseover="show(event)">A0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A0</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
-						</div>
-					</div>
+                    <div class="w3-dropdown-hover w3-block w3-margin-bottom">
+                        Awareness
+                        <button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice" onmouseover="show(event)">A0</button>
+                        <div class="w3-dropdown-content w3-bar-block w3-border">
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A0</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A1</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A2</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A3</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
+                        </div>
+                    </div>
 
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="weaponChoice" onmouseover="show(event)">5*</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
-						</div>
-					</div>
+                    <div class="w3-dropdown-hover w3-block w3-margin-bottom">
+                        Weapon
+                        <button class="w3-button w3-white w3-block w3-left-align" id="weaponChoice" onmouseover="show(event)">5*</button>
+                        <div class="w3-dropdown-content w3-bar-block w3-border">
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
+                            <a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
+                        </div>
+                    </div>
 
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Select the card set
-						<button class="w3-button w3-white w3-block w3-left-align" id="cardChoice" onmouseover="show(event)">Harmony and Victory</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="cardListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCardlist" onkeyup="filterFunctionCard()">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Meditation and Opulence</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Meditation and Courage</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Meditation and Love</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Awareness and Truth</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Awareness and Control</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Awareness and Hindrance</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Growth and Opulence</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Growth and Renewal</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Growth and Power</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Trust and Prosperity</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Trust and Power</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Trust and Renewal</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Departure and Prosperity</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Departure and Control</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Departure and Hindrance</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Faith and Peace</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Faith and Love</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Acceptance and Peace</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Acceptance and Strife</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Acceptance and Love</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Harmony and Victory</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Harmony and Power</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Harmony and Truth</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Resolve and Virtue</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Resolve and Labor</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Wisdom and Oppression</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Wisdom and Pleasure</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Wisdom and Virtue</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Integrity and Pleasure</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Integrity and Labor</a>
-						</div>
-					</div>
+                    <div class="w3-dropdown-hover w3-block w3-margin-bottom">
+                        Card Set
+                        <button class="w3-button w3-white w3-block w3-left-align" id="cardChoice" onmouseover="fillCard(event)">Hope and Fixation</button>
+                        <div class="w3-dropdown-content w3-bar-block w3-border" id="cardListDiv">
+                            <input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCardlist" onkeyup="filterFunctionCard()">
+                        </div>
+                    </div>
 
-					<label>Navigator/Elucidator's Atk</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="navAtk">
-				</div>
+                    <label>Navigator/Elucidator's Atk</label>
+                    <input class="w3-input w3-margin-bottom" type="number" value="0" id="navAtk">
+                </div>
 
 				<div class="w3-container w3-third">
 					<h3 class="w3-green w3-center">Space Card</h3>
@@ -255,16 +225,13 @@
 				</div>
 			</div>
 
-			<div class="w3-container w3-dropdown-hover w3-block w3-third">
-				Boss
-				<button class="w3-button w3-white w3-block w3-left-align" id="enemyChoice" onmouseover="show(event)">Dominion</button>
-				<div class="w3-dropdown-content w3-bar-block w3-border">
-					<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Sea of Souls 8 LV89</a>
-					<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Dominion</a>
-					<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Atavaka</a>
-					<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Vishnu</a>
-					<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Mini Vishnu</a>
-					<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Yatsufusa</a>
+			<div class="w3-container w3-block w3-third">
+				<div class="w3-dropdown-hover w3-block w3-margin-bottom" style="background-color: rgba(0, 0, 0, 0)">
+					Boss
+					<button class="w3-button w3-white w3-block w3-left-align" id="bossName" onmouseover="fillBoss(event)">[NTMR] Dominion</button>
+					<div class="w3-dropdown-content w3-bar-block w3-border" id="bossListDiv">
+						<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterBosslist" onkeyup="filterFunctionBoss()">
+					</div>
 				</div>
 			</div>
 
@@ -322,7 +289,7 @@
 				</div>
 			</div>
 
-			<div class="w3-panel w3-center" id="result">
+			<div class="w3-panel w3-center w3-margin w3-blue " id="result">
 			</div>
 
 			<footer>

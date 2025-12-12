@@ -1,5 +1,5 @@
 ,,,,,Effect 1: A3 increases S3 and TT skills by 3. A5 increase S1 and S3 by 3. Max skill % only,,,,,,, Effect 2,,,,,,, Effect 3,,,,,,, Effect 4,,,,,,, Effect 5,,,,,,, Effect 6,,,,,,,
-Character,Position,Awareness,Name,Type,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff/type,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,Note
+Character,Position,Awareness,Name,Type,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff/type,Condition (buff name must  match),LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,LV10,LV10+Minds 5,LV13,LV13+Minds 5,# of hit,Buff/Debuff,Condition,Note
 Okyann,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Puppet,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Sephia,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -49,16 +49,16 @@ Makoto Yuki,S1,A0,Melodic Blaze,Fire,59.8,66,63.2,69.6,3,DMG_SKILL_SINGLE,,,,,,,
 Makoto Yuki,S1,A1,Melodic Blaze,Fire,59.8,66,63.2,69.6,4,DMG_SKILL_SINGLE,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,S2,A0,Moonlit Hymn,Support,23.4,25.8,24.9,27.3,,PARTY_CRIT_MULT_PERC,,19.5,21.5,20.7,22.7,,SELF_ATK_FLAT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,S2,A1,Moonlit Hymn,Support,23.4,25.8,24.9,27.3,,PARTY_CRIT_MULT_PERC,,19.5,21.5,20.7,22.7,,SELF_ATK_FLAT,,10,10,10,10,,PARTY_PIERCE_PERC,,,,,,,,,,,,,,,,,,,,,,,
-Makoto Yuki,S3,A0,Scarlet: Devouring Blaze,Fire,108.7,119.8,115.4,126.5,4,DMG_SKILL_SINGLE,,167.1,184.2,177.4,194.5,1,DMG_SKILL_SINGLE,SELF_HL_BUFF_REQ,11.7,12.9,12.4,13.6,,SELF_PIERCE_PERC,S3,24.4,26.9,25.9,28.4,,SELF_DMG_PERC,S3,,,,,,,,,,,,,,,
-Makoto Yuki,S3,A1,Scarlet: Devouring Blaze,Fire,108.7,119.8,115.4,126.5,4,DMG_SKILL_SINGLE,,167.1,184.2,177.4,194.5,1,DMG_SKILL_SINGLE,SELF_HL_BUFF_REQ,11.7,12.9,12.4,13.6,,SELF_PIERCE_PERC,S3,24.4,26.9,25.9,28.4,,SELF_DMG_PERC,S3,16,16,16,16,,SELF_CRIT_PERC,S3,,,,,,,,
-Makoto Yuki,S3,A6,Scarlet: Devouring Blaze,Fire,108.7,119.8,115.4,126.5,4,DMG_SKILL_SINGLE,,167.1,184.2,177.4,194.5,2,DMG_SKILL_SINGLE,SELF_HL_BUFF_REQ,11.7,12.9,12.4,13.6,,SELF_PIERCE_PERC,S3,24.4,26.9,25.9,28.4,,SELF_DMG_PERC,S3,16,16,16,16,,SELF_CRIT_PERC,S3,20,20,20,20,,SELF_DMG_PERC,S3,"At A6, he uses 2 Theurgies, so he gains 2 stacks of special moon phases, making the follow up 2 hits"
+Makoto Yuki,S3,A0,Scarlet: Devouring Blaze,Fire,108.7,119.8,115.4,126.5,4,DMG_SKILL_SINGLE,,167.1,184.2,177.4,194.5,1,DMG_SKILL_SINGLE,Theurgy,11.7,12.9,12.4,13.6,,SELF_PIERCE_PERC,S3,24.4,26.9,25.9,28.4,,SELF_DMG_PERC,S3,,,,,,,,,,,,,,,
+Makoto Yuki,S3,A1,Scarlet: Devouring Blaze,Fire,108.7,119.8,115.4,126.5,4,DMG_SKILL_SINGLE,,167.1,184.2,177.4,194.5,1,DMG_SKILL_SINGLE,Theurgy,11.7,12.9,12.4,13.6,,SELF_PIERCE_PERC,S3,24.4,26.9,25.9,28.4,,SELF_DMG_PERC,S3,16,16,16,16,,SELF_CRIT_PERC,S3,,,,,,,,
+Makoto Yuki,S3,A6,Scarlet: Devouring Blaze,Fire,108.7,119.8,115.4,126.5,4,DMG_SKILL_SINGLE,,167.1,184.2,177.4,194.5,2,DMG_SKILL_SINGLE,Theurgy,11.7,12.9,12.4,13.6,,SELF_PIERCE_PERC,S3,24.4,26.9,25.9,28.4,,SELF_DMG_PERC,S3,16,16,16,16,,SELF_CRIT_PERC,S3,20,20,20,20,,SELF_DMG_PERC,S3,"At A6, he uses 2 Theurgies, so he gains 2 stacks of special moon phases, making the follow up 2 hits"
 Makoto Yuki,Theurgy,A0,Theurgy - Ardhanari,Fire,147.5,162.6,156.5,171.6,4,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,Theurgy,A4,Theurgy - Ardhanari,Fire,147.5,162.6,156.5,171.6,5,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,Theurgy,A0,Theurgy - Cadenza,Support,25,26.9,26.5,28.4,,PARTY_ATK_PERC,,20,21.5,21.2,22.7,,PARTY_DMG_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,Theurgy,A4,Theurgy - Cadenza,Support,25,26.9,26.5,28.4,,PARTY_ATK_PERC,,20,21.5,21.2,22.7,,PARTY_DMG_PERC,,10,10,10,10,,PARTY_DMG_PERC,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,Assist,A0,Assist Skill,Support,20,20,20,20,,ALLY_ATK_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-Makoto Yuki,Passive,A0,Lead,Passive,40,40,40,40,,ALLY_ATK_PERC,SELF_HL_BUFF_REQ,20,20,20,20,,ALLY_ATK_PERC,SELF_HL_BUFF_REQ/SEES_ALLY_REQ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-Makoto Yuki,Passive,A0,Trust,Passive,7.2,7.2,7.2,7.2,,E_SELF_CRIT_MULT_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Makoto Yuki,Passive,A0,Lead,Passive,40,40,40,40,,PARTY_ATK_PERC,Theurgy,20,20,20,20,,PARTY_ATK_PERC,Theurgy/SEES_ALLY_REQ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Makoto Yuki,Passive,A0,Trust,Passive,7.2,7.2,7.2,7.2,,SELF_CRIT_MULT_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Makoto Yuki,Passive,A0,Great Guide,Passive,12,19.5,12,19.5,,SELF_PIERCE_PERC,,16,16,16,16,,SELF_DMG_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Yukari,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Akihiko,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
