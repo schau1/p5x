@@ -1,4 +1,16 @@
-﻿// python -m http.server
+﻿/*
+ * File: p5x_calculator
+ * Description: 
+ *  
+ * 
+ * Author: schau1 / cantiga
+ * 
+ * Copyright (c) 2025
+ * 
+*/
+
+
+// python -m http.server
 
 // 1. rotation simulation - 6T
 // List of 5 characters - input inportant stats: Speed (for turn order), atk, atk mul, crit, crit mul, card set
@@ -67,12 +79,16 @@ let skillList = [];
 let weaponList = [];  
 let wonderList = [];
 let bossList = [];
+let htmlDbList = [];
 
 // stores info regard the main character to sim/calc for
 let iCharInfo = [];
 
-// store a list of all the buff/debuff
+// store a list of all the buff/debuff that will be processed by the app as part of the calculation
 let buffList = [];
+
+// store a list of all the buff/debuff that the user enters
+let htmlDBuffList = [];
 
 readCharStatDatabase();
 readCardDatabase();
@@ -94,21 +110,6 @@ function runCalculation() {
 
     getHtmlInfo();
 
-    // Using weapon, add to the buff list
-    addWeaponToBuffList(iCharInfo.charName, iCharInfo.weapon, 0);
-
-    // Add buffs from skill to buff list
-    var skillIndex = addSelfSkillBuffToBuffList(iCharInfo.charName, iCharInfo.skill, iCharInfo.awareness, SKILL_LEVEL_10);
-    iCharInfo.type = skillList[skillIndex].type;
-
-    // @todo need to add an entry to see if the skill is resonance or not
-
-
-    // Add buffs/debuffs from card set bonus
-    addCardToBuffList(iCharInfo.cardSet, iCharInfo.type, iCharInfo.role, iCharInfo.isResonance);
-
-    console.log(buffList);
-
     for (var i = 0; i < charStatList.length; i++) {
         if (charStatList[i].charName == iCharInfo.charName) {
             iCharInfo.indexOfCharStatList = 0 + i;
@@ -116,8 +117,43 @@ function runCalculation() {
             iCharInfo.hiddenCrit = charStatList[i].hiddenCrit;
             iCharInfo.hiddenCritMult = charStatList[i].hiddenCritMult;
             iCharInfo.role = charStatList[i].role;
+            iCharInfo.isSees = (charStatList[i].isSees == 'Y') ? true : false;
+
+            if (iCharInfo.skill == "Highlight/Theurgy") {
+                if (iCharInfo.isSees) {
+                    iCharInfo.skill = "Theurgy";
+                }
+                else {
+                    iCharInfo.skill = "Highlight";
+                }
+            }
         }
     }
+
+    // Add passive skill the the buff list. These are the ones that do not have a condition. If they have a condition to fullfill
+    // add to the user Select buff list instead so that the user can pick them as they know if the condition works
+    // No - Add all passive skills to the buff List. When I process the list, I go through it to see if there is any buff there
+    // matching the required buffs instead. For example, I will go through the list and see this skill requires SEES, then, I will
+    // check to see if SEES is found in that list. If not found, I will skip it. Right now I do that for the dmg portion
+    // but I can do a 2nd pass of the list to remove anything that doesn't fit.
+    addSelfPassiveSkillToBuffList(iCharInfo);
+
+
+    // Using weapon, add to the buff list
+    addWeaponToBuffList(iCharInfo.charName, iCharInfo.weapon, iCharInfo.reforgeLevel);
+
+    // Add buffs from skill to buff list
+    var skillIndex = addSelfSkillBuffToBuffList(iCharInfo.charName, iCharInfo.skill, iCharInfo.awareness, iCharInfo.skillLevel, "");
+    iCharInfo.skillType = skillList[skillIndex].skillType;
+
+    // @todo need to add an entry to see if the skill is resonance or not
+
+    // Add buffs/debuffs from card set bonus
+    addSelfCardToBuffList(iCharInfo.cardSet, iCharInfo.skillType, iCharInfo.role, iCharInfo.isResonance);
+
+    addUserSelectedBuffToBuffList();    
+
+    console.log(buffList);
 
     iCharInfo.atkFlat = iCharInfo.navAtk * NAV_BUFF_PERC + iCharInfo.atkFlat;
     iCharInfo.atkPerc = iCharInfo.hiddenAtk + iCharInfo.atkPerc;
@@ -192,24 +228,6 @@ function runCalculation() {
     console.log(iCharInfo);
 }
 
-function displayResult(dmgPerHit, dmgPerHit2) {
-    var element = document.getElementById("result");
-
-    element.innerHTML = "";
-
-    var item = document.createElement("p");
-    item.innerHTML = "Damage is: ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[0].numHit +
-        "x for a total of ~" + dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit;;
-    element.appendChild(item);
-
-    if (dmgPerHit2[0] > 0) {
-        item = document.createElement("p");
-        item.innerHTML = "In addition, the skill also deals ~" + dmgPerHit2[0] + " to ~" + dmgPerHit2[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[1].numHit +
-            "x for a total of ~" + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[1].numHit;
-        element.appendChild(item);
-    }
-}
-
 function initializeData(){
     iCharInfo.baseAtk = 0;
     iCharInfo.atkFlat = 0;
@@ -231,18 +249,20 @@ function initializeData(){
     iCharInfo.cardSet = "";
     iCharInfo.navAtk = 0
     iCharInfo.includeCrit = "";
-    iCharInfo.type = "";
+    iCharInfo.skillType = "";
     iCharInfo.role = "";
     iCharInfo.isResonance = false;
     iCharInfo.final_weakness = 0;
+    iCharInfo.skillLevel = 0;
+    iCharInfo.reforgeLevel = 0;
+    iCharInfo.final_critStableDomain = 1;
+    iCharInfo.isSees = false;
 }
 // Return a list of skill percentage for the skill and its follow up
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
 // @param   skill - item containing the skill from the database
 // @todo: Assuming the skill has only 2 parts at most. If it's more than 2, need to adjust this code
-function calculateSkillPerc(skill, skillLevel) {
-    console.log(skill)
-    
+function calculateSkillPerc(skill, skillLevel) {   
     let skillPercList = [];
     // The first one should be a skill percent. If it's not, screw you.
     if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")) {
@@ -282,8 +302,8 @@ function calculateSkillPerc(skill, skillLevel) {
         data.value = 0;
         data.numHit = 0;
 
-        // if the condition is not fulfilled, this dmg doesn't exist, just quit
-        if (!IsValidCondition(skill.e2condition)) {
+        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
+        if (!IsValidSkillCondition(skill.e2condition)) {
             skillPercList.push(data);
         }
         else {
@@ -320,11 +340,11 @@ function calculateSkillPerc(skill, skillLevel) {
     return skillPercList;
 }
 
-function IsValidCondition(condition) {
+function IsValidSkillCondition(condition) {
     if (condition != "") {
         // this has a requirement, need to go through the buff to see if the user has the buff
         for (var i = 0; i < buffList.length; i++) {
-            if (condition == buffList[i].buffName.slice(0, condition.length)){
+            if (buffList[i].buffName.includes(condition)){
                 return true;
             }
         }
@@ -353,54 +373,70 @@ function processDBuffList(skill) {
     data.pierceRate = 0;
     data.defenseReduction = 0;
     data.windswept = false;
+    var buffConditionMet = true;
 
     for (var i = 0; i < buffList.length; i++) {
-        switch (buffList[i].dbuff) {
-            case "SELF_ATK_PERC":   // fall through
-            case "PARTY_ATK_PERC":
-                data.atkPerc += buffList[i].value;
-                break;
-            case "SELF_ATK_FLAT":   // fall through
-            case "PARTY_ATK_FLAT":   // fall through
-            case "ALLY_ATK_FLAT":
-                data.atkFlat += buffList[i].value;
-                break;
-            case "SELF_CRIT_MULT_PERC":   // fall through
-            case "ALLIES_CRIT_MULT_PERC":   // fall through
-            case "PARTY_CRIT_MULT_PERC":   // fall through
-            case "ALLY_CRIT_MULT_PERC":  
-                data.critMult += buffList[i].value;
-                break;
-            case "SELF_CRIT_PERC":   // fall through
-            case "PARTY_CRIT_PERC":   // fall through
-            case "ALLY_CRIT_PERC":
-                data.critRate += buffList[i].value;
-                break;
-            case "SELF_DMG_PERC":   // fall through
-            case "PARTY_DMG_PERC":   // fall through
-            case "ALLY_DMG_PERC":
-                data.dmgMult += buffList[i].value;
-                break;
-            case "SELF_PIERCE_PERC":   // fall through
-            case "PARTY_PIERCE_PERC":   // fall through
-            case "ALLY_PIERCE_PERC":
-                data.pierceRate += buffList[i].value;
-                break;
-            case "DEF_DECR_PERC":   // fall through
-            case "DEF_DECR_PERC_AOE":
-                data.defenseReduction += buffList[i].value;
-                break;
-            case "WINDSWEEP_AOE":   // fall through
-            case "WINDSWEEP":   // fall through
-                data.windswept += true;
-                break;
-            default:
-                break;
+        // Go through the list to make sure I have the buff required before we add it.
+        buffConditionMet = true;
+        if ((buffList[i].condition != "") && (buffList[i].conditionType == 'DBuff')) {
+            const searchName = buffList[i].condition.split("&");
+            for (var j = 0; j < searchName.length; j++) {
+                const buffItem = buffList.find(item => item.buffName.includes(searchName[j]));
+                if (!buffItem) {
+                    buffConditionMet = false;
+                }
+            }
+        }
+
+        if (buffConditionMet) {
+            switch (buffList[i].dbuff) {
+                case "SELF_ATK_PERC":   // fall through
+                case "PARTY_ATK_PERC":
+                    data.atkPerc += buffList[i].value;
+                    break;
+                case "SELF_ATK_FLAT":   // fall through
+                case "PARTY_ATK_FLAT":   // fall through
+                case "ALLY_ATK_FLAT":
+                    data.atkFlat += buffList[i].value;
+                    break;
+                case "SELF_CRIT_MULT_PERC":   // fall through
+                case "ALLIES_CRIT_MULT_PERC":   // fall through
+                case "PARTY_CRIT_MULT_PERC":   // fall through
+                case "ALLY_CRIT_MULT_PERC":  
+                    data.critMult += buffList[i].value;
+                    break;
+                case "SELF_CRIT_PERC":   // fall through
+                case "PARTY_CRIT_PERC":   // fall through
+                case "ALLY_CRIT_PERC":
+                    data.critRate += buffList[i].value;
+                    break;
+                case "SELF_DMG_PERC":   // fall through
+                case "PARTY_DMG_PERC":   // fall through
+                case "ALLY_DMG_PERC":
+                    data.dmgMult += buffList[i].value;
+                    break;
+                case "SELF_PIERCE_PERC":   // fall through
+                case "PARTY_PIERCE_PERC":   // fall through
+                case "ALLY_PIERCE_PERC":
+                    data.pierceRate += buffList[i].value;
+                    break;
+                case "DEF_DECR_PERC":   // fall through
+                case "DEF_DECR_PERC_AOE":
+                    data.defenseReduction += buffList[i].value;
+                    break;
+                case "WINDSWEEP_AOE":   // fall through
+                case "WINDSWEEP":   // fall through
+                    data.windswept = true;
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
     return data;
 }
+
 
 // add the passive skill the character has to the HTML as soon as they choose a character
 // If they don't like the passive buff, they can remove it
@@ -409,10 +445,21 @@ function processDBuffList(skill) {
 // After the buff list is done, I will grab straight from it instead...
 function hmtl_addPassiveSkillToBuffList() {
 
-}
+    let dropdown = document.getElementById(htmlDivId);
+    var firstChild = dropdown.children[0];  // Save the search Filter
 
-function hmtl_addWonderBuffToBuffList() {
-    // when I do this, make sure I don't add anything that is self
+    dropdown.textContent = '';
+    dropdown.appendChild(firstChild);   //add back the search field
+
+    outputNameCommon(dropdown, list);
+
+    const targetElement = dropdown;
+    var x = targetElement.parentNode.firstElementChild.nextElementSibling;
+
+    x.className = x.className.replace(" w3-hide", "");
+
+    document.getElementById(filterHmtlId).value = '';
+
 }
 
 function hmtl_addOthersSkillBuffToBuffList(charName, skill, awareness, skillLevel) {
@@ -421,7 +468,95 @@ function hmtl_addOthersSkillBuffToBuffList(charName, skill, awareness, skillLeve
 
 }
 
-function addCardToBuffList(name, elem, role, isResonance) {
+function addUserSelectedBuffToBuffList() {
+    //@todo I need to deal with Wonder Knife too... make sure to pass in a reforge value
+    for (var i = 0; i < htmlDBuffList.length; i++) {      
+        const buffItem = wonderList.find(item => item.name == htmlDBuffList[i]);
+
+        if (isValidTargetBuff(buffItem.e1dbuff, buffItem.e1condition, buffItem.e1conditionType)) {
+            let data = [];
+            data.buffName = buffItem.name;
+            data.value = buffItem.e1r0;
+            data.dbuff = buffItem.e1dbuff;
+            data.condition = buffItem.e1condition;
+            data.conditionType = buffItem.e1conditionType;
+            buffList.push(data);
+        }
+
+        if (isValidTargetBuff(buffItem.e2dbuff, buffItem.e1condition, buffItem.e2conditionType)) {
+            let data = [];
+            data.buffName = buffItem.name;
+            data.value = buffItem.e2r0;
+            data.dbuff = buffItem.e2dbuff;
+            data.condition = buffItem.e2condition;
+            data.conditionType = buffItem.e2conditionType;
+            buffList.push(data);
+        }
+
+        if (isValidTargetBuff(buffItem.e3dbuff, buffItem.e3condition, buffItem.e3conditionType)) {
+            let data = [];
+            data.buffName = buffItem.name;
+            data.value = buffItem.e3r0;
+            data.dbuff = buffItem.e3dbuff;
+            data.condition = buffItem.e3condition;
+            data.conditionType = buffItem.e3conditionType;
+            buffList.push(data);
+        }
+
+        if (isValidTargetBuff(buffItem.e4dbuff, buffItem.e4condition, buffItem.e4conditionType)) {
+            let data = [];
+            data.buffName = buffItem.name;
+            data.value = buffItem.e4r0;
+            data.dbuff = buffItem.e4dbuff;
+            data.condition = buffItem.e4condition;
+            data.conditionType = buffItem.e4conditionType;
+            buffList.push(data);
+        }
+
+        if (isValidTargetBuff(buffItem.e5dbuff, buffItem.e5condition, buffItem.e5conditionType)) {
+            let data = [];
+            data.buffName = buffItem.name;
+            data.value = buffItem.e5r0;
+            data.dbuff = buffItem.e5dbuff;
+            data.condition = buffItem.e5condition;
+            data.conditionType = buffItem.e5conditionType;
+            buffList.push(data);
+        }
+
+        if (isValidTargetBuff(buffItem.e6dbuff, buffItem.e6condition, buffItem.e6conditionType)) {
+            let data = [];
+            data.buffName = buffItem.name;
+            data.value = buffItem.e6r0;
+            data.dbuff = buffItem.e6dbuff;
+            data.condition = buffItem.e6condition;
+            data.conditionType = buffItem.e6conditionType;
+            buffList.push(data);
+        }
+    }
+}
+
+
+// The only time it returns false is if the skillType doesn't match: Wind required but Skill is Fire
+// or if it's a self buff
+function isValidTargetBuff(dbuff, condition, conditionType) {
+    // check if this is a party buff
+    if ((dbuff != "") && (dbuff.slice(0, 4) != "SELF")) {
+        if ((conditionType != "") && (conditionType != "Debuff") && (conditionType != "Buff")) {
+            // Debuff is ok
+            if (conditionType == "Skill" && condition != iCharInfo.skillType) {
+                return false;
+            }
+        }
+
+        // since there is no requirement for this buff, it's valid
+        return true;
+    }
+
+    return false;
+}
+
+// @todo: fix the card database later so less columns...
+function addSelfCardToBuffList(name, elem, role, isResonance) {
     for (var i = 0; i < cardList.length; i++) {
         if ((cardList[i].name == name)) {
             var add = true;
@@ -446,6 +581,7 @@ function addCardToBuffList(name, elem, role, isResonance) {
                     data.value = cardList[i].e1rate;
                     data.dbuff = cardList[i].e1dbuff;
                     data.condition = "";
+                    data.conditionType = "";
                     buffList.push(data);
                 }
             }
@@ -472,6 +608,7 @@ function addCardToBuffList(name, elem, role, isResonance) {
                     data.value = cardList[i].e2rate;
                     data.dbuff = cardList[i].e2dbuff;
                     data.condition = "";
+                    data.conditionType = "";
                     buffList.push(data);
                 }
 
@@ -497,6 +634,7 @@ function addCardToBuffList(name, elem, role, isResonance) {
                         data.value = cardList[i].s2rate;
                         data.dbuff = cardList[i].s2dbuff;
                         data.condition = "";
+                        data.conditionType = "";
                         buffList.push(data);
                     }
                 }
@@ -522,6 +660,7 @@ function addCardToBuffList(name, elem, role, isResonance) {
                         data.value = cardList[i].s4rate;
                         data.dbuff = cardList[i].s4dbuff;
                         data.condition = "";
+                        data.conditionType = "";
                         buffList.push(data);
                     }
                 }
@@ -531,64 +670,87 @@ function addCardToBuffList(name, elem, role, isResonance) {
     }
 }
 
+function addSelfPassiveSkillToBuffList(charInfo) {
+    // Add SEES buff
+    if (charInfo.isSees) {
+        let data = [];
+        data.buffName = "SEES";
+        data.value = 0;
+        data.dbuff = "";
+        data.condition = "";
+        data.conditionType = "";
+
+        buffList.push(data);
+    }
+
+    for (var i = 0; i < skillList.length; i++) {
+        if ((charInfo.charName == skillList[i].charName) && (skillList[i].skillPos == "Passive")) {
+            addSelfSkillBuffToBuffList(charInfo.charName, "Passive", charInfo.awareness, 0, skillList[i].name);
+        }
+    }
+
+}
+
 // Since I count by awarenss lowest to highest, the database better be in this order or it will break the code...
-function addSelfSkillBuffToBuffList(charName, skill, awareness, skillLevel) {
+function addSelfSkillBuffToBuffList(charName, skill, awareness, skillLevel, skillName) {
     var item = -1;
 
     // Since I count by awarenss lowest to highest, the database better be in this order or it will break the code...
     for (var i = 0; i < skillList.length; i++) {
-        if ((skillList[i].charName == charName) && (skill == skillList[i].skillPos)) {
+        if ((skillList[i].charName == charName) && (skill == skillList[i].skillPos) &&
+            ((skillName == "") || (skillList[i].name == skillName))) {
             if (awareness == skillList[i].awareness) {
                 // matching awareness, done
                 item = i;
                 break;
             }
-            else if (awareness > skillList[i].awareness) {                
+            else if (skillList[i].awareness > awareness) {
                 break;
             }
             else {
                 // if awareness is less, keep the highest found awareness, and continue to the next one.
                 item = i;
-            }            
+            }
         }
     }
 
     if (item < 0) {
+        console.log("addSelfSkillBuffToBuffList::Skill not found");
         return item; // not found
     }
 
     let data = composeBuffData(skillList[item].e1dbuff, skillLevel, skillList[item].name, skillList[item].e1Lvl10,
-        skillList[item].e1Lvl10m5, skillList[item].e1Lvl13, skillList[item].e1Lvl13m5, skillList[item].e1condition);
+        skillList[item].e1Lvl10m5, skillList[item].e1Lvl13, skillList[item].e1Lvl13m5, skillList[item].e1condition, skillList[item].e1conditionType);
     if (data.buffName) {
         buffList.push(data);
     }
 
     data = composeBuffData(skillList[item].e2dbuff, skillLevel, skillList[item].name, skillList[item].e2Lvl10,
-        skillList[item].e2Lvl10m5, skillList[item].e2Lvl13, skillList[item].e2Lvl13m5, skillList[item].e2condition);
+        skillList[item].e2Lvl10m5, skillList[item].e2Lvl13, skillList[item].e2Lvl13m5, skillList[item].e2condition, skillList[item].e2conditionType);
     if (data.buffName) {
         buffList.push(data);
     }
 
     data = composeBuffData(skillList[item].e3dbuff, skillLevel, skillList[item].name, skillList[item].e3Lvl10,
-        skillList[item].e3Lvl10m5, skillList[item].e3Lvl13, skillList[item].e3Lvl13m5, skillList[item].e3condition);
+        skillList[item].e3Lvl10m5, skillList[item].e3Lvl13, skillList[item].e3Lvl13m5, skillList[item].e3condition, skillList[item].e3conditionType);
     if (data.buffName) {
         buffList.push(data);
     }
 
     data = composeBuffData(skillList[item].e4dbuff, skillLevel, skillList[item].name, skillList[item].e4Lvl10,
-        skillList[item].e4Lvl10m5, skillList[item].e4Lvl13, skillList[item].e4Lvl13m5, skillList[item].e4condition);
+        skillList[item].e4Lvl10m5, skillList[item].e4Lvl13, skillList[item].e4Lvl13m5, skillList[item].e4condition, skillList[item].e4conditionType);
     if (data.buffName) {
         buffList.push(data);
     }
 
     data = composeBuffData(skillList[item].e5dbuff, skillLevel, skillList[item].name, skillList[item].e5Lvl10,
-        skillList[item].e5Lvl10m5, skillList[item].e5Lvl13, skillList[item].e5Lvl13m5, skillList[item].e5condition);
+        skillList[item].e5Lvl10m5, skillList[item].e5Lvl13, skillList[item].e5Lvl13m5, skillList[item].e5condition, skillList[item].e5conditionType);
     if (data.buffName) {
         buffList.push(data);
     }
 
     data = composeBuffData(skillList[item].e6dbuff, skillLevel, skillList[item].name, skillList[item].e6Lvl10,
-        skillList[item].e6Lvl10m5, skillList[item].e6Lvl13, skillList[item].e6Lvl13m5, skillList[item].e6condition);
+        skillList[item].e6Lvl10m5, skillList[item].e6Lvl13, skillList[item].e6Lvl13m5, skillList[item].e6condition, skillList[item].e6conditionType);
     if (data.buffName) {
         buffList.push(data);
     }
@@ -596,9 +758,9 @@ function addSelfSkillBuffToBuffList(charName, skill, awareness, skillLevel) {
     return item;   // save the index - probably needed for later to calculate skill damage
 
 }
-
+    
 // Trash function, but at least it's less copy and paste making it less prone to bug
-function composeBuffData(dbuff, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5, condition) {
+function composeBuffData(dbuff, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5, condition, conditionType) {
     let data = [];
 
     if ((dbuff != "") && !(dbuff == "DMG_SKILL_SINGLE") || (dbuff == "DMG_SKILL_AOE")) {
@@ -622,7 +784,8 @@ function composeBuffData(dbuff, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5
         }
 
         data.dbuff = dbuff;
-        data.condition = condition;        
+        data.condition = condition;
+        data.conditionType = conditionType;
     }
 
     return data;
@@ -636,47 +799,93 @@ function addWeaponToBuffList(charName, rarity, reforge) {
             // Such trash code... I really could do better than this...
             // should input these in an array when I read the database... seriously...
             if (weaponList[i].e1dbuff != "") {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e1r0, 0, weaponList[i].e1r2, reforge);
-                data.dbuff = weaponList[i].e1dbuff;
-                data.condition = weaponList[i].e1condition;
-                buffList.push(data);
+                if (isSkillConditionMet(weaponList[i].e1condition, weaponList[i].e1conditionType, iCharInfo.skill)) {
+                    let data = [];
+                    data.buffName = weaponList[i].name;    // where the buff is from
+                    data.value = calcWeaponBasedOnReforge(weaponList[i].e1r0, 0, weaponList[i].e1r2, reforge);
+                    data.dbuff = weaponList[i].e1dbuff;
+                    data.condition = weaponList[i].e1condition;
+                    data.conditionType = weaponList[i].e1conditionType;
+                    buffList.push(data);
+                }
             }
 
             if (weaponList[i].e2dbuff != "") {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e2r0, weaponList[i].e1r1, 0, reforge);
-                data.dbuff = weaponList[i].e2dbuff;
-                data.condition = weaponList[i].e2condition;
-                buffList.push(data);
+                if (isSkillConditionMet(weaponList[i].e2condition, weaponList[i].e2conditionType, iCharInfo.skill)) {
+                    let data = [];
+                    data.buffName = weaponList[i].name;    // where the buff is from
+                    data.value = calcWeaponBasedOnReforge(weaponList[i].e2r0, weaponList[i].e2r1, 0, reforge);
+                    data.dbuff = weaponList[i].e2dbuff;
+                    data.condition = weaponList[i].e2condition;
+                    data.conditionType = weaponList[i].e2conditionType;
+                    buffList.push(data);
+                }
             }
 
             if (weaponList[i].e3dbuff != "") {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e3r0, weaponList[i].e3r1, 0, reforge);
-                data.dbuff = weaponList[i].e3dbuff;
-                data.condition = weaponList[i].e3condition;
-                buffList.push(data);
+                if (isSkillConditionMet(weaponList[i].e3condition, weaponList[i].e3conditionType, iCharInfo.skill)) {
+                    let data = [];
+                    data.buffName = weaponList[i].name;    // where the buff is from
+                    data.value = calcWeaponBasedOnReforge(weaponList[i].e3r0, weaponList[i].e3r1, 0, reforge);
+                    data.dbuff = weaponList[i].e3dbuff;
+                    data.condition = weaponList[i].e3condition;
+                    data.conditionType = weaponList[i].e3conditionType;
+                    buffList.push(data);
+                }
             }
 
             if (weaponList[i].e3adbuff != "") {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e3ar0, weaponList[i].e3ar1, 0, reforge);
-                data.dbuff = weaponList[i].e3adbuff;
-                data.condition = weaponList[i].e3acondition;
-                buffList.push(data);
+                if (isSkillConditionMet(weaponList[i].e3acondition, weaponList[i].e3aconditionType, iCharInfo.skill)) {
+                    let data = [];
+                    data.buffName = weaponList[i].name;    // where the buff is from
+                    data.value = calcWeaponBasedOnReforge(weaponList[i].e3ar0, weaponList[i].e3ar1, 0, reforge);
+                    data.dbuff = weaponList[i].e3adbuff;
+                    data.condition = weaponList[i].e3acondition;
+                    data.conditionType = weaponList[i].e3aconditionType;
+                    buffList.push(data);
+                }
             }
 
             return i;   // save the index
         }
     }    
 }
+function isSkillConditionMet(condition, conditionType, skill) {
+    if ((condition != "") && conditionType == "Self Skill") {
+        if (condition.includes(skill)) {
+            return true;
+        }
+        return false;
+    }
 
-// Code dealing with HTML 
+    return true;
+}
+
+// ------------------------------------------------ Code dealing with HTML
+
+function displayResult(dmgPerHit, dmgPerHit2) {
+    var element = document.getElementById("result");
+
+    element.innerHTML = "";
+
+    var item = document.createElement("p");
+    item.innerHTML = "Damage: ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[0].numHit +
+        "x for a total of ~" + dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + ".";
+    element.appendChild(item);
+
+    if (dmgPerHit2[0] > 0) {
+        item = document.createElement("p");
+        item.innerHTML = "In addition, the skill also deals ~" + dmgPerHit2[0] + " to ~" + dmgPerHit2[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[1].numHit +
+            "x for a total of ~" + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit + " to ~" + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit + ".";
+        element.appendChild(item);
+
+        item = document.createElement("p");
+        item.innerHTML = "Final Damage: ~" + (dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit)
+            + " to ~" + (dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit) + ".";
+        element.appendChild(item);
+    }
+}
+
 function getHtmlInfo() {
     iCharInfo.charName = document.getElementById('charName').innerHTML;
     iCharInfo.skill = document.getElementById('skillChoice').innerHTML; // Will also filter out support skill so only DPS skill is listed
@@ -724,12 +933,16 @@ function getHtmlInfo() {
     iCharInfo.includeCrit = document.getElementById('critChoice').innerHTML;
     iCharInfo.bossName = document.getElementById('bossName').innerHTML;
 
-    var ulElement = document.getElementById('defDebuffOutputDiv');
+    iCharInfo.skillLevel = convertSkillLevelTextToValue(document.getElementById('skillLevelChoice').innerHTML);
+    iCharInfo.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('reforgeChoice').innerHTML)
+
+    htmlProcessDefDebuff('defDebuffOutputDiv');
+/*    var ulElement = document.getElementById('defDebuffOutputDiv');
     el = ulElement.firstElementChild;
     while (el) {
         processDefDebuff(el);
         el = el.nextElementSibling;
-    }
+    }*/
 
     ulElement = document.getElementById('atkOutputDiv');
     el = ulElement.firstElementChild;
@@ -749,6 +962,26 @@ function getHtmlInfo() {
         processDmgBuff(el);
         el = el.nextElementSibling;
     }
+}
+
+// Add buff names the user chose to a list so we can add to our processing debuff list later
+function htmlProcessDefDebuff(id) {
+    let list = [];
+    var ulElement = document.getElementById(id);
+    el = ulElement.firstElementChild;
+    while (el) {
+        list.push(el.innerHTML);
+        el = el.nextElementSibling;
+    }
+
+    htmlDBuffList = [...new Set(list)];
+//    console.log(htmlDBuffList);
+}
+
+function fillHtmlDBuffList(event) {
+    // should add all the debuff/buff to 1 big list before I send to this...
+
+    appendToList(event, htmlDbList);
 }
 
 function getAtkValueFromAwareness(charStat) {
@@ -772,6 +1005,45 @@ function getAtkValueFromAwareness(charStat) {
             return charStat.a0Atk;
     }
 }
+
+function convertReforgeLevelTextToValue(text) {
+    switch (text) {
+        case "R0":
+            return 0;
+        case "R1":
+            return 1;
+        case "R2":
+            return 2;
+        case "R3":
+            return 3;
+        case "R4":
+            return 4;
+        case "R5":
+            return 5;
+        case "R6":
+            return 6;
+        default:
+            console.log("convertReforgeLevelTextToValue::Code does not match html value.")
+            return 0;
+    }
+}
+
+function convertSkillLevelTextToValue(text) {
+    switch (text) {
+        case "Level 10":
+            return SKILL_LEVEL_10;
+        case "Level 10 Mindscape 5":
+            return SKILL_LEVEL_10_MINDSCAPE_5;
+        case "Level 13":
+            return SKILL_LEVEL_13;
+        case "Level 13 Mindscape 5":
+            return SKILL_LEVEL_13_MINDSCAPE_5;
+        default:
+            console.log("convertSkillLevelTextToValue::Code does not match html value.")
+            return SKILL_LEVEL_10;
+    }
+}
+
 function getWeapAtkValueFromAwareness(charStat) {
     switch (iCharInfo.weapon) {
         case "5*":
@@ -782,6 +1054,33 @@ function getWeapAtkValueFromAwareness(charStat) {
             console.log("weapon::Code does not match html value.")
             return charStat.weap5Atk;
     }
+}
+
+function isValidRole(role, roleName) {
+    switch (roleName) {
+        case DPS_ROLE:
+            if (role == "Assassin" || role == "Sweeper") {
+                return true;
+            }
+            break;
+        case SUPPORT_ROLE:
+            if (role == "Strategist" || role == "Medic" || role == "Defense" || role == "Saboteur") {
+                return true;
+            }
+            break;
+        case NAVI_ROLE:
+            if (role == "Elucidator") {
+                return true;
+            }
+            break;
+        case ALL_ROLE:
+            return true;
+            break;
+        default:
+            break;
+    }
+
+    return false;
 }
 
 function convertEnemyWeaknessTextToValue(text) {
@@ -865,37 +1164,6 @@ function fillBoss(event) {
 
     fillHtmlCommon("bossListDiv", "userFilterBosslist", bossList); 
 }
-function outputNameCommon(dropdown, list) {
-    for (var i = 0; i < list.length; i++) {
-        if (list[i].name != "") {
-            var item = document.createElement("a");
-            item.setAttribute('class', 'w3-bar-item w3-button');
-            item.innerHTML = list[i].name;
-            item.onclick = function () {
-                replaceHeaderWithName(this);
-            };
-
-            dropdown.appendChild(item);
-        }
-    }
-}
-
-function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
-    let dropdown = document.getElementById(htmlDivId);
-    var firstChild = dropdown.children[0];  // Save the search Filter
-
-    dropdown.textContent = '';
-    dropdown.appendChild(firstChild);   //add back the search field
-
-    outputNameCommon(dropdown, list);
-
-    const targetElement = dropdown;
-    var x = targetElement.parentNode.firstElementChild.nextElementSibling;
-
-    x.className = x.className.replace(" w3-hide", "");
-
-    document.getElementById(filterHmtlId).value = '';
-}
 
 function fillCard(event) {
     readCardDatabase();
@@ -926,36 +1194,9 @@ function filterFunctionDmg() {
     filterFunction("userFilterDmgList", "dmgListDiv", "a");
 }
 
-function isValidRole(role, roleName) {
-    switch(roleName){
-        case DPS_ROLE:
-            if (role == "Assassin" || role == "Sweeper") {
-                return true;
-            }
-            break;
-        case SUPPORT_ROLE:
-            if (role == "Strategist" || role == "Medic" || role == "Defense" || role == "Saboteur") {
-                return true;
-            }
-            break;
-        case NAVI_ROLE:
-            if (role == "Elucidator") {
-                return true;
-            }
-            break;
-        case ALL_ROLE:
-            return true;
-            break;
-        default:            
-            break;
-    }
+// --------------- End of HTML Interface ---------------------------------------------------------------------------
 
-    return false;
-}
-
-// --------------- End of HTML Interface -----------------------
-
-// ------------------ Database related -------------------------
+// ------------------ Database related -----------------------------------------------------------------------------
 function readCharStatDatabase() {
     if (charStatList[0] != null) {
         return;
@@ -979,6 +1220,7 @@ function readCharStatDatabase() {
             data.charName = row[i][j++];
             data.released = row[i][j++];
             data.role = row[i][j++];
+            data.isSees = row[i][j++];
             data.a0Hp = parseFloat(row[i][j++]);
             data.a0Atk = parseFloat(row[i][j++]);
             data.a0Def = parseFloat(row[i][j++]);
@@ -1038,21 +1280,25 @@ function readWeaponDatabase() {
             data.e1r0 = parseFloat(row[i][j++]);
             data.e1r2 = parseFloat(row[i][j++]);
             data.e1condition = row[i][j++];
+            data.e1conditionType = row[i][j++];
             data.e1dbuff = row[i][j++];
 
             data.e2r0 = parseFloat(row[i][j++]);
             data.e2r1 = parseFloat(row[i][j++]);
             data.e2condition = row[i][j++];
+            data.e2conditionType = row[i][j++];
             data.e2dbuff = row[i][j++];
 
             data.e3r0 = parseFloat(row[i][j++]);
             data.e3r1 = parseFloat(row[i][j++]);
             data.e3condition = row[i][j++];
+            data.e3conditionType = row[i][j++];
             data.e3dbuff = row[i][j++];
 
             data.e3ar0 = parseFloat(row[i][j++]);
             data.e3ar1 = parseFloat(row[i][j++]);
             data.e3acondition = row[i][j++];
+            data.e3aconditionType = row[i][j++];
             data.e3adbuff = row[i][j++];
 
             weaponList.push(data);
@@ -1143,7 +1389,7 @@ function readSkillDatabase() {
             data.skillPos = row[i][j++];
             data.awareness = row[i][j++];
             data.name = row[i][j++];
-            data.type = row[i][j++];    // support or fire or passive
+            data.skillType = row[i][j++];    // support or fire or passive
 
             data.e1Lvl10 = parseFloat(row[i][j++]);
             data.e1Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
@@ -1152,6 +1398,7 @@ function readSkillDatabase() {
             data.e1numHit = parseFloat(row[i][j++]);
             data.e1dbuff = row[i][j++];
             data.e1condition = row[i][j++];
+            data.e1conditionType = row[i][j++];
 
             data.e2Lvl10 = parseFloat(row[i][j++]);
             data.e2Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
@@ -1160,6 +1407,7 @@ function readSkillDatabase() {
             data.e2numHit = parseFloat(row[i][j++]);
             data.e2dbuff = row[i][j++];
             data.e2condition = row[i][j++];
+            data.e2conditionType = row[i][j++];
 
             data.e3Lvl10 = parseFloat(row[i][j++]);
             data.e3Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
@@ -1168,6 +1416,7 @@ function readSkillDatabase() {
             data.e3numHit = parseFloat(row[i][j++]);
             data.e3dbuff = row[i][j++];
             data.e3condition = row[i][j++];
+            data.e3conditionType = row[i][j++];
 
             data.e4Lvl10 = parseFloat(row[i][j++]);
             data.e4Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
@@ -1176,6 +1425,7 @@ function readSkillDatabase() {
             data.e4numHit = parseFloat(row[i][j++]);
             data.e4dbuff = row[i][j++];
             data.e4condition = row[i][j++];
+            data.e4conditionType = row[i][j++];
 
             data.e5Lvl10 = parseFloat(row[i][j++]);
             data.e5Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
@@ -1184,6 +1434,7 @@ function readSkillDatabase() {
             data.e5numHit = parseFloat(row[i][j++]);
             data.e5dbuff = row[i][j++];
             data.e5condition = row[i][j++];
+            data.e5conditionType = row[i][j++];
 
             data.e6Lvl10 = parseFloat(row[i][j++]);
             data.e6Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
@@ -1192,6 +1443,7 @@ function readSkillDatabase() {
             data.e6numHit = parseFloat(row[i][j++]);
             data.e6dbuff = row[i][j++];
             data.e6condition = row[i][j++];
+            data.e6conditionType = row[i][j++];
 
             skillList.push(data);
         }
@@ -1221,6 +1473,7 @@ function readWonderDatabase() {
             var j = 0;
 
             data.name = row[i][j++];
+            data.persona = row[i][j++];
             data.type = row[i][j++];
 
             data.e1r0 = parseFloat(row[i][j++]);
@@ -1232,6 +1485,7 @@ function readWonderDatabase() {
             data.e1r6 = parseFloat(row[i][j++]);
             data.e1dbuff = row[i][j++];
             data.e1condition = row[i][j++];
+            data.e1conditionType = row[i][j++];
 
             data.e2r0 = parseFloat(row[i][j++]);
             data.e2r1 = parseFloat(row[i][j++]);
@@ -1242,6 +1496,7 @@ function readWonderDatabase() {
             data.e2r6 = parseFloat(row[i][j++]);
             data.e2dbuff = row[i][j++];
             data.e2condition = row[i][j++];
+            data.e2conditionType = row[i][j++];
 
             data.e3r0 = parseFloat(row[i][j++]);
             data.e3r1 = parseFloat(row[i][j++]);
@@ -1252,6 +1507,7 @@ function readWonderDatabase() {
             data.e3r6 = parseFloat(row[i][j++]);
             data.e3dbuff = row[i][j++];
             data.e3condition = row[i][j++];
+            data.e3conditionType = row[i][j++];
 
             data.e4r0 = parseFloat(row[i][j++]);
             data.e4r1 = parseFloat(row[i][j++]);
@@ -1262,6 +1518,7 @@ function readWonderDatabase() {
             data.e4r6 = parseFloat(row[i][j++]);
             data.e4dbuff = row[i][j++];
             data.e4condition = row[i][j++];
+            data.e4conditionType = row[i][j++];
 
             data.e5r0 = parseFloat(row[i][j++]);
             data.e5r1 = parseFloat(row[i][j++]);
@@ -1272,6 +1529,7 @@ function readWonderDatabase() {
             data.e5r6 = parseFloat(row[i][j++]);
             data.e5dbuff = row[i][j++];
             data.e5condition = row[i][j++];
+            data.e5conditionType = row[i][j++];
 
             data.e6r0 = parseFloat(row[i][j++]);
             data.e6r1 = parseFloat(row[i][j++]);
@@ -1282,8 +1540,10 @@ function readWonderDatabase() {
             data.e6r6 = parseFloat(row[i][j++]);
             data.e6dbuff = row[i][j++];
             data.e6condition = row[i][j++];
+            data.e6conditionType = row[i][j++];
 
             wonderList.push(data);
+            htmlDbList.push(data.name);
         }
     }
 

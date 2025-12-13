@@ -1,4 +1,15 @@
-﻿const ATK_BATTLE_CONST = 0;// 55;    // for whatever reason, we gain 55 points of atk in battle
+﻿/*
+ * File: p5x_calculator
+ * Description: 
+ *  
+ * 
+ * Author: schau1 / cantiga
+ * 
+ * Copyright (c) 2025
+ * 
+*/
+
+const ATK_BATTLE_CONST = 55;    // for whatever reason, we gain 55 points of atk in battle
 const MIN_VARIANCE = 0.95;
 const MAX_VARIANCE = 1.05;
 const WINDSWEPT_VALUE = 12; // 12%

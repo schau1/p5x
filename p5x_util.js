@@ -1,4 +1,15 @@
-﻿function filterFunction(inputId, divId, tagId) {
+﻿/*
+ * File: p5x_calculator
+ * Description: 
+ *  
+ * 
+ * Author: schau1 / cantiga
+ * 
+ * Copyright (c) 2025
+ * 
+*/
+
+function filterFunction(inputId, divId, tagId) {
     var input, filter, ul, li, a, i;
     input = document.getElementById(inputId);
     filter = input.value.toUpperCase();
@@ -168,24 +179,110 @@ function show(event) {
     x.className = x.className.replace(" w3-hide", "");
 }
 
+function outputNameCommon(dropdown, list) {
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].name != "") {
+            var item = document.createElement("a");
+            item.setAttribute('class', 'w3-bar-item w3-button');
+            item.innerHTML = list[i].name;
+            item.onclick = function () {
+                replaceHeaderWithName(this);
+            };
+
+            dropdown.appendChild(item);
+        }
+    }
+}
+
+function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
+    let dropdown = document.getElementById(htmlDivId);
+    var firstChild = dropdown.children[0];  // Save the search Filter
+
+    dropdown.textContent = '';
+    dropdown.appendChild(firstChild);   //add back the search field
+
+    outputNameCommon(dropdown, list);
+
+    const targetElement = dropdown;
+    var x = targetElement.parentNode.firstElementChild.nextElementSibling;
+
+    x.className = x.className.replace(" w3-hide", "");
+
+    document.getElementById(filterHmtlId).value = '';
+}
+
+function appendToList(event, debuffArray) {
+    const targetElement = event.target;
+    var divSibling = targetElement.parentNode.children[1];
+
+    let dropdown = document.getElementById(divSibling.id);
+    var firstChild = dropdown.children[0]; // Save the search Filter
+
+    if (firstChild.nextElementSibling) {
+        return;
+    }
+
+    dropdown.textContent = '';
+    dropdown.appendChild(firstChild); //add back the search field
+
+/*    var item = document.createElement("a");
+    item.setAttribute('class', 'w3-bar-item w3-button');
+    item.innerHTML = "Reset";
+    item.onclick = function () {
+        resetList(targetElement.parentNode.parentNode.children[1].firstElementChild.id);
+    };
+    dropdown.appendChild(item);*/
+   
+    var outputDiv = "", listDiv = "";
+
+    switch (divSibling.id) {
+        case "defDebuffListDiv":
+            outputDiv = "defDebuffOutputDiv";
+            listDiv = "defDebuffListDiv";
+            document.getElementById("userFilterDefDebufflist").value = '';
+            break;
+        case "atkListDiv":
+            outputDiv = "atkOutputDiv";
+            listDiv = "atkListDiv";
+            document.getElementById("userFilterAtklist").value = '';
+            break;
+        case "dmgListDiv":
+            outputDiv = "dmgOutputDiv";
+            listDiv = "dmgListDiv";
+            document.getElementById("userFilterDmgList").value = '';
+            break;
+        default:
+            console.log("Error. Defaulting to defDebuffListDiv");
+            outputDiv = "defDebuffOutputDiv";
+            listDiv = "defDebuffListDiv";
+            document.getElementById("userFilterDefDebufflist").value = '';
+            break;
+    }
+
+    outputList(dropdown, debuffArray, outputDiv, listDiv);
+
+    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
+    x.className = x.className.replace(" w3-hide", "");
+}
+
 function fillList(event) {
     const targetElement = event.target;
     var divSibling = targetElement.parentNode.children[1];
 
     let dropdown = document.getElementById(divSibling.id);
-    var firstChild = dropdown.children[0];
+    var firstChild = dropdown.children[0]; // Save the search Filter
 
     dropdown.textContent = '';
-    dropdown.appendChild(firstChild);
+    dropdown.appendChild(firstChild); //add back the search field
 
-    var item = document.createElement("a");
+/*    var item = document.createElement("a");
     item.setAttribute('class', 'w3-bar-item w3-button');
     item.innerHTML = "Reset";
     item.onclick = function () {
         resetList(targetElement.parentNode.parentNode.children[1].firstElementChild.id);
     };
 
-    dropdown.appendChild(item);
+    dropdown.appendChild(item);*/
 
     var debuffArray = [];
     var outputDiv = "", listDiv = "";
@@ -236,7 +333,7 @@ function outputList(dropdown, itemArray, outputDiv, listDiv) {
     for (var i = 0; i < itemArray.length; i++) {
         var item = document.createElement("a");
         item.setAttribute('class', 'w3-bar-item w3-button');
-        item.innerHTML = itemArray[i];//itemList[i].name;
+        item.innerHTML = itemArray[i];
         item.onclick = function () {
             addItemToList(this, outputDiv, listDiv);
         };
@@ -249,13 +346,14 @@ function addItemToList(cell, outputDiv, listDiv) {
     var output = document.getElementById(outputDiv);
     var el = document.getElementById(listDiv).firstChild;
 
-    while (el) {
+/*    while (el) {
         if (el.innerHTML == cell.innerHTML) {
             document.getElementById(listDiv).removeChild(el);
             break;
         }
         el = el.nextSibling;
     }
+*/
 
     var item = document.createElement("ul");
     item.innerHTML = cell.innerHTML;
