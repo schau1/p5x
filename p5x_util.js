@@ -236,10 +236,10 @@ function appendToList(event, debuffArray) {
     var outputDiv = "", listDiv = "";
 
     switch (divSibling.id) {
-        case "defDebuffListDiv":
-            outputDiv = "defDebuffOutputDiv";
-            listDiv = "defDebuffListDiv";
-            document.getElementById("userFilterDefDebufflist").value = '';
+        case "wDBuffListDiv":
+            outputDiv = "wDBuffOutputDiv";
+            listDiv = "wDBuffListDiv";
+            document.getElementById("userFilterwDBuffList").value = '';
             break;
         case "atkListDiv":
             outputDiv = "atkOutputDiv";
@@ -252,10 +252,10 @@ function appendToList(event, debuffArray) {
             document.getElementById("userFilterDmgList").value = '';
             break;
         default:
-            console.log("Error. Defaulting to defDebuffListDiv");
-            outputDiv = "defDebuffOutputDiv";
-            listDiv = "defDebuffListDiv";
-            document.getElementById("userFilterDefDebufflist").value = '';
+            console.log("Error. Defaulting to wDBuffListDiv");
+            outputDiv = "wDBuffOutputDiv";
+            listDiv = "wDBuffListDiv";
+            document.getElementById("userFilterwDBuffList").value = '';
             break;
     }
 
@@ -288,11 +288,11 @@ function fillList(event) {
     var outputDiv = "", listDiv = "";
 
     switch (divSibling.id) {
-        case "defDebuffListDiv":
+        case "wDBuffListDiv":
             debuffArray = ["yuki", "joker"];
-            outputDiv = "defDebuffOutputDiv";
-            listDiv = "defDebuffListDiv";
-            document.getElementById("userFilterDefDebufflist").value = '';
+            outputDiv = "wDBuffOutputDiv";
+            listDiv = "wDBuffListDiv";
+            document.getElementById("userFilterwDBuffList").value = '';
             break;
         case "atkListDiv":
             debuffArray = ["makoto", "yu"];
@@ -307,11 +307,11 @@ function fillList(event) {
             document.getElementById("userFilterDmgList").value = '';
             break;
         default:
-            console.log("Error. Defaulting to defDebuffListDiv");
+            console.log("Error. Defaulting to wDBuffListDiv");
             debuffArray = ["cat", "dog"];
-            outputDiv = "defDebuffOutputDiv";
-            listDiv = "defDebuffListDiv";
-            document.getElementById("userFilterDefDebufflist").value = '';
+            outputDiv = "wDBuffOutputDiv";
+            listDiv = "wDBuffListDiv";
+            document.getElementById("userFilterwDBuffList").value = '';
             break;
     }
 
@@ -355,7 +355,8 @@ function addItemToList(cell, outputDiv, listDiv) {
     }
 */
 
-    var item = document.createElement("ul");
+    var item = document.createElement("li");
+    item.setAttribute('class', 'w3-block w3-left-align');
     item.innerHTML = cell.innerHTML;
     item.onclick = function () {
         removeItemFromList(this, outputDiv);

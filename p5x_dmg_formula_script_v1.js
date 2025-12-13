@@ -936,8 +936,8 @@ function getHtmlInfo() {
     iCharInfo.skillLevel = convertSkillLevelTextToValue(document.getElementById('skillLevelChoice').innerHTML);
     iCharInfo.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('reforgeChoice').innerHTML)
 
-    htmlProcessDefDebuff('wDBuffOutputDiv');
-/*    var ulElement = document.getElementById('wDBuffOutputDiv');
+    htmlProcessDefDebuff('defDebuffOutputDiv');
+/*    var ulElement = document.getElementById('defDebuffOutputDiv');
     el = ulElement.firstElementChild;
     while (el) {
         processDefDebuff(el);
@@ -1182,8 +1182,8 @@ function filterFunctionCard() {
     filterFunction("userFilterCardlist", "cardListDiv", "a");
 }
 
-function filterFunctionwDBuff() {
-    filterFunction("userFilterwDBuffList", "wDBuffListDiv", "a");
+function filterFunctionDef() {
+    filterFunction("userFilterDefDebufflist", "defDebuffListDiv", "a");
 }
 
 function filterFunctionAtk() {
