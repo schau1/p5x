@@ -79,7 +79,14 @@ let skillList = [];
 let weaponList = [];  
 let wonderList = [];
 let bossList = [];
-let htmlDbList = [];
+let wonderKnifeList = [];
+
+// Store data that will be used to output as an entry to the html file
+let htmlWonderDbList = [];
+let htmlP1DbList = [];
+let htmlP2DbList = [];
+let htmlNaviDbList = [];
+let htmlDpsDbList = [];
 
 // stores info regard the main character to sim/calc for
 let iCharInfo = [];
@@ -144,7 +151,22 @@ function runCalculation() {
 
     // Add buffs from skill to buff list
     var skillIndex = addSelfSkillBuffToBuffList(iCharInfo.charName, iCharInfo.skill, iCharInfo.awareness, iCharInfo.skillLevel, "");
-    iCharInfo.skillType = skillList[skillIndex].skillType;
+    if (skillIndex >= 0) {
+        iCharInfo.skillType = skillList[skillIndex].skillType;
+    }
+    else {
+        var element = document.getElementById("result");
+
+        element.innerHTML = "";
+
+        var item = document.createElement("p");
+        item.innerHTML = "Error:: Info Not Found";
+        element.appendChild(item);
+
+        console.log("runCalculation::skill not found");
+
+        return;
+    }
 
     // @todo need to add an entry to see if the skill is resonance or not
 
@@ -215,11 +237,11 @@ function runCalculation() {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
 
-    let dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[0].value, iCharInfo.final_weakness, FINAL_DMG_BONUS, OTHER_DMG_BONUS);
+    let dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[0].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
     let dmgPerHit2 = [0,0,0];
 
     if (iCharInfo.final_skillPerc[1].numHit > 0) {
-        dmgPerHit2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[1].value, iCharInfo.final_weakness, FINAL_DMG_BONUS, OTHER_DMG_BONUS);        
+        dmgPerHit2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[1].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);        
     }
     // calculate the first dmg, // calculate 2nd dmg // output all those + total dmg
 
@@ -257,6 +279,7 @@ function initializeData(){
     iCharInfo.reforgeLevel = 0;
     iCharInfo.final_critStableDomain = 1;
     iCharInfo.isSees = false;
+    iCharInfo.finalBonus = 0;
 }
 // Return a list of skill percentage for the skill and its follow up
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
@@ -472,6 +495,9 @@ function addUserSelectedBuffToBuffList() {
     //@todo I need to deal with Wonder Knife too... make sure to pass in a reforge value
     for (var i = 0; i < htmlDBuffList.length; i++) {      
         const buffItem = wonderList.find(item => item.name == htmlDBuffList[i]);
+        if (!buffItem) {
+            continue;
+        }
 
         if (isValidTargetBuff(buffItem.e1dbuff, buffItem.e1condition, buffItem.e1conditionType)) {
             let data = [];
@@ -892,76 +918,58 @@ function getHtmlInfo() {
     iCharInfo.awareness = document.getElementById('awarenessChoice').innerHTML;
     iCharInfo.weapon = document.getElementById('weaponChoice').innerHTML;
     iCharInfo.cardSet = document.getElementById('cardChoice').innerHTML;
-    iCharInfo.navAtk = parseFloat(document.getElementById('navAtk').value);
+    iCharInfo.navAtk = parseFloat(document.getElementById('naviAtk').value);
 
     iCharInfo.atkFlat = 0 + parseFloat(document.getElementById('spaceAtk').value);
     iCharInfo.atkPerc = 0 + parseFloat(document.getElementById('spaceAtkPercent').value);
     iCharInfo.dmgMult = 0 + parseFloat(document.getElementById('spaceDmgMult').value);
     iCharInfo.critRate = 0 + parseFloat(document.getElementById('spaceCritRate').value);
     iCharInfo.critMult = 0 + parseFloat(document.getElementById('spaceCritMult').value);
-    iCharInfo.pierceRate = 0 + parseFloat(document.getElementById('spacePierce').value);
-
-    iCharInfo.atkFlat += parseFloat(document.getElementById('sunAtk').value);
-    iCharInfo.atkPerc += parseFloat(document.getElementById('sunAtkPercent').value);
-    iCharInfo.dmgMult += parseFloat(document.getElementById('sunDmgMult').value);
-    iCharInfo.critRate += parseFloat(document.getElementById('sunCritRate').value);
-    iCharInfo.critMult += parseFloat(document.getElementById('sunCritMult').value);
-    iCharInfo.pierceRate += parseFloat(document.getElementById('sunPierce').value);
-
-    iCharInfo.atkFlat += parseFloat(document.getElementById('moonAtk').value);
-    iCharInfo.atkPerc += parseFloat(document.getElementById('moonAtkPercent').value);
-    iCharInfo.dmgMult += parseFloat(document.getElementById('moonDmgMult').value);
-    iCharInfo.critRate += parseFloat(document.getElementById('moonCritRate').value);
-    iCharInfo.critMult += parseFloat(document.getElementById('moonCritMult').value);
-    iCharInfo.pierceRate += parseFloat(document.getElementById('moonPierce').value);
-
-    iCharInfo.atkFlat += parseFloat(document.getElementById('starAtk').value);
-    iCharInfo.atkPerc += parseFloat(document.getElementById('starAtkPercent').value);
-    iCharInfo.dmgMult += parseFloat(document.getElementById('starDmgMult').value);
-    iCharInfo.critRate += parseFloat(document.getElementById('starCritRate').value);
-    iCharInfo.critMult += parseFloat(document.getElementById('starCritMult').value);
-    iCharInfo.pierceRate += parseFloat(document.getElementById('starPierce').value);
-
-    iCharInfo.atkFlat += parseFloat(document.getElementById('skyAtk').value);
-    iCharInfo.atkPerc += parseFloat(document.getElementById('skyAtkPercent').value);
-    iCharInfo.dmgMult += parseFloat(document.getElementById('skyDmgMult').value);
-    iCharInfo.critRate += parseFloat(document.getElementById('skyCritRate').value);
-    iCharInfo.critMult += parseFloat(document.getElementById('skyCritMult').value);
-    iCharInfo.pierceRate += parseFloat(document.getElementById('skyPierce').value);
+    iCharInfo.pierceRate = 0 + parseFloat(document.getElementById('spacePierce').value);  
 
     iCharInfo.weakness = document.getElementById('enemyElemWeakness').innerHTML;
     iCharInfo.includeCrit = document.getElementById('critChoice').innerHTML;
     iCharInfo.bossName = document.getElementById('bossName').innerHTML;
+    iCharInfo.finalBonus = parseFloat(document.getElementById('finalBonus').value);
 
     iCharInfo.skillLevel = convertSkillLevelTextToValue(document.getElementById('skillLevelChoice').innerHTML);
     iCharInfo.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('reforgeChoice').innerHTML)
 
-    htmlProcessDefDebuff('wDBuffOutputDiv');
-/*    var ulElement = document.getElementById('wDBuffOutputDiv');
-    el = ulElement.firstElementChild;
-    while (el) {
-        processDefDebuff(el);
-        el = el.nextElementSibling;
-    }*/
 
-    ulElement = document.getElementById('atkOutputDiv');
-    el = ulElement.firstElementChild;
-    while (el) {
-        processAtkBuff(el);
-        el = el.nextElementSibling;
-    }
+    let party = [];
+    iCharInfo.charName = document.getElementById('charName').innerHTML;
+    iCharInfo.skill = document.getElementById('skillChoice').innerHTML; // Will also filter out support skill so only DPS skill is listed
+    iCharInfo.awareness = document.getElementById('awarenessChoice').innerHTML;
+    iCharInfo.weapon = document.getElementById('weaponChoice').innerHTML;
+    iCharInfo.cardSet = document.getElementById('cardChoice').innerHTML;
+    iCharInfo.navAtk = parseFloat(document.getElementById('naviAtk').value);
+
+    iCharInfo.atkFlat = 0 + parseFloat(document.getElementById('spaceAtk').value);
+    iCharInfo.atkPerc = 0 + parseFloat(document.getElementById('spaceAtkPercent').value);
+    iCharInfo.dmgMult = 0 + parseFloat(document.getElementById('spaceDmgMult').value);
+    iCharInfo.critRate = 0 + parseFloat(document.getElementById('spaceCritRate').value);
+    iCharInfo.critMult = 0 + parseFloat(document.getElementById('spaceCritMult').value);
+    iCharInfo.pierceRate = 0 + parseFloat(document.getElementById('spacePierce').value);  
+    iCharInfo.skillLevel = convertSkillLevelTextToValue(document.getElementById('skillLevelChoice').innerHTML);
+    iCharInfo.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('reforgeChoice').innerHTML)
+
+    
+
+
+
+
+    htmlProcessDefDebuff('wDBuffOutputDiv');
+    htmlProcessDefDebuff('p1DBuffOutputDiv');
+    htmlProcessDefDebuff('p2DBuffOutputDiv');
+    htmlProcessDefDebuff('naviDBuffOutputDiv');
+    htmlProcessDefDebuff('dpsDBOutputDiv');
 
     // May need to go down to just DefReductionList/DmgMult and Atk/DmgMult list together since some buff does both...
     // Probably have a buff list and a debuff list... that makes the most sense I think...
     // I don't think anything does both buff and debuff...
     // I have to see how I enter info in the database.. I guess
 
-    ulElement = document.getElementById('dmgOutputDiv');
-    el = ulElement.firstElementChild;
-    while (el) {
-        processDmgBuff(el);
-        el = el.nextElementSibling;
-    }
+    console.log(htmlDBuffList);
 }
 
 // Add buff names the user chose to a list so we can add to our processing debuff list later
@@ -974,15 +982,129 @@ function htmlProcessDefDebuff(id) {
         el = el.nextElementSibling;
     }
 
-    htmlDBuffList = [...new Set(list)];
-//    console.log(htmlDBuffList);
+    const newArray = htmlDBuffList.concat(list);
+
+    htmlDBuffList = [...new Set(newArray)];
+}
+
+function FillWonderKnife(event) {
+    var divSibling = event.target.parentNode.children[1];
+    var id = divSibling.id;
+
+    let dropdown = document.getElementById(id);
+    dropdown.textContent = '';
+
+    readWonderDatabase();
+
+    outputNameCommon(dropdown, wonderKnifeList);
+
+    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
+
+    x.className = x.className.replace(" w3-hide", "");
 }
 
 function fillHtmlDBuffList(event) {
-    // should add all the debuff/buff to 1 big list before I send to this...
+    //    fillListWithOutputPanel(event, htmlWonderDbList);
 
-    appendToList(event, htmlDbList);
+    const targetElement = event.target;
+    var divSibling = targetElement.parentNode.children[1];
+
+    let dropdown = document.getElementById(divSibling.id);
+    var firstChild = dropdown.children[0]; // Save the search Filter
+
+    if (firstChild.nextElementSibling) {
+        return;
+    }
+
+    dropdown.textContent = '';
+    dropdown.appendChild(firstChild); //add back the search field
+    var outputDiv = "", listDiv = "", debuffArray = [];
+
+    switch (divSibling.id) {
+        case "wDBuffListDiv":
+            outputDiv = "wDBuffOutputDiv";
+            listDiv = "wDBuffListDiv";
+            document.getElementById("userFilterwDBuffList").value = '';
+            debuffArray = htmlWonderDbList; // already filled during database read
+            break;
+        case "dpsDBuffListDiv":
+            outputDiv = "dpsDBOutputDiv";
+            listDiv = "dpsDBuffListDiv";
+            document.getElementById("userFilterDpsDbufflist").value = '';
+            debuffArray = getSkillNameFromDatabase(document.getElementById('charName').innerHTML, DPS_ROLE, outputDiv);
+            break;
+        case "p1DBuffListDiv":
+            outputDiv = "p1DBuffOutputDiv";
+            listDiv = "p1DBuffListDiv";
+            document.getElementById("userFilterP1DBuffList").value = '';
+            debuffArray = getSkillNameFromDatabase(document.getElementById('p1charName').innerHTML, SUPPORT_ROLE, outputDiv);
+            break;
+        case "p2DBuffListDiv":
+            outputDiv = "p2DBuffOutputDiv";
+            listDiv = "p2DBuffListDiv";
+            document.getElementById("userFilterP2DBuffList").value = '';
+            debuffArray = getSkillNameFromDatabase(document.getElementById('p2charName').innerHTML, SUPPORT_ROLE, outputDiv);
+            break;
+        case "naviDBuffListDiv":
+            outputDiv = "naviDBuffOutputDiv";
+            listDiv = "naviDBuffListDiv";
+            document.getElementById("userFilternaviDBuffList").value = '';
+            debuffArray = getSkillNameFromDatabase(document.getElementById('naviName').innerHTML, NAVI_ROLE, outputDiv);
+            break;
+        default:
+            console.log("fillHtmlDBuffList::Cannot find html element");
+            outputDiv = "wDBuffOutputDiv";
+            listDiv = "wDBuffListDiv";
+            document.getElementById("userFilterwDBuffList").value = '';
+            break;
+    }
+
+    if (debuffArray.length != 0) {
+        outputList(dropdown, debuffArray, outputDiv, listDiv);
+    }
+
+    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
+    x.className = x.className.replace(" w3-hide", "");
 }
+
+function getSkillNameFromDatabase(charName, role, outputDiv) {
+    let list = [];
+    if (role == DPS_ROLE) {
+        // only add passive, buff and support
+        // if a dps skill hits and gives a self-buff that last more than just that one dps turn
+        // it will be record as a buff in the skill database. For example, if Surf 'n' Shine gives
+        // Summer Hype state that will increase crit by 9.8 and 29.3, Summer Hype will be a buff
+        // that can be used to apply to S1 and S2 also
+        for (const skill of skillList) {
+            if (skill.charName == charName) {
+                if (skill.skillPos == "Buff") {
+                    list.push(skill.name);
+                }
+                else if (skill.skillPos == "Passive") {
+                    addItemToListNoButton(skill.name, outputDiv);
+                }
+            }
+        }
+    }
+    else {
+        // Other people other than the dps, just add all the passive and support skill
+        for (const skill of skillList) {
+            if ((skill.charName == charName) &&
+                ((skill.skillType == "Passive") || (skill.skillType == "Support"))) {
+
+                if (skill.skillPos == "Passive") {
+                    addItemToListNoButton(skill.name, outputDiv);
+                }
+                else {
+                    list.push(skill.name);
+                }
+            }
+        }
+    }
+    return list;
+}
+
+
 
 function getAtkValueFromAwareness(charStat) {
     switch (iCharInfo.awareness) {
@@ -1122,7 +1244,10 @@ function convertEnemyNameToAdditionaDefenseValue(text) {
 }
 
 function fillCharacter(event) {
-    let dropdown = document.getElementById("charListDiv");
+    var divSibling = event.target.parentNode.children[1];
+    var id = divSibling.id;
+
+    let dropdown = document.getElementById(id);
     var firstChild = dropdown.children[0];  // Save the search Filter
 
     dropdown.textContent = '';
@@ -1130,15 +1255,39 @@ function fillCharacter(event) {
 
     readCharStatDatabase();
 
-    // I'm not going to calculate trash DPS of your support/Wonder
-    outputCharName(event, dropdown, charStatList, DPS_ROLE);
+    switch (id) {
+        case "charListDiv":
+            // I'm not going to calculate trash DPS of your support/Wonder
+            outputCharName(event, dropdown, charStatList, DPS_ROLE);
+            document.getElementById("userFilterCharlist").value = '';
+            resetList("dpsDBOutputDiv", false);
+            resetList("dpsDBuffListDiv", true);
+            break;
+        case "p1charListDiv":
+            outputCharName(event, dropdown, charStatList, SUPPORT_ROLE);
+            document.getElementById("userFilterP1Charlist").value = '';
+            resetList("p1DBuffOutputDiv", false);
+            resetList("p1DBuffListDiv", true);
+            break;
+        case "p2charListDiv":
+            outputCharName(event, dropdown, charStatList, SUPPORT_ROLE);
+            document.getElementById("userFilterP2Charlist").value = '';
+            resetList("p2DBuffOutputDiv", false);
+            resetList("p2DBuffListDiv", true);
+            break;
+        case "naviListDiv":
+            outputCharName(event, dropdown, charStatList, NAVI_ROLE);
+            document.getElementById("userFilterNavilist").value = '';
+            resetList("naviDBuffOutputDiv", false);
+            resetList("naviDBuffListDiv", true);
+            break;
+        default:
+            break;
+    }
 
-    const targetElement = dropdown;
-    var x = targetElement.parentNode.firstElementChild.nextElementSibling;
+    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
 
     x.className = x.className.replace(" w3-hide", "");
-
-    document.getElementById("userFilterCharlist").value = '';
 }
 
 function outputCharName(event, dropdown, list, role) {
@@ -1167,7 +1316,25 @@ function fillBoss(event) {
 
 function fillCard(event) {
     readCardDatabase();
-    fillHtmlCommon("cardListDiv", "userFilterCardlist", cardList); 
+    var divSibling = event.target.parentNode.children[1];
+
+    switch (divSibling.id) {
+        case "cardListDiv":
+            fillHtmlCommon("cardListDiv", "userFilterCardlist", cardList); 
+            break;
+        case "p1cardListDiv":
+            fillHtmlCommon("p1cardListDiv", "userFilterP1Cardlist", cardList);
+            break;
+        case "p2cardListDiv":
+            fillHtmlCommon("p2cardListDiv", "userFilterP2Cardlist", cardList);
+            break;
+        case "navicardListDiv":
+            fillHtmlCommon("navicardListDiv", "userFilterNaviCardlist", cardList);
+            break;
+        default:
+            console.log("fillCard::couldn't find matching html");
+            break;
+    } 
 }
 
 function filterFunctionBoss() {
@@ -1543,7 +1710,13 @@ function readWonderDatabase() {
             data.e6conditionType = row[i][j++];
 
             wonderList.push(data);
-            htmlDbList.push(data.name);
+
+            if (data.type != "Weapon") {
+                htmlWonderDbList.push(data.name);
+            }
+            else {
+                wonderKnifeList.push(data);
+            }
         }
     }
 

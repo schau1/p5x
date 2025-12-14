@@ -197,7 +197,7 @@ function outputNameCommon(dropdown, list) {
 function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
     let dropdown = document.getElementById(htmlDivId);
     var firstChild = dropdown.children[0];  // Save the search Filter
-
+    
     dropdown.textContent = '';
     dropdown.appendChild(firstChild);   //add back the search field
 
@@ -211,13 +211,14 @@ function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
     document.getElementById(filterHmtlId).value = '';
 }
 
-function appendToList(event, debuffArray) {
+function fillListWithOutputPanel(event, debuffArray) {
     const targetElement = event.target;
     var divSibling = targetElement.parentNode.children[1];
 
     let dropdown = document.getElementById(divSibling.id);
     var firstChild = dropdown.children[0]; // Save the search Filter
 
+    // If the list is already fill, just return
     if (firstChild.nextElementSibling) {
         return;
     }
@@ -241,15 +242,25 @@ function appendToList(event, debuffArray) {
             listDiv = "wDBuffListDiv";
             document.getElementById("userFilterwDBuffList").value = '';
             break;
-        case "atkListDiv":
-            outputDiv = "atkOutputDiv";
-            listDiv = "atkListDiv";
-            document.getElementById("userFilterAtklist").value = '';
+        case "dpsDBuffListDiv":
+            outputDiv = "dpsDBOutputDiv";
+            listDiv = "dpsDBuffListDiv";
+            document.getElementById("userFilterDpsDbufflist").value = '';
             break;
-        case "dmgListDiv":
-            outputDiv = "dmgOutputDiv";
-            listDiv = "dmgListDiv";
-            document.getElementById("userFilterDmgList").value = '';
+        case "p1DBuffListDiv":
+            outputDiv = "p1DBuffOutputDiv";
+            listDiv = "p1DBuffListDiv";
+            document.getElementById("userFilterP1DBuffList").value = '';
+            break;
+        case "p2DBuffListDiv":
+            outputDiv = "p2DBuffOutputDiv";
+            listDiv = "p2DBuffListDiv";
+            document.getElementById("userFilterP2DBuffList").value = '';
+            break;
+        case "naviDBuffListDiv":
+            outputDiv = "naviDBuffOutputDiv";
+            listDiv = "naviDBuffListDiv";
+            document.getElementById("userFilternaviDBuffList").value = '';
             break;
         default:
             console.log("Error. Defaulting to wDBuffListDiv");
@@ -265,68 +276,17 @@ function appendToList(event, debuffArray) {
     x.className = x.className.replace(" w3-hide", "");
 }
 
-function fillList(event) {
-    const targetElement = event.target;
-    var divSibling = targetElement.parentNode.children[1];
-
-    let dropdown = document.getElementById(divSibling.id);
-    var firstChild = dropdown.children[0]; // Save the search Filter
-
-    dropdown.textContent = '';
-    dropdown.appendChild(firstChild); //add back the search field
-
-/*    var item = document.createElement("a");
-    item.setAttribute('class', 'w3-bar-item w3-button');
-    item.innerHTML = "Reset";
-    item.onclick = function () {
-        resetList(targetElement.parentNode.parentNode.children[1].firstElementChild.id);
-    };
-
-    dropdown.appendChild(item);*/
-
-    var debuffArray = [];
-    var outputDiv = "", listDiv = "";
-
-    switch (divSibling.id) {
-        case "wDBuffListDiv":
-            debuffArray = ["yuki", "joker"];
-            outputDiv = "wDBuffOutputDiv";
-            listDiv = "wDBuffListDiv";
-            document.getElementById("userFilterwDBuffList").value = '';
-            break;
-        case "atkListDiv":
-            debuffArray = ["makoto", "yu"];
-            outputDiv = "atkOutputDiv";
-            listDiv = "atkListDiv";
-            document.getElementById("userFilterAtklist").value = '';
-            break;
-        case "dmgListDiv":
-            debuffArray = ["p3protag", "p4protag"];
-            outputDiv = "dmgOutputDiv";
-            listDiv = "dmgListDiv";
-            document.getElementById("userFilterDmgList").value = '';
-            break;
-        default:
-            console.log("Error. Defaulting to wDBuffListDiv");
-            debuffArray = ["cat", "dog"];
-            outputDiv = "wDBuffOutputDiv";
-            listDiv = "wDBuffListDiv";
-            document.getElementById("userFilterwDBuffList").value = '';
-            break;
-    }
-
-    outputList(dropdown, debuffArray, outputDiv, listDiv);
-
-    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
-    x.className = x.className.replace(" w3-hide", "");
-}
-
-function resetList(listName) {
+function resetList(listName, saveFirstChild) {
     var divParent = document.getElementById(listName);
+    var firstChild = divParent.children[0]; // Save the search Filter   
+
     while (divParent.firstChild) {
         divParent.removeChild(divParent.lastChild);
     }
 
+    if (saveFirstChild) {
+        divParent.appendChild(firstChild); //add back the search field
+    }
 }
 
 function outputList(dropdown, itemArray, outputDiv, listDiv) {
@@ -342,11 +302,43 @@ function outputList(dropdown, itemArray, outputDiv, listDiv) {
     }
 }
 
+function addItemToListNoButton(name, outputDiv) {
+    var output = document.getElementById(outputDiv);
+    var item = document.createElement("li");
+    var el = output.firstChild;
+    var add = true;
+
+    while (el) {
+        if (el.innerHTML == name) {
+            add = false;
+            break;
+        }
+        el = el.nextSibling;
+    }
+    if (add) {
+        item.setAttribute('class', 'w3-block w3-left-align');
+        item.innerHTML = name;
+
+        output.appendChild(item);
+    }
+}
+
 function addItemToList(cell, outputDiv, listDiv) {
     var output = document.getElementById(outputDiv);
-    var el = document.getElementById(listDiv).firstChild;
+    var el = output.firstChild;
+    var add = true;
 
-/*    while (el) {
+    while (el) {
+        if (el.innerHTML == cell.innerHTML) {
+            add = false;
+            break;
+        }
+        el = el.nextSibling;
+    }
+
+/*  var el = document.getElementById(listDiv).firstChild;
+
+    while (el) {
         if (el.innerHTML == cell.innerHTML) {
             document.getElementById(listDiv).removeChild(el);
             break;
@@ -354,15 +346,16 @@ function addItemToList(cell, outputDiv, listDiv) {
         el = el.nextSibling;
     }
 */
+    if (add) {
+        var item = document.createElement("li");
+        item.setAttribute('class', 'w3-block w3-left-align');
+        item.innerHTML = cell.innerHTML;
+        item.onclick = function () {
+            removeItemFromList(this, outputDiv);
+        };
 
-    var item = document.createElement("li");
-    item.setAttribute('class', 'w3-block w3-left-align');
-    item.innerHTML = cell.innerHTML;
-    item.onclick = function () {
-        removeItemFromList(this, outputDiv);
-    };
-
-    output.appendChild(item);
+        output.appendChild(item);
+    }
 }
 
 function removeItemFromList(cell, name) {

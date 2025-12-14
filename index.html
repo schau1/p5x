@@ -105,7 +105,7 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="cardChoice" onmouseover="fillCard(event)">Hope and Fixation</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="cardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="cardListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCardlist" onkeyup="filterFunctionCard()">
 						</div>
 					</div>
@@ -136,8 +136,8 @@
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="spacePierce">
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillList(event)" id="dpsDBuffList">Buff/Debuff List</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="dpsDBuffListDiv">
+						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="dpsDBuffList">Buff/Debuff List</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="dpsDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterDpsDbufflist" onkeyup="filterFunctionDpsDBuff()">
 						</div>
 					</div>
@@ -151,10 +151,8 @@
 					<h3 class="w3-green w3-center">Wonder</h3>
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="wweaponChoice" onmouseover="show(event)">5*</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
+						<button class="w3-button w3-white w3-block w3-left-align" id="wweaponChoice" onmouseover="FillWonderKnife(event)">Ex Machina</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="wonderKnifeDiv">
 						</div>
 					</div>
 
@@ -174,7 +172,7 @@
 
 					<div class="w3-dropdown-hover w3-block">
 						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="wDBuffList">Debuff/Buff List</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="wDBuffListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="wDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterwDBuffList" onkeyup="filterFunctionwDBuff()">
 						</div>
 					</div>
@@ -230,7 +228,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Character
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1charName" onmouseover="fillP1Character(event)">Wind-Vast</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p1charName" onmouseover="fillCharacter(event)">Wind-Vast</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1charListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1Charlist" onkeyup="filterFunctionP1Name()">
 						</div>
@@ -298,14 +296,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1cardChoice" onmouseover="fillCard(event)">Departure and Control</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1cardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1cardListDiv" style="width: 100%;">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1Cardlist" onkeyup="filterFunctionCard()">
 						</div>
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillList(event)" id="p1DBuffList">Buff/Debuff List</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1DBuffListDiv">
+						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="p1DBuffList">Buff/Debuff List</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p1DBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1DBuffList" onkeyup="filterFunctionP1DBuff()">
 						</div>
 					</div>
@@ -319,7 +317,7 @@
 					<h3 class="w3-green w3-center">Party Member</h3>
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Character
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2charName" onmouseover="fillP1Character(event)">Howler</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p2charName" onmouseover="fillCharacter(event)">Howler</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2charListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2Charlist" onkeyup="filterFunctionP1Name()">
 						</div>
@@ -387,14 +385,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2cardChoice" onmouseover="fillCard(event)">Depature and Control</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2cardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p2cardListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2Cardlist" onkeyup="filterFunctionCard()">
 						</div>
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillList(event)" id="p2DBuffList">Buff/Debuff List</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2DBuffListDiv">
+						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="p2DBuffList">Buff/Debuff List</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p2DBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2DBuffList" onkeyup="filterFunctionP2DBuff()">
 						</div>
 					</div>
@@ -410,7 +408,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Character
-						<button class="w3-button w3-white w3-block w3-left-align" id="naviName" onmouseover="fillNaviCharacter(event)">Ange</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="naviName" onmouseover="fillCharacter(event)">Ange</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="naviListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterNavilist" onkeyup="filterFunctionNaviName()">
 						</div>
@@ -467,14 +465,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="navicardChoice" onmouseover="fillCard(event)">Hope and Labor</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="navicardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="navicardListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterNaviCardlist" onkeyup="filterFunctionCard()">
 						</div>
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillList(event)" id="naviDbList">Buff/Debuff List</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="naviDBuffListDiv">
+						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="naviDbList">Buff/Debuff List</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="naviDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilternaviDBuffList" onkeyup="filterFunctionNaviDBuff()">
 						</div>
 					</div>
@@ -489,9 +487,6 @@
 
 					<label>ATK</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="359" id="naviAtk">
-
-					<label>ATK %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviAtkPercent">
 
 					<label>Damage Mult %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviDmgMult">
