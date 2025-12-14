@@ -11,7 +11,7 @@
         }
 
         p {
-            font-size: 1.5em; /* 1 * 16 = 16px */
+            font-size: 1.2em; /* 1 * 16 = 16px */
         }
 
         #phyButton {
@@ -25,8 +25,11 @@
 	<h1 class="w3-margin w3-center">P5X Damage Calculator</h1>
 
 	<div class="w3-margin">
-		<h3><b>Instruction:</b></h3><p>If you're using this, I assume you care enough to have the rotations down correctly. For example, Makoto should always have 4 moon stacks before he uses S3, so the calculator assumes he has max stacks. If you're not sure, his rotation is S1->S3->S1->S3, with someone buffing him every single turn. 
-		This tool only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). In the future, I may expand it.</p>
+		<h3><b>Instruction:</b></h3><p>If you're using this, I assume you care enough to have the rotations down correctly. For example, Makoto should always have 4 moon stacks before he uses S3, so the calculator assumes he has max stacks. If you're not sure, his rotation is S1->S3->S1->S3, with someone buffing him every single turn.</p>
+									<p>This tool also assumes you have necessary stats for your party members to max out any skill that has a max of % stat up to X amount. For example, the description for Leon's Ultima Boosters is "Increase 1 ally's Attack by 19.5% for 2 turns. For each stack of Power of Friendship the target has, increase Attack by 20% of Kamiyama's Attack more (up to 1516.7)." 
+		The tool assumes that you hit the max of 1516.7.</p>
+		<p>The final calculation may also be slightly off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, and of course bugs. Use this as something to compare builds with the same baseline instead of as an absolute calculator.</p>
+		<p>This tool only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). In the future, I may expand it.</p>
 	</div>
 
 	<div class="w3-margin">
@@ -118,22 +121,19 @@
 					<h3 class="w3-green w3-center w3-tooltip">Card Summary<span class="w3-text">(<em>Total of all cards</em>)</span></h3>
 
 					<label>ATK</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="359" id="spaceAtk">
-
-					<label>ATK %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="spaceAtkPercent">
+					<input class="w3-input w3-margin-bottom" type="number" value="1530" id="spaceAtk">
 
 					<label>Damage Mult %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="spaceDmgMult">
+					<input class="w3-input w3-margin-bottom" type="number" value="18.4" id="spaceDmgMult">
 
 					<label>Crit Rate %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="spaceCritRate">
+					<input class="w3-input w3-margin-bottom" type="number" value="27" id="spaceCritRate">
 
 					<label>Crit Damage Mult %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="spaceCritMult">
+					<input class="w3-input w3-margin-bottom" type="number" value="30" id="spaceCritMult">
 
 					<label>Pierce Rate %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="0" id="spacePierce">
+					<input class="w3-input w3-margin-bottom" type="number" value="6" id="spacePierce">
 
 					<div class="w3-dropdown-hover w3-block">
 						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="dpsDBuffList">Buff/Debuff List</button>
@@ -249,17 +249,6 @@
 					</div>
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Skill
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1skillChoice" onmouseover="show(event)">S3</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Highlight/Theurgy</a>
-						</div>
-					</div>
-
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1skillLevelChoice" onmouseover="show(event)">Level 10</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
@@ -334,17 +323,6 @@
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
-						</div>
-					</div>
-
-					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
-						Skill
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2skillChoice" onmouseover="show(event)">S3</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">S3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Highlight/Theurgy</a>
 						</div>
 					</div>
 
@@ -486,7 +464,7 @@
 					</div>
 
 					<label>ATK</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="359" id="naviAtk">
+					<input class="w3-input w3-margin-bottom" type="number" value="4000" id="naviAtk">
 
 					<label>Damage Mult %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviDmgMult">
@@ -559,7 +537,7 @@
 				</div>
 			</div>
 
-			<div class="w3-panel w3-center w3-margin w3-blue" id="result">
+			<div class="w3-panel w3-large w3-margin w3-sand" id="result">
 			</div>
 
 			<footer>
