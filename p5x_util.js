@@ -316,7 +316,7 @@ function addItemToListNoButton(name, outputDiv) {
         el = el.nextSibling;
     }
     if (add) {
-        item.setAttribute('class', 'w3-block w3-left-align');
+        item.setAttribute('class', 'w3-block w3-left-align w3-light-gray');
         item.innerHTML = name;
 
         output.appendChild(item);
