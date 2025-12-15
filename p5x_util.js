@@ -54,6 +54,7 @@ function loadFile(filePath) {
     if (xmlhttp.status == 200) {
         result = xmlhttp.responseText;
     }
+
     return result;
 }
 
@@ -194,12 +195,16 @@ function outputNameCommon(dropdown, list) {
     }
 }
 
-function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
+function fillHtmlCommon(htmlDivId, filterHmtlId, list, addSearchField = true) {
     let dropdown = document.getElementById(htmlDivId);
     var firstChild = dropdown.children[0];  // Save the search Filter
     
     dropdown.textContent = '';
-    dropdown.appendChild(firstChild);   //add back the search field
+
+    if (addSearchField) {
+        dropdown.appendChild(firstChild);   //add back the search field
+        document.getElementById(filterHmtlId).value = '';
+    }
 
     outputNameCommon(dropdown, list);
 
@@ -207,8 +212,6 @@ function fillHtmlCommon(htmlDivId, filterHmtlId, list) {
     var x = targetElement.parentNode.firstElementChild.nextElementSibling;
 
     x.className = x.className.replace(" w3-hide", "");
-
-    document.getElementById(filterHmtlId).value = '';
 }
 
 function fillListWithOutputPanel(event, debuffArray) {

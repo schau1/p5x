@@ -44,12 +44,12 @@ const ENEMY_DEFENSE_ADDITIONAL_DEFAULT = 158.4; // doesn't have it - use NTMR va
 const FINAL_DMG_BONUS = 1.40;  // In certain gimmicks or boss battles, there are forms where final damage increases or decreases based on conditions. 
 const OTHER_DMG_BONUS = 1; // In certain gimmicks or boss battles, there are forms where final damage increases or decreases based on conditions. 
 
-const CHAR_STAT_FILE_NAME = "P5X database - stat.csv";
-const CARD_FILE_NAME = "P5X database - card.csv";
-const SKILL_FILE_NAME = "P5X database - skill.csv";
-const WEAPON_FILE_NAME = "P5X database - weapon.csv";
-const WONDER_FILE_NAME = "P5X database - wonder.csv";
-const BOSS_FILE_NAME = "P5X database - boss.csv";
+const CHAR_STAT_FILE_NAME = encodeURIComponent("P5X database - stat.csv");
+const CARD_FILE_NAME = encodeURIComponent("P5X database - card.csv");
+const SKILL_FILE_NAME = encodeURIComponent("P5X database - skill.csv");
+const WEAPON_FILE_NAME = encodeURIComponent("P5X database - weapon.csv");
+const WONDER_FILE_NAME = encodeURIComponent("P5X database - wonder.csv");
+const BOSS_FILE_NAME = encodeURIComponent("P5X database - boss.csv");
 const FILE_NUM_SKIP_LINE = 2;   // skip the first 2 lines of the csv file
 
 const NAV_BUFF_PERC = 0.20;     // Used for now. Once I do party member, I can remove this and get the correct value
@@ -144,7 +144,7 @@ function runCalculation() {
     addCardToBuffList(iCharInfo.cardSet, iCharInfo.charName, DPS_ROLE);
 
     // Add Wonder weapon
-//    addWeaponBuffToBuffList(iCharInfo.charName, iCharInfo.weapon, iCharInfo.reforgeLevel, DPS_ROLE);
+    addWonderWeaponToBuffList(document.getElementById('wweaponChoice').innerHTML, convertReforgeLevelTextToValue(document.getElementById('wreforgeChoice').innerHTML));
 
     // Add Weapons from Party Members - Not Wonder... I'll think about Wonder later...
     for (const party of partyMembers) {
@@ -152,8 +152,6 @@ function runCalculation() {
         addWeaponBuffToBuffList(party.charName, party.weapon, party.reforgeLevel, SUPPORT_ROLE);
         addCardToBuffList(party.card, party.charName, SUPPORT_ROLE);
     }
-
-
 
     // Get skills and add buffs from the user selected skill (S1/S3) to buff list
     var skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName);
@@ -773,7 +771,7 @@ function addSelfPassiveSkillToBuffList(charInfo) {
         data.buffName = "SEES";
         data.charName = charInfo.charName;
         data.value = 0;
-        data.dbuff = "";
+        data.dbuff = "SEES";
         data.condition = "";
         data.conditionType = "";
 
@@ -950,6 +948,114 @@ function addWeaponBuffToBuffList(charName, rarity, reforge, role) {
         }
     }    
 }
+
+function addWonderWeaponToBuffList(name, reforge) {
+    var weapon = wonderList.find(item => item.name == name);
+
+    if (weapon) {
+        if (isValidWeaponBuff(weapon.e1dbuff, weapon.e1condition, weapon.e1conditionType, "", SUPPORT_ROLE)) {
+            let data = [];
+            data.buffName = name;    // where the buff is from
+            data.charName = "Wonder";
+            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e1r0, weapon.e1r1, weapon.e1r2, weapon.e1r3, weapon.e1r4, weapon.e1r5, weapon.e1r6);
+
+            data.dbuff = weapon.e1dbuff;
+            data.condition = weapon.e1condition;
+            data.conditionType = weapon.e1conditionType;
+
+            buffList.push(data);
+        }
+
+        if (isValidWeaponBuff(weapon.e2dbuff, weapon.e2condition, weapon.e2conditionType, "", SUPPORT_ROLE)) {
+            let data = [];
+            data.buffName = name;    // where the buff is from
+            data.charName = "Wonder";
+            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e2r0, weapon.e2r1, weapon.e2r2, weapon.e2r3, weapon.e2r4, weapon.e2r5, weapon.e2r6);
+
+            data.dbuff = weapon.e2dbuff;
+            data.condition = weapon.e2condition;
+            data.conditionType = weapon.e2conditionType;
+
+            buffList.push(data);
+        }
+
+        if (isValidWeaponBuff(weapon.e3dbuff, weapon.e3condition, weapon.e3conditionType, "", SUPPORT_ROLE)) {
+            let data = [];
+            data.buffName = name;    // where the buff is from
+            data.charName = "Wonder";
+            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e3r0, weapon.e3r1, weapon.e3r2, weapon.e3r3, weapon.e3r4, weapon.e3r5, weapon.e3r6);
+
+            data.dbuff = weapon.e3dbuff;
+            data.condition = weapon.e3condition;
+            data.conditionType = weapon.e3conditionType;
+
+            buffList.push(data);
+        }
+
+        if (isValidWeaponBuff(weapon.e4dbuff, weapon.e4condition, weapon.e4conditionType, "", SUPPORT_ROLE)) {
+            let data = [];
+            data.buffName = name;    // where the buff is from
+            data.charName = "Wonder";
+            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e4r0, weapon.e4r1, weapon.e4r2, weapon.e4r3, weapon.e4r4, weapon.e4r5, weapon.e4r6);
+
+            data.dbuff = weapon.e4dbuff;
+            data.condition = weapon.e4condition;
+            data.conditionType = weapon.e4conditionType;
+
+            buffList.push(data);
+        }
+
+        if (isValidWeaponBuff(weapon.e5dbuff, weapon.e5condition, weapon.e5conditionType, "", SUPPORT_ROLE)) {
+            let data = [];
+            data.buffName = name;    // where the buff is from
+            data.charName = "Wonder";
+            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e5r0, weapon.e5r1, weapon.e5r2, weapon.e5r3, weapon.e5r4, weapon.e5r5, weapon.e5r6);
+
+            data.dbuff = weapon.e5dbuff;
+            data.condition = weapon.e5condition;
+            data.conditionType = weapon.e5conditionType;
+
+            buffList.push(data);
+        }
+
+        if (isValidWeaponBuff(weapon.e6dbuff, weapon.e6condition, weapon.e6conditionType, "", SUPPORT_ROLE)) {
+            let data = [];
+            data.buffName = name;    // where the buff is from
+            data.charName = "Wonder";
+            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e6r0, weapon.e6r1, weapon.e6r2, weapon.e6r3, weapon.e6r4, weapon.e6r5, weapon.e6r6);
+
+            data.dbuff = weapon.e6dbuff;
+            data.condition = weapon.e6condition;
+            data.conditionType = weapon.e6conditionType;
+
+            buffList.push(data);
+        }
+    }
+    else { 
+        console.log("addWonderWeaponToBuffList::Couldn't find Wonder's Knife: " + name);
+    }
+}
+function getWonderWeaponStatBasedOnReforge(reforgeLevel, r0, r1, r2, r3, r4, r5, r6) {
+    switch (reforgeLevel) {
+        case 0:
+            return parseFloat(r0.toFixed(2));
+        case 1:
+            return parseFloat(r1.toFixed(2));
+        case 2:
+            return parseFloat(r2.toFixed(2));
+        case 3:
+            return parseFloat(r3.toFixed(2));
+        case 4:
+            return parseFloat(r4.toFixed(2));
+        case 5:
+            return parseFloat(r5.toFixed(2));
+        case 6:
+            return parseFloat(r6.toFixed(2));
+        default:
+            return parseFloat(r0.toFixed(2));    
+    }
+}
+
 function isValidWeaponBuff(dbuff, condition, conditionType, skill, role) {
     // check for the condition
     if (dbuff != "") {
@@ -1000,7 +1106,7 @@ function displayResult(dmgPerHit, dmgPerHit2) {
     item = document.createElement("ul");
     item.setAttribute('class', "w3-ul w3-left-align w3-large");
     var li = document.createElement("li");
-    li.innerHTML = "Stats (applied to this skill): ";
+    li.innerHTML = "Stats (applied ONLY while using this skill): ";
     item.appendChild(li);
     li = document.createElement("li");
     li.innerHTML = "Akt: " + iCharInfo.final_atk.toFixed(2);
@@ -1442,7 +1548,7 @@ function outputCharName(event, dropdown, list, role) {
                 item.setAttribute('class', 'w3-bar-item w3-button');
                 item.innerHTML = list[i].charName;
                 item.onclick = function () {
-                    replaceHeaderWithName(this);
+                    replaceCharHeaderWithCharName(this);
                 };
 
                 dropdown.appendChild(item);
@@ -1451,11 +1557,75 @@ function outputCharName(event, dropdown, list, role) {
     }
 }
 
+function replaceCharHeaderWithCharName(cell) {
+    var divParent = cell.parentNode.parentNode;
+    var charName = cell.innerHTML;
+
+    divParent.children[0].innerHTML = cell.innerHTML;
+
+    readSkillDatabase();
+    outputCharSkillHeader(charName, "skillChoice", skillList);
+
+    var x = cell.parentNode;
+
+    if (x.className.indexOf("w3-hide") == -1) {
+        x.className += " w3-hide";
+    }
+}
+
+function outputCharSkillHeader(charName, id, list) {
+    let header = document.getElementById(id);
+    header.innerHTML = '';
+    // change only the skillChoice
+    for (const item of list) {
+        if (item.charName == charName) {
+            if (isDpsSkill(item.skillType)) {
+                header.innerHTML = item.skillName;
+                break;
+            }
+        }
+    }
+
+    if (header.innerHTML == '') {
+        header.innerHTML = "S3";
+    }
+}
+
+function isDpsSkill(skillType) {
+    if ((skillType != "Passive") && (skillType != "Support")) {
+        return true;
+    }
+
+    return false;
+}
+
 function fillBoss(event) {
-    let dropdown = document.getElementById("bossListDiv");
     readBossDatabase();
 
     fillHtmlCommon("bossListDiv", "userFilterBosslist", bossList); 
+}
+
+function fillSkill() {
+    let charName = document.getElementById("charName").innerHTML;
+    let list = [];
+
+    readSkillDatabase();
+
+    for (const skill of skillList) {
+        if (charName == skill.charName) {
+            if (isDpsSkill(skill.skillType)) {
+                if (!list.find(item => item.name == skill.skillName)) {
+                    let m = [];
+                    m.name = skill.skillName;
+                    list.push(m);
+                }
+            }
+        }
+    }
+
+    if (list.length > 0) {
+        fillHtmlCommon("skillListDiv", "", list, false);
+    }
 }
 
 function fillCard(event) {
@@ -1896,7 +2066,6 @@ function readBossDatabase() {
 
     var location = window.location.href;
     var directoryPath = location.substring(0, location.lastIndexOf("/") + 1);
-
     var result = loadFile(directoryPath + BOSS_FILE_NAME);
 
     if (result != null) {

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>	  
 	<link rel="stylesheet" href="w3.css">	
@@ -22,14 +23,14 @@
 	<title>P5X Damage Calculator</title>
 </head>
 <body>
-	<h1 class="w3-margin w3-center">P5X Damage Calculator</h1>
+	<h1 class="w3-margin w3-center"><b>P5X Team Builder/Max Damage Calculator</b></h1>
 
 	<div class="w3-margin">
 		<h3><b>Instruction:</b></h3><p>If you're using this, I assume you care enough to have the rotations down correctly. For example, Makoto should always have 4 moon stacks before he uses S3, so the calculator assumes he has max stacks. If you're not sure, his rotation is S1->S3->S1->S3, with someone buffing him every single turn.</p>
 									<p>This tool also assumes you have necessary stats for your party members to max out any skill that has a max of % stat up to X amount. For example, the description for Leon's Ultima Boosters is "Increase 1 ally's Attack by 19.5% for 2 turns. For each stack of Power of Friendship the target has, increase Attack by 20% of Kamiyama's Attack more (up to 1516.7)." 
 		The tool assumes that you hit the max of 1516.7.</p>
-		<p>The final calculation may also be slightly off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, and of course bugs. Use this as something to compare builds with the same baseline instead of as an absolute calculator.</p>
-		<p>This tool only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). In the future, I may expand it.</p>
+									<p>The final calculation may also be slightly off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, more stats from your support from any ability that has no max (for example, at 5 stacks of Bloom, it increase their ATK based on 8% own CRIT DMG that's over 100% but has no limit on how much it would be. The calculator will assume CRIT DMG 338% at LVL10 and 418% at LVL 13 for example), and of course bugs. <b>Use this as something to compare builds with the same baseline instead of as an absolute number calculator.</b> For example, use it to compare Wonder's knives and see if it's worth getting reforge with your limited currency or use it to see which card set is better. Just play the game if the exact number is what you need.</p>
+									<p>This tool was created out of love for the Persona 3 Protagonist (Makoto Yuki). As a result, it only contains characters already released + Makoto and his supports and only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). The Makoto's #2 biggest fan is still working on adding the rest of the characters and any new one, but they are unpaid and not a web developer, so it may take some time.</p>
 	</div>
 
 	<div class="w3-margin">
@@ -62,12 +63,8 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill
-						<button class="w3-button w3-white w3-block w3-left-align" id="skillChoice" onmouseover="show(event)">Scarlet: Devouring Blaze</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Melodic Blaze</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Moonlit Hymn</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Scarlet: Devouring Blaze</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Theurgy - Ardhanari</a>
+						<button class="w3-button w3-white w3-block w3-left-align" id="skillChoice" onmouseover="fillSkill()">Scarlet: Devouring Blaze</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="skillListDiv">
 						</div>
 					</div>
 
@@ -104,27 +101,24 @@
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R6</a>
 						</div>
 					</div>
-
-					<!--<label>Navigator/Elucidator's Atk</label>
-			<input class="w3-input w3-margin-bottom" type="number" value="0" id="navAtk">-->
 				</div>
 
 				<div class="w3-container w3-third">
 					<h3 class="w3-green w3-center w3-tooltip">Card Summary<span class="w3-text">(<em>Total of all cards</em>)</span></h3>
 
-					<label>ATK</label>
+					<label for="spaceAtk">ATK</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="1530" id="spaceAtk">
 
-					<label>Damage Mult %</label>
+					<label for="spaceDmgMult">Damage Mult %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="18.4" id="spaceDmgMult">
 
-					<label>Crit Rate %</label>
+					<label for="spaceCritRate">Crit Rate %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="27" id="spaceCritRate">
 
-					<label>Crit Damage Mult %</label>
+					<label for="spaceCritMult">Crit Damage Mult %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="30" id="spaceCritMult">
 
-					<label>Pierce Rate %</label>
+					<label for="spacePierce">Pierce Rate %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="6" id="spacePierce">
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
@@ -151,7 +145,7 @@
 					<h3 class="w3-green w3-center">Wonder</h3>
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="wweaponChoice" onmouseover="FillWonderKnife(event)">Ex Machina</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="wweaponChoice" onmouseover="FillWonderKnife(event)">Flame's Inferno</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="wonderKnifeDiv">
 						</div>
 					</div>
@@ -215,7 +209,7 @@
 						</div>
 					</div>
 
-					<label>Final Bonus</label>
+					<label for="finalBonus">Final Bonus</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="1.4" id="finalBonus">
 				</div>
 
@@ -463,73 +457,23 @@
 						<h3 class="w3-green w3-center w3-tooltip">Navigator Stats<span class="w3-text">(From Summary Screen)</span></h3>
 					</div>
 
-					<label>ATK</label>
+					<label for="naviAtk">ATK</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="4000" id="naviAtk">
 
-					<label>Damage Mult %</label>
+					<label for="naviDmgMult">Damage Mult %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviDmgMult">
 
-					<label>Crit Rate %</label>
+					<label for="naviCritRate">Crit Rate %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviCritRate">
 
-					<label>Crit Damage Mult %</label>
+					<label for="naviCritMult">Crit Damage Mult %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviCritMult">
 
-					<label>Pierce Rate %</label>
+					<label for="naviPierce">Pierce Rate %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="0" id="naviPierce">
 
 				</div>
 			</div>
-
-			<!--
-			<div class="w3-container w3-green w3-margin">
-				<h4>Buff/Debuff Info</h4>
-			</div>
-
-
-					<div class="w3-row w3-margin-top">
-		<div class="w3-third">
-							<div class="w3-dropdown-hover w3-margin">
-								<button class="w3-large w3-button w3-teal w3-block w3-padding-large" onmouseover="fillHtmlDBuffList(event)" id="defDebufflist">Defense Reduction List</button>
-								<div class="w3-dropdown-content w3-bar-block w3-border" id="defDebuffListDiv">
-									<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterDefDebufflist" onkeyup="filterFunctionwDBuff()">
-								</div>
-							</div>
-							<div class="w3-panel w3-margin">
-								<ul class="w3-ul w3-border w3-white" id="wDBuffOutputDiv">
-								</ul>
-							</div>
-							</div>
-
-
-							<div class="w3-third">
-								<div class="w3-dropdown-hover w3-margin">
-									<button class="w3-large w3-button w3-teal w3-block w3-padding-large" onmouseover="fillList(event)" id="atklist">Atk Buff List</button>
-									<div class="w3-dropdown-content w3-bar-block w3-border" id="atkListDiv">
-										<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterAtklist" onkeyup="filterFunctionAtk()">
-									</div>
-								</div>
-								<div class="w3-panel">
-									<ul class="w3-ul w3-border w3-white" id="atkOutputDiv">
-									</ul>
-								</div>
-							</div>
-
-							<div class="w3-third">
-								<div class="w3-dropdown-hover w3-margin">
-									<button class="w3-large w3-button w3-teal w3-block w3-padding-large" onmouseover="fillList(event)" id="dmglist">Dmg Mult. List</button>
-									<div class="w3-dropdown-content w3-bar-block w3-border" id="dmgListDiv">
-										<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterDmgList" onkeyup="filterFunctionDmg()">
-									</div>
-								</div>
-								<div class="w3-panel">
-									<ul class="w3-ul w3-border w3-white" id="dmgOutputDiv">
-									</ul>
-								</div>
-							</div>
-
-			</div>
-	-->
 
 			<div class="w3-center w3-margin">
 				<div class="w3-container">
