@@ -1,3 +1,9 @@
 .gitattributes
 /build
 /other_tool
+.vs/p5x/config/applicationhost.config
+.vs/p5x/FileContentIndex/db4bf982-e0be-4653-b974-161e188d12dd.vsidx
+.vs/p5x/FileContentIndex/0cd960d8-828c-4e19-b363-8836bd25dcc0.vsidx
+.vs/ProjectSettings.json
+*.vsidx
+*.sqlite

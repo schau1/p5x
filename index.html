@@ -20,17 +20,18 @@
         }
 	</style>	
 	<link rel="shortcut icon" href="makoto_icon.png">
-	<title>P5X Damage Calculator</title>
+	<title>P5X Max Damage Calculator</title>
 </head>
 <body>
 	<h1 class="w3-margin w3-center"><b>P5X Team Builder/Max Damage Calculator</b></h1>
 
 	<div class="w3-margin">
-		<h3><b>Instruction:</b></h3><p>If you're using this, I assume you care enough to have the rotations down correctly. For example, Makoto should always have 4 moon stacks before he uses S3, so the calculator assumes he has max stacks. If you're not sure, his rotation is S1->S3->S1->S3, with someone buffing him every single turn.</p>
-									<p>This tool also assumes you have necessary stats for your party members to max out any skill that has a max of % stat up to X amount. For example, the description for Leon's Ultima Boosters is "Increase 1 ally's Attack by 19.5% for 2 turns. For each stack of Power of Friendship the target has, increase Attack by 20% of Kamiyama's Attack more (up to 1516.7)." 
-		The tool assumes that you hit the max of 1516.7.</p>
-									<p>The final calculation may also be slightly off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, more stats from your support from any ability that has no max (for example, at 5 stacks of Bloom, it increase their ATK based on 8% own CRIT DMG that's over 100% but has no limit on how much it would be. The calculator will assume CRIT DMG 338% at LVL10 and 418% at LVL 13 for example), and of course bugs. <b>Use this as something to compare builds with the same baseline instead of as an absolute number calculator.</b> For example, use it to compare Wonder's knives and see if it's worth getting reforge with your limited currency or use it to see which card set is better. Just play the game if the exact number is what you need.</p>
-									<p>This tool was created out of love for the Persona 3 Protagonist (Makoto Yuki). As a result, it only contains characters already released + Makoto and his supports and only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). The Makoto's #2 biggest fan is still working on adding the rest of the characters and any new one, but they are unpaid and not a web developer, so it may take some time.</p>
+		<h3><b>Instruction:</b></h3><p><b>Assumption:</b></p>
+		<p>1. If an ability has different percentages per stack, assume Max stacks. For example, Makoto can have a max of 4 [Moon Stacks]. The tool will use 4 stacks for calculation.</p>
+		<p>2. Party members have enough stats to max out any skill that has a max of % stat up to X amount. For example, the description for Leon's Ultima Boosters is "Increase 1 ally's Attack by 19.5% for 2 turns. For each stack of Power of Friendship the target has, increase Attack by 20% of Kamiyama's Attack more (up to 1516.7)," the tool assumes that you hit the max of 1516.7.</p>
+		<p>3. For any ability that has no max, assume max stat from other Skill. For example, 5 stacks of Bloom increases ATK based on 8% own CRIT DMG over 100%. This ability has no max. The calculator will assume CRIT DMG 338% at LVL10 and 418% at LVL 13 and so on.</p>
+		<p>The final calculation may also be slightly off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, more stats from your support (#3 assumption as stated above), and of course bugs. <b>Use this as something to compare builds with the same baseline instead of as an absolute number calculator.</b> For example, use it to compare Wonder's knives and see if it's worth getting one reforged with your limited currency or use it to see which card set is better. Just play the game if the exact number is what you need.</p>
+		<p>This tool was created out of love for the Persona 3 Protagonist (Makoto Yuki). As a result, it only contains useful characters already released + Makoto and his supports and only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). The Makoto's #2 biggest fan is still working on adding the rest of the characters and any new one, but they are unpaid and not a web developer (ugly UI proved it), so it may take some time.</p>
 	</div>
 
 	<div class="w3-margin">
@@ -130,7 +131,8 @@
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="dpsDBuffList">Buff/Debuff List</button>
+						From Main Damage Dealer
+						<button class="w3-white w3-button w3-left-align w3-block" onmouseover="fillHtmlDBuffList(event)" id="dpsDBuffList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="dpsDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterDpsDbufflist" onkeyup="filterFunctionDpsDBuff()">
 						</div>
@@ -165,7 +167,8 @@
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="wDBuffList">Debuff/Buff List</button>
+						From Wonder
+						<button class="w3-button w3-white w3-block w3-left-align" onmouseover="fillHtmlDBuffList(event)" id="wDBuffList">Debuff/Buff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="wDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterwDBuffList" onkeyup="filterFunctionwDBuff()">
 						</div>
@@ -211,6 +214,17 @@
 
 					<label for="finalBonus">Final Bonus</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="1.4" id="finalBonus">
+
+					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
+						Debuff
+						<button class="w3-button w3-white w3-block w3-left-align" id="bossDbList" onmouseover="fillHtmlDBuffList(event)">Debuff List</button>
+						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="bossDBuffListDiv">
+						</div>
+					</div>
+					<div class="w3-panel w3-block">
+						<ul class="w3-ul w3-border w3-white" id="bossDBuffOutputDiv">
+						</ul>
+					</div>
 				</div>
 
 			</div>
@@ -285,7 +299,8 @@
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="p1DBuffList">Buff/Debuff List</button>
+						From Party Member
+						<button class="w3-white w3-button w3-left-align w3-block" onmouseover="fillHtmlDBuffList(event)" id="p1DBuffList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p1DBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1DBuffList" onkeyup="filterFunctionP1DBuff()">
 						</div>
@@ -363,7 +378,8 @@
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="p2DBuffList">Buff/Debuff List</button>
+						From Party Member
+						<button class="w3-white w3-button w3-left-align w3-block" onmouseover="fillHtmlDBuffList(event)" id="p2DBuffList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p2DBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2DBuffList" onkeyup="filterFunctionP2DBuff()">
 						</div>

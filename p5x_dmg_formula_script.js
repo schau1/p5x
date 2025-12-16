@@ -93,6 +93,7 @@ let iCharInfo = [];
 
 // party members
 let partyMembers = [];
+let bDebuffList = [];
 
 // store a list of all the buff/debuff that will be processed by the app as part of the calculation
 let buffList = [];
@@ -262,6 +263,7 @@ function addNaviStats(percent) {
 function initializeData() {
     buffList = [];
     htmlDBuffList = [];
+    bDebuffList = [];
     partyMembers = [];
 
     iCharInfo.baseAtk = 0;
@@ -421,6 +423,11 @@ function processDBuffList(skill, element) {
 
         // Go through the list to make sure I have the buff required before we add it.
         if (buffList[i].conditionType != "") {
+            // What I should do is split OR first, then send it to a function to split AND
+            // 
+
+
+
             const searchName = buffList[i].condition.split(/[|&]/);
             const conditionName = buffList[i].conditionType.split(/[|&]/);
             let buffMet = [];
@@ -542,6 +549,10 @@ function processDBuffList(skill, element) {
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
                 case "WARM_WELCOME":
                 case "FURIOUS_PURSUE":
+                case "NO_VALUE_BUFF":
+                    break;
+                case "PARTY_DEF_PERC":  // fall through, future development
+                case "PARTY_HP_PERC":
                     break;
                 default:
                     failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, "N/A"]);
@@ -562,37 +573,6 @@ function processDBuffList(skill, element) {
         console.log("processDBuffList::All buffs were added.");
     }*/
     return data;
-}
-
-
-// add the passive skill the character has to the HTML as soon as they choose a character
-// If they don't like the passive buff, they can remove it
-// I guess I can add buffs from skill into this... like [Moon Phase],
-// and the user can remove it if they don't like it but it may be for another day
-// After the buff list is done, I will grab straight from it instead...
-function hmtl_addPassiveSkillToBuffList() {
-
-    let dropdown = document.getElementById(htmlDivId);
-    var firstChild = dropdown.children[0];  // Save the search Filter
-
-    dropdown.textContent = '';
-    dropdown.appendChild(firstChild);   //add back the search field
-
-    outputNameCommon(dropdown, list);
-
-    const targetElement = dropdown;
-    var x = targetElement.parentNode.firstElementChild.nextElementSibling;
-
-    x.className = x.className.replace(" w3-hide", "");
-
-    document.getElementById(filterHmtlId).value = '';
-
-}
-
-function hmtl_addOthersSkillBuffToBuffList(charName, skill, awareness, skillLevel) {
-    // Add other people buff to the list...
-    // when I do this, make sure I don't add anything that is self
-
 }
 
 function addWonderBuffToBuffList(name) {
@@ -771,7 +751,7 @@ function addSelfPassiveSkillToBuffList(charInfo) {
         data.buffName = "SEES";
         data.charName = charInfo.charName;
         data.value = 0;
-        data.dbuff = "SEES";
+        data.dbuff = "NO_VALUE_BUFF";   // these are added as a condition to trigger other buffs
         data.condition = "";
         data.conditionType = "";
 
@@ -863,7 +843,7 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName) {
 function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5, condition, conditionType) {
     let data = [];
 
-    if ((dbuff != "") && !(dbuff.includes("DMG_SKILL_SINGLE") || dbuff.includes("DMG_SKILL_AOE"))) {
+    if ((dbuff != "") && !(dbuff.includes("DMG_SKILL_SINGLE") || dbuff.includes("DMG_SKILL_AOE") || dbuff.includes("HEAL_SKILL_"))) {
         data.buffName = name;
         data.charName = charName;
         switch (skillLevel) {
@@ -933,14 +913,14 @@ function addWeaponBuffToBuffList(charName, rarity, reforge, role) {
                 buffList.push(data);
             }
 
-            if (isValidWeaponBuff(weaponList[i].e3adbuff, weaponList[i].e3acondition, weaponList[i].e3aconditionType, iCharInfo.skillPos, role)) {
+            if (isValidWeaponBuff(weaponList[i].e4dbuff, weaponList[i].e4condition, weaponList[i].e4conditionType, iCharInfo.skillPos, role)) {
                 let data = [];
                 data.buffName = weaponList[i].name;    // where the buff is from
                 data.charName = charName;
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e3ar0, weaponList[i].e3ar1, 0, reforge);
-                data.dbuff = weaponList[i].e3adbuff;
-                data.condition = weaponList[i].e3acondition;
-                data.conditionType = weaponList[i].e3aconditionType;
+                data.value = calcWeaponBasedOnReforge(weaponList[i].e4r0, weaponList[i].e4r1, 0, reforge);
+                data.dbuff = weaponList[i].e4dbuff;
+                data.condition = weaponList[i].e4condition;
+                data.conditionType = weaponList[i].e4conditionType;
                 buffList.push(data);
             }
 
@@ -950,91 +930,90 @@ function addWeaponBuffToBuffList(charName, rarity, reforge, role) {
 }
 
 function addWonderWeaponToBuffList(name, reforge) {
-    var weapon = wonderList.find(item => item.name == name);
+    for (const weapon of wonderList) {      
+        if (weapon.name.includes(name)) {
+            if (isValidWeaponBuff(weapon.e1dbuff, weapon.e1condition, weapon.e1conditionType, "", SUPPORT_ROLE)) {
+                let data = [];
+                data.buffName = weapon.name;    // where the buff is from
+                data.charName = "Wonder";
+                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e1r0, weapon.e1r1, weapon.e1r2, weapon.e1r3, weapon.e1r4, weapon.e1r5, weapon.e1r6);
 
-    if (weapon) {
-        if (isValidWeaponBuff(weapon.e1dbuff, weapon.e1condition, weapon.e1conditionType, "", SUPPORT_ROLE)) {
-            let data = [];
-            data.buffName = name;    // where the buff is from
-            data.charName = "Wonder";
-            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e1r0, weapon.e1r1, weapon.e1r2, weapon.e1r3, weapon.e1r4, weapon.e1r5, weapon.e1r6);
+                data.dbuff = weapon.e1dbuff;
+                data.condition = weapon.e1condition;
+                data.conditionType = weapon.e1conditionType;
 
-            data.dbuff = weapon.e1dbuff;
-            data.condition = weapon.e1condition;
-            data.conditionType = weapon.e1conditionType;
+                buffList.push(data);
+            }
 
-            buffList.push(data);
+            if (isValidWeaponBuff(weapon.e2dbuff, weapon.e2condition, weapon.e2conditionType, "", SUPPORT_ROLE)) {
+                let data = [];
+                data.buffName = name;    // where the buff is from
+                data.charName = "Wonder";
+                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e2r0, weapon.e2r1, weapon.e2r2, weapon.e2r3, weapon.e2r4, weapon.e2r5, weapon.e2r6);
+
+                data.dbuff = weapon.e2dbuff;
+                data.condition = weapon.e2condition;
+                data.conditionType = weapon.e2conditionType;
+
+                buffList.push(data);
+            }
+
+            if (isValidWeaponBuff(weapon.e3dbuff, weapon.e3condition, weapon.e3conditionType, "", SUPPORT_ROLE)) {
+                let data = [];
+                data.buffName = name;    // where the buff is from
+                data.charName = "Wonder";
+                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e3r0, weapon.e3r1, weapon.e3r2, weapon.e3r3, weapon.e3r4, weapon.e3r5, weapon.e3r6);
+
+                data.dbuff = weapon.e3dbuff;
+                data.condition = weapon.e3condition;
+                data.conditionType = weapon.e3conditionType;
+
+                buffList.push(data);
+            }
+
+            if (isValidWeaponBuff(weapon.e4dbuff, weapon.e4condition, weapon.e4conditionType, "", SUPPORT_ROLE)) {
+                let data = [];
+                data.buffName = name;    // where the buff is from
+                data.charName = "Wonder";
+                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e4r0, weapon.e4r1, weapon.e4r2, weapon.e4r3, weapon.e4r4, weapon.e4r5, weapon.e4r6);
+
+                data.dbuff = weapon.e4dbuff;
+                data.condition = weapon.e4condition;
+                data.conditionType = weapon.e4conditionType;
+
+                buffList.push(data);
+            }
+
+            if (isValidWeaponBuff(weapon.e5dbuff, weapon.e5condition, weapon.e5conditionType, "", SUPPORT_ROLE)) {
+                let data = [];
+                data.buffName = name;    // where the buff is from
+                data.charName = "Wonder";
+                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e5r0, weapon.e5r1, weapon.e5r2, weapon.e5r3, weapon.e5r4, weapon.e5r5, weapon.e5r6);
+
+                data.dbuff = weapon.e5dbuff;
+                data.condition = weapon.e5condition;
+                data.conditionType = weapon.e5conditionType;
+
+                buffList.push(data);
+            }
+
+            if (isValidWeaponBuff(weapon.e6dbuff, weapon.e6condition, weapon.e6conditionType, "", SUPPORT_ROLE)) {
+                let data = [];
+                data.buffName = name;    // where the buff is from
+                data.charName = "Wonder";
+                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e6r0, weapon.e6r1, weapon.e6r2, weapon.e6r3, weapon.e6r4, weapon.e6r5, weapon.e6r6);
+
+                data.dbuff = weapon.e6dbuff;
+                data.condition = weapon.e6condition;
+                data.conditionType = weapon.e6conditionType;
+
+                buffList.push(data);
+            }
         }
-
-        if (isValidWeaponBuff(weapon.e2dbuff, weapon.e2condition, weapon.e2conditionType, "", SUPPORT_ROLE)) {
-            let data = [];
-            data.buffName = name;    // where the buff is from
-            data.charName = "Wonder";
-            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e2r0, weapon.e2r1, weapon.e2r2, weapon.e2r3, weapon.e2r4, weapon.e2r5, weapon.e2r6);
-
-            data.dbuff = weapon.e2dbuff;
-            data.condition = weapon.e2condition;
-            data.conditionType = weapon.e2conditionType;
-
-            buffList.push(data);
-        }
-
-        if (isValidWeaponBuff(weapon.e3dbuff, weapon.e3condition, weapon.e3conditionType, "", SUPPORT_ROLE)) {
-            let data = [];
-            data.buffName = name;    // where the buff is from
-            data.charName = "Wonder";
-            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e3r0, weapon.e3r1, weapon.e3r2, weapon.e3r3, weapon.e3r4, weapon.e3r5, weapon.e3r6);
-
-            data.dbuff = weapon.e3dbuff;
-            data.condition = weapon.e3condition;
-            data.conditionType = weapon.e3conditionType;
-
-            buffList.push(data);
-        }
-
-        if (isValidWeaponBuff(weapon.e4dbuff, weapon.e4condition, weapon.e4conditionType, "", SUPPORT_ROLE)) {
-            let data = [];
-            data.buffName = name;    // where the buff is from
-            data.charName = "Wonder";
-            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e4r0, weapon.e4r1, weapon.e4r2, weapon.e4r3, weapon.e4r4, weapon.e4r5, weapon.e4r6);
-
-            data.dbuff = weapon.e4dbuff;
-            data.condition = weapon.e4condition;
-            data.conditionType = weapon.e4conditionType;
-
-            buffList.push(data);
-        }
-
-        if (isValidWeaponBuff(weapon.e5dbuff, weapon.e5condition, weapon.e5conditionType, "", SUPPORT_ROLE)) {
-            let data = [];
-            data.buffName = name;    // where the buff is from
-            data.charName = "Wonder";
-            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e5r0, weapon.e5r1, weapon.e5r2, weapon.e5r3, weapon.e5r4, weapon.e5r5, weapon.e5r6);
-
-            data.dbuff = weapon.e5dbuff;
-            data.condition = weapon.e5condition;
-            data.conditionType = weapon.e5conditionType;
-
-            buffList.push(data);
-        }
-
-        if (isValidWeaponBuff(weapon.e6dbuff, weapon.e6condition, weapon.e6conditionType, "", SUPPORT_ROLE)) {
-            let data = [];
-            data.buffName = name;    // where the buff is from
-            data.charName = "Wonder";
-            data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e6r0, weapon.e6r1, weapon.e6r2, weapon.e6r3, weapon.e6r4, weapon.e6r5, weapon.e6r6);
-
-            data.dbuff = weapon.e6dbuff;
-            data.condition = weapon.e6condition;
-            data.conditionType = weapon.e6conditionType;
-
-            buffList.push(data);
-        }
-    }
-    else { 
-        console.log("addWonderWeaponToBuffList::Couldn't find Wonder's Knife: " + name);
-    }
+    }    
+     //   console.log("addWonderWeaponToBuffList::Couldn't find Wonder's Knife: " + name);
 }
+
 function getWonderWeaponStatBasedOnReforge(reforgeLevel, r0, r1, r2, r3, r4, r5, r6) {
     switch (reforgeLevel) {
         case 0:
@@ -1195,6 +1174,7 @@ function getHtmlInfo() {
                             document.getElementById('naviawarenessChoice').innerHTML,
                             convertSkillLevelTextToValue(document.getElementById('naviskillLevelChoice').innerHTML));
     htmlProcessDefDebuff('dpsDBOutputDiv', iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel);
+    htmlProcessDefDebuff('bossDBuffOutputDiv', document.getElementById('bossName').innerHTML, 0, 0);
 
     // May need to go down to just DefReductionList/DmgMult and Atk/DmgMult list together since some buff does both...
     // Probably have a buff list and a debuff list... that makes the most sense I think...
@@ -1261,12 +1241,14 @@ function fillHtmlDBuffList(event) {
     let dropdown = document.getElementById(divSibling.id);
     var firstChild = dropdown.children[0]; // Save the search Filter
 
-    if (firstChild.nextElementSibling) {
-        return;
-    }
+    if (firstChild) {
+        if (firstChild.nextElementSibling) {
+            return;
+        }
+        dropdown.textContent = '';
+        dropdown.appendChild(firstChild); //add back the search field
+    }   
 
-    dropdown.textContent = '';
-    dropdown.appendChild(firstChild); //add back the search field
     var outputDiv = "", listDiv = "", debuffArray = [];
 
     switch (divSibling.id) {
@@ -1299,6 +1281,11 @@ function fillHtmlDBuffList(event) {
             listDiv = "naviDBuffListDiv";
             document.getElementById("userFilternaviDBuffList").value = '';
             debuffArray = getSkillNameListFromDatabaseAndAddItemtoHmtmList(document.getElementById('naviName').innerHTML, NAVI_ROLE, outputDiv);
+            break;
+        case "bossDBuffListDiv":
+            outputDiv = "bossDBuffOutputDiv";
+            listDiv = "bossDBuffListDiv";
+            debuffArray = ["Windswept", "Shocked", "Burn", "Freeze", "Curse"];
             break;
         default:
             console.log("fillHtmlDBuffList::Cannot find html element");
@@ -1342,7 +1329,7 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(charName, role, output
         // Other people other than the dps, just add all the passive and support skill
         for (const skill of skillList) {
             if ((skill.charName == charName) &&
-                ((skill.skillType == "Passive") || (skill.skillType == "Support"))) {
+                ((skill.skillType == "Passive") || (skill.skillType == "Support") || (skill.skillType == "Debuff"))) {
                 if (skill.skillPos == "Passive") {
                     addItemToListNoButton(skill.skillName, outputDiv);
                 }
@@ -1548,7 +1535,7 @@ function outputCharName(event, dropdown, list, role) {
                 item.setAttribute('class', 'w3-bar-item w3-button');
                 item.innerHTML = list[i].charName;
                 item.onclick = function () {
-                    replaceCharHeaderWithCharName(this);
+                    replaceCharHeaderWithCharName(this, role);
                 };
 
                 dropdown.appendChild(item);
@@ -1557,14 +1544,16 @@ function outputCharName(event, dropdown, list, role) {
     }
 }
 
-function replaceCharHeaderWithCharName(cell) {
+function replaceCharHeaderWithCharName(cell, role) {
     var divParent = cell.parentNode.parentNode;
     var charName = cell.innerHTML;
 
     divParent.children[0].innerHTML = cell.innerHTML;
 
-    readSkillDatabase();
-    outputCharSkillHeader(charName, "skillChoice", skillList);
+    if (role == DPS_ROLE) {
+        readSkillDatabase();
+        outputCharSkillHeader(charName, "skillChoice", skillList);
+    }
 
     var x = cell.parentNode;
 
@@ -1734,6 +1723,15 @@ function readCharStatDatabase() {
 
 //    console.log(charStatList);
 }
+
+function isElementalAilment(dbuff) {
+    if ((dbuff == "SHOCKED") || (dbuff == "WINDSWEEP") || (dbuff == "ELEMENTAL_AILMENT")) {
+        return true;
+    }
+
+    return false;
+}
+
 function readWeaponDatabase() {
     if (weaponList[0] != null) {
         return;
@@ -1760,27 +1758,31 @@ function readWeaponDatabase() {
 
             data.e1r0 = parseFloat(row[i][j++]);
             data.e1r2 = parseFloat(row[i][j++]);
+            data.e1dbuff = row[i][j++];
             data.e1condition = row[i][j++];
             data.e1conditionType = row[i][j++];
-            data.e1dbuff = row[i][j++];
+            data.e1multipliler = row[i][j++];
 
             data.e2r0 = parseFloat(row[i][j++]);
             data.e2r1 = parseFloat(row[i][j++]);
+            data.e2dbuff = row[i][j++];
             data.e2condition = row[i][j++];
             data.e2conditionType = row[i][j++];
-            data.e2dbuff = row[i][j++];
+            data.e2multipliler = row[i][j++];
 
             data.e3r0 = parseFloat(row[i][j++]);
             data.e3r1 = parseFloat(row[i][j++]);
+            data.e3dbuff = row[i][j++];
             data.e3condition = row[i][j++];
             data.e3conditionType = row[i][j++];
-            data.e3dbuff = row[i][j++];
+            data.e3multipliler = row[i][j++];
 
-            data.e3ar0 = parseFloat(row[i][j++]);
-            data.e3ar1 = parseFloat(row[i][j++]);
-            data.e3acondition = row[i][j++];
-            data.e3aconditionType = row[i][j++];
-            data.e3adbuff = row[i][j++];
+            data.e4r0 = parseFloat(row[i][j++]);
+            data.e4r1 = parseFloat(row[i][j++]);
+            data.e4dbuff = row[i][j++];
+            data.e4condition = row[i][j++];
+            data.e4conditionType = row[i][j++];
+            data.e4multipliler = row[i][j++];
 
             weaponList.push(data);
         }
@@ -1976,7 +1978,7 @@ function readWonderDatabase() {
             var j = 0;
 
             data.name = row[i][j++];
-            data.persona = row[i][j++];
+            data.source = row[i][j++];
             data.type = row[i][j++];
 
             data.e1r0 = parseFloat(row[i][j++]);
