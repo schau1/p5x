@@ -12,7 +12,17 @@
         }
 
         p {
-            font-size: 1.2em; /* 1 * 16 = 16px */
+            font-size: 1.1em; /* 1 * 16 = 16px */
+        }
+
+        #result {
+            width: 100%; /* Adjust width as needed */
+            height: 500px; /* Set a fixed height */
+            border: 1px solid #ccc; /* Add a border for visibility */
+            overflow: auto; /* Add scrollbars when content exceeds height */
+            padding: 10px;
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            font-family: monospace; /* Optional: good for output/log text */
         }
 
         #phyButton {
@@ -26,7 +36,7 @@
 	<h1 class="w3-margin w3-center"><b>P5X Team Builder/Max Damage Calculator</b></h1>
 
 	<div class="w3-margin">
-		<h3><b>Instruction:</b></h3><p><b>Assumption:</b></p>
+		<p><b>Assumption:</b></p>
 		<p>1. If an ability has different percentages per stack, assume Max stacks. For example, Makoto can have a max of 4 [Moon Stacks]. The tool will use 4 stacks for calculation.</p>
 		<p>2. Party members have enough stats to max out any skill that has a max of % stat up to X amount. For example, the description for Leon's Ultima Boosters is "Increase 1 ally's Attack by 19.5% for 2 turns. For each stack of Power of Friendship the target has, increase Attack by 20% of Kamiyama's Attack more (up to 1516.7)," the tool assumes that you hit the max of 1516.7.</p>
 		<p>3. For any ability that has no max, assume max stat from other Skill. For example, 5 stacks of Bloom increases ATK based on 8% own CRIT DMG over 100%. This ability has no max. The calculator will assume CRIT DMG 338% at LVL10 and 418% at LVL 13 and so on.</p>
@@ -51,14 +61,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
 						<button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice" onmouseover="show(event)">A0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A0</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="awarenessListDiv">
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A2</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A3</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A4</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A5</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A6</a>
 						</div>
 					</div>
 
@@ -245,14 +255,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1awarenessChoice" onmouseover="show(event)">A0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A0</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1awarenessListDiv">
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A2</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A3</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A4</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A5</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A6</a>
 						</div>
 					</div>
 
@@ -324,14 +334,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2awarenessChoice" onmouseover="show(event)">A0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A0</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2awarenessListDiv">
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A2</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A3</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A4</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A5</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A6</a>
 						</div>
 					</div>
 
@@ -405,14 +415,14 @@
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
 						<button class="w3-button w3-white w3-block w3-left-align" id="naviawarenessChoice" onmouseover="show(event)">A0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A0</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A1</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A2</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A3</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A4</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A5</a>
-							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">A6</a>
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="naviawarenessListDiv">
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A2</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A3</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A4</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A5</a>
+							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A6</a>
 						</div>
 					</div>
 
@@ -459,7 +469,8 @@
 					</div>
 
 					<div class="w3-dropdown-hover w3-block">
-						<button class="w3-large w3-button w3-blue-grey w3-block" onmouseover="fillHtmlDBuffList(event)" id="naviDbList">Buff/Debuff List</button>
+						From Navi
+						<button class="w3-left-align w3-button w3-white w3-block" onmouseover="fillHtmlDBuffList(event)" id="naviDbList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="naviDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilternaviDBuffList" onkeyup="filterFunctionNaviDBuff()">
 						</div>
@@ -470,7 +481,7 @@
 					</div>
 
 					<div class="w3-green w3-block w3-margin-bottom">
-						<h3 class="w3-green w3-center w3-tooltip">Navigator Stats<span class="w3-text">(From Summary Screen)</span></h3>
+						<h3 class="w3-green w3-center w3-tooltip">Navigator Stats<span class="w3-text">(From Summary Screen, only used for starting stat, not skills)</span></h3>
 					</div>
 
 					<label for="naviAtk">ATK</label>
@@ -497,7 +508,10 @@
 				</div>
 			</div>
 
-			<div class="w3-panel w3-large w3-margin w3-sand" id="result">
+			<input type="checkbox" id="checkClrOutput" class="w3-large" checked>
+			<label for="checkClrOutput">Clear Output When Displaying the Next Result</label><br>
+
+			<div class="w3-large w3-margin w3-sand" id="result">
 			</div>
 
 			<footer>
