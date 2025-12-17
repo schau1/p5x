@@ -102,6 +102,9 @@ let buffList = [];
 let htmlDBuffList = [];
 let extraMath = [];
 
+// Verbose output
+let htmlAppliedBuffList = [];
+
 readCardDatabase();
 readSkillDatabase();
 readWeaponDatabase();
@@ -288,6 +291,7 @@ function initializeData() {
     htmlDBuffList = [];
     bDebuffList = [];
     partyMembers = [];
+    htmlAppliedBuffList = [];
 
     iCharInfo.baseAtk = 0;
     iCharInfo.atkFlat = 0;
@@ -370,7 +374,7 @@ function calculateSkillPerc(skill, skillLevel) {
         data.numHit = 0;
 
         // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
-        if (!IsValidSkillCondition(skill.e2condition)) {
+        if (!IsValidDBuffCondition(skill.e2condition)) {
             skillPercList.push(data);
         }
         else {
@@ -407,29 +411,70 @@ function calculateSkillPerc(skill, skillLevel) {
     return skillPercList;
 }
 
-function IsValidSkillCondition(condition) {
+function IsValidDBuffCondition(condition) {
     if (condition != "") {
         // this has a requirement, need to go through the buff to see if the user has the buff
         for (var i = 0; i < buffList.length; i++) {
-            if (buffList[i].buffName.includes(condition)){
+            if (buffList[i].buffName.includes(condition)) {
                 return true;
             }
         }
+
+        return false;
     }
     else {
         // it does not have a requirement, so it's fine.
         return true;
     }
-
-    return false;
 }
+
+
+function IsValidAndCondition(name, type, skill, element) {
+    const searchName = name.split('&');
+    const searchType = type.split('&');
+
+    // Handle each of the condition. Since this is an & operation, any false means the whole thing is false, so
+    // just return false
+    for (var j = 0; j < searchName.length; j++) {
+        if (searchType[j].includes("DBuff") || searchType[j].includes("Dbuff")) {
+            if (!IsValidDBuffCondition(searchName[j])) {
+                return false;
+            }
+        }
+        else if (searchType[j].includes("Self Skill")) {
+            // self skill means it only applies to this skill, so check to see if the skill matches
+            if (skill != searchName[j]) {
+                return false;
+            }
+        }
+        else if (searchType[j].includes("Element")) {
+            if ((element != searchName[j]) && (searchName[j] != "Any")) {
+                return false;
+            }
+        }
+        else if (searchType[j].includes("Exclusive")) {
+            if (IsValidDBuffCondition(searchName[j])) {
+                // this is exclusive, meaning that if the buff is on the list, we can't use it
+                return false;
+            }
+        }
+        else {
+            // not handled... Maybe I need to do something else in the future
+            // because right now, if I set this to true, it will basically ignore 
+            // any condition there.... like follow up skill would be assumed to be true
+        }
+    }
+
+    return true;
+}
+
 
 // using the buff list to add up all the the values
 // check the condition to make sure it is ok before I can add
 // how should I deal with condition?? I could go through the list to make sure I have the buff condition first
 // before I add?? Like if he requires HL, I need to make sure I have that buff name on the list first 
 // if the dps only buffs allies with some skills, I may need to filter it out when I add selfBuff/passive skills
-function processDBuffList(skill, element) {
+function processDBuffList(skill, element, skillBehavior = "") {
     let data = [];
     data.atkFlat = 0;
     data.atkPerc = 0;
@@ -446,75 +491,27 @@ function processDBuffList(skill, element) {
         buffConditionMet = true;
 
         // Go through the list to make sure I have the buff required before we add it.
-        if (buffList[i].conditionType != "") {
+        if (buffList[i].condition != "") {
             // What I should do is split OR first, then send it to a function to split AND
-            // 
-            const searchName = buffList[i].condition.split(/[|&]/);
-            const conditionName = buffList[i].conditionType.split(/[|&]/);
-            let buffMet = [];
+            // and check the AND Result
+            const conditionName = buffList[i].condition.split("|");
+            const conditionType = buffList[i].conditionType.split("|");
+            var andResult;
 
-            // Handle each of the condition
-            for (var j = 0; j < searchName.length; j++) {
-                // if it's a debuff/buff, search the buffList to see if we can find it
-                if (conditionName[j].includes("DBuff")) {
-                    const buffItem = buffList.find(item => item.buffName.includes(searchName[j]));
-                    if (!buffItem) {
-                        buffMet[j] = false;
-                    }
-                    else {
-                        buffMet[j] = true;
-                    }
-                }
-                else if (conditionName[j].includes("Self Skill")) {
-                    // self skill means it only applies to this skill, so check to see if the skill matches
-                    if (skill == searchName[j]) {
-                        buffMet[j] = true;
-                    }
-                    else {
-                        buffMet[j] = false;
-                    }
-                }
-                else if (conditionName[j].includes("Element")) {
-                    if ((element == searchName[j]) || (searchName[j] == "Any")) {
-                        buffMet[j] = true;
-                    }
-                    else {
-                        buffMet[j] = false;
-                    }
-                }
-                else {
-                    // not handled... Maybe I need to do something else in the future
-                    // because right now, if I set this to true, it will basically ignore 
-                    // any condition there.... like follow up skill would be assumed to be true
-                    buffMet[j] = true;
+            for (var m = 0; m < conditionName.length; m++) {
+                andResult = IsValidAndCondition(conditionName[m], conditionType[m], skill, element, skillBehavior);
+
+                if (andResult) {
+                    // Since this is an OR operation, any true result means the final result is true
+                    break;
                 }
             }
 
-            if (buffList[i].condition.includes("|")) {
-                // Check the condition to see if they match
-                // @todo: How do I know if it's and & or |???? because now I'm assuming only either | or &, not a 
-                // mix of such as ((SEES & Theugry) | S3)... Will need more complicated algo to handle it...
+            if (andResult) {
+                buffConditionMet = true;
+            }
+            else {
                 buffConditionMet = false;
-/*                if (buffList[i].conditionType.includes("element")){
-                    console.log(searchName);
-                    console.log(conditionName);
-                    console.log(buffMet);
-                }*/
-
-                for (var j = 0; j < buffMet.length; j++) {
-                    if (buffMet[j]) {
-                        buffConditionMet = true;
-                        break;
-                    }
-                }
-            }
-            else /*if (buffList[i].condition.includes("&"))*/ {
-                // include &, everything needs to met.
-                for (var j = 0; j < buffMet.length; j++) {
-                    if (!buffMet[j]) {
-                        buffConditionMet = false;
-                    }
-                }
             }
         }
 
@@ -525,17 +522,20 @@ function processDBuffList(skill, element) {
                 case "ALLY_ATK_PERC":
                 case "ALLIES_ATK_PERC":
                     data.atkPerc += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Percent", buffList[i].value]);
                     break;
                 case "SELF_ATK_FLAT":   // fall through
                 case "PARTY_ATK_FLAT":   // fall through
                 case "ALLY_ATK_FLAT":
                     data.atkFlat += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Flat", buffList[i].value]);
                     break;
                 case "SELF_CRIT_MULT_PERC":   // fall through
                 case "ALLIES_CRIT_MULT_PERC":   // fall through
                 case "PARTY_CRIT_MULT_PERC":   // fall through
                 case "ALLY_CRIT_MULT_PERC":
                     data.critMult += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage", buffList[i].value]);
                     break;
                 case "ALLY_CRIT_MULT_PERC_CR":
                     let item = [];
@@ -543,30 +543,36 @@ function processDBuffList(skill, element) {
                     item.statBuff = "CM";
                     item.multiplier = buffList[i].value;
                     extraMath.push(item);
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", buffList[i].value]);
                     break;
                 case "SELF_CRIT_PERC":   // fall through
                 case "PARTY_CRIT_PERC":   // fall through
                 case "ALLY_CRIT_PERC":
                 case "ALLIES_CRIT_PERC":
                     data.critRate += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Rate", buffList[i].value]);
                     break;
                 case "SELF_DMG_PERC":   // fall through
                 case "PARTY_DMG_PERC":   // fall through
                 case "ALLY_DMG_PERC":
                     data.dmgMult += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage", buffList[i].value]);
                     break;
                 case "SELF_PIERCE_PERC":   // fall through
                 case "PARTY_PIERCE_PERC":   // fall through
                 case "ALLY_PIERCE_PERC":
                     data.pierceRate += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Pierce Rate", buffList[i].value]);
                     break;
                 case "DEF_DECR_PERC":   // fall through
                 case "DEF_DECR_PERC_AOE":
                     data.defenseReduction += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Decrement Enemy Defense", buffList[i].value]);
                     break;
                 case "WINDSWEEP_AOE":   // fall through
                 case "WINDSWEEP":   // fall through
                     data.windswept = true;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Windswept", data.windswept]);
                     break;
                 case "SHOCKED":    // Elemental Ailments
                 case "ELEMENTAL_AILMENT":
@@ -580,15 +586,17 @@ function processDBuffList(skill, element) {
                     data.critRate += temp[2];
                     data.critMult += temp[3];
                     data.pierceRate += temp[4];
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
                     break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
-                case "WARM_WELCOME":
-                case "FURIOUS_PURSUE":
+//                case "WARM_WELCOME":
+//                case "FURIOUS_PURSUE":
                 case "NO_VALUE_BUFF":
                 case "HIGHLIGHT_CHARGE_INC":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
                 case "PARTY_HP_PERC":
+                case "BLOSSOM":
                 case "HOLY_SONG":   // buffs by the number of stacks so I may want to add later
                     break;
                 case "MYRIAD_SONG":
@@ -728,9 +736,9 @@ function isValidTargetBuff(dbuff, condition, conditionType) {
     if ((dbuff != "") && (dbuff.slice(0, 4) != "SELF")) {
         if ((conditionType != "") && (conditionType != "Debuff") && (conditionType != "Buff")) {
             // buff/debuff is ok, only need to check if this is a skill buff
-/*            if (conditionType == "Skill" && condition != iCharInfo.skillType) {
+            if (conditionType == "Skill" && condition != iCharInfo.skillType) {
                 return false;
-            }*/
+            }
         }
 
         // since there is no requirement for this buff, it's valid
@@ -1135,32 +1143,57 @@ function displayResult(dmgPerHit, dmgPerHit2) {
         element.innerHTML = "";
     }
 
-//    var item = document.createElement("p");
+    //    var item = document.createElement("p");
+    var item;
 
-    var item = document.createElement("ul");
-    item.setAttribute('class', "w3-ul w3-left-align w3-large");
-    var li = document.createElement("li");
-    li.innerHTML = "Stats (applied ONLY while using this skill): ";
-    item.appendChild(li);
-    li = document.createElement("li");
-    li.innerHTML = "Akt: " + iCharInfo.final_atk.toFixed(2);
-    item.appendChild(li);
-    li = document.createElement("li");
-    li.innerHTML = "Dmg Mult: " + iCharInfo.dmgMult.toFixed(2) + "%";
-    item.appendChild(li);
-    li = document.createElement("li");
-    li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(2) + "%";
-    item.appendChild(li);
-    li = document.createElement("li");
-    li.innerHTML = "Crit Mult: " + iCharInfo.critMult.toFixed(2) + "%";
-    item.appendChild(li);
-    li = document.createElement("li");
-    li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(2) + "%";
-    item.appendChild(li);
-    li = document.createElement("li");
-    li.innerHTML = "Defense Reduction: " + iCharInfo.final_defenseReduction.toFixed(2);
-    item.appendChild(li);
-    element.prepend(item);
+    if (document.getElementById('chkDetailOutput').checked) {
+        item = document.createElement("ul");
+        item.setAttribute('class', "w3-ul w3-left-align w3-large");
+        var li = document.createElement("li");
+        li.innerHTML = "Stats (applied ONLY while using this skill): ";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Akt: " + iCharInfo.final_atk.toFixed(2);
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Dmg Mult: " + iCharInfo.dmgMult.toFixed(2) + "%";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(2) + "%";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Crit Mult: " + iCharInfo.critMult.toFixed(2) + "%";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(2) + "%";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Defense Reduction: " + iCharInfo.final_defenseReduction.toFixed(2);
+        item.appendChild(li);
+        if (iCharInfo.final_defenseReduction == 1) {
+            li = document.createElement("li");
+            li.innerHTML = "Too many defense down. You hit the max limit. Consider using less defense reduction ability.";
+            item.appendChild(li);
+        }
+        item.appendChild(li);
+        element.prepend(item);
+    }
+
+    if (document.getElementById('chkDBuffOutput').checked) {
+        item = document.createElement("ul");
+        item.setAttribute('class', "w3-ul w3-left-align w3-large");
+        var li = document.createElement("li");
+        li.innerHTML = "Applied Buffs: ";
+        item.appendChild(li);
+
+        for (const buff of htmlAppliedBuffList) {
+            var li = document.createElement("li");
+            item.innerHTML += buff[0] + "::" + buff[1] + "::" + buff[2];
+            item.appendChild(li);
+        }
+
+        element.prepend(item);
+    }
 
     if (dmgPerHit2[0] > 0) {
         item = document.createElement("p");
@@ -1179,6 +1212,16 @@ function displayResult(dmgPerHit, dmgPerHit2) {
         "x for a total of ~" + dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + ".";
     element.prepend(item);
 
+    item = document.createElement("p");
+    item.innerHTML = "Party::" + iCharInfo.charName + "::" + iCharInfo.awareness + "R" + iCharInfo.reforgeLevel + " " + iCharInfo.weapon + ". ";
+    for (const party of partyMembers) {
+        item.innerHTML += party.charName + "::" + party.awareness + party.reforgeLevel + " " + party.weapon + ". ";
+    }
+    element.prepend(item);
+
+    item = document.createElement("p");
+    item.innerHTML = "---------------- RESULT ------------------";
+    element.prepend(item);
 }
 
 function getHtmlInfo() {
@@ -1606,28 +1649,28 @@ function fillCharacter(event) {
     switch (id) {
         case "charListDiv":
             // I'm not going to calculate trash DPS of your support/Wonder
-            outputCharName(event, dropdown, charStatList, 'dpsDBuffListDiv', DPS_ROLE);
+            outputCharName(event, dropdown, charStatList, 'dpsDBuffListDiv', 'dpsDBOutputDiv', DPS_ROLE);
             document.getElementById("userFilterCharlist").value = '';
-            resetList("dpsDBOutputDiv", false);
-            resetList("dpsDBuffListDiv", true);
+//            resetList("dpsDBOutputDiv", false);
+//            resetList("dpsDBuffListDiv", true);
             break;
         case "p1charListDiv":
-            outputCharName(event, dropdown, charStatList, 'p1DBuffListDiv', SUPPORT_ROLE);
+            outputCharName(event, dropdown, charStatList, 'p1DBuffListDiv', 'p1DBuffOutputDiv', SUPPORT_ROLE);
             document.getElementById("userFilterP1Charlist").value = '';
-            resetList("p1DBuffOutputDiv", false);
-            resetList("p1DBuffListDiv", true);
+//            resetList("p1DBuffOutputDiv", false);
+//            resetList("p1DBuffListDiv", true);
             break;
         case "p2charListDiv":
-            outputCharName(event, dropdown, charStatList, 'p2DBuffListDiv', SUPPORT_ROLE);
+            outputCharName(event, dropdown, charStatList, 'p2DBuffListDiv', 'p2DBuffOutputDiv', SUPPORT_ROLE);
             document.getElementById("userFilterP2Charlist").value = '';
-            resetList("p2DBuffOutputDiv", false);
-            resetList("p2DBuffListDiv", true);
+//            resetList("p2DBuffOutputDiv", false);
+//            resetList("p2DBuffListDiv", true);
             break;
         case "naviListDiv":
-            outputCharName(event, dropdown, charStatList, 'naviDBuffListDiv', NAVI_ROLE);
+            outputCharName(event, dropdown, charStatList, 'naviDBuffListDiv', 'naviDBuffOutputDiv', NAVI_ROLE);
             document.getElementById("userFilterNavilist").value = '';
-            resetList("naviDBuffOutputDiv", false);
-            resetList("naviDBuffListDiv", true);
+//            resetList("naviDBuffOutputDiv", false);
+//            resetList("naviDBuffListDiv", true);
             break;
         default:
             break;
@@ -1638,7 +1681,7 @@ function fillCharacter(event) {
     x.className = x.className.replace(" w3-hide", "");
 }
 
-function outputCharName(event, dropdown, list, outputListDiv, role) {
+function outputCharName(event, dropdown, list, outputListDiv, resetListDiv, role) {
     for (var i = 0; i < list.length; i++) {
         if (list[i].released == 'Y') {
             if (isValidRole(list[i].role, role)) {
@@ -1647,6 +1690,7 @@ function outputCharName(event, dropdown, list, outputListDiv, role) {
                 item.innerHTML = list[i].charName;
                 item.onclick = function () {
                     replaceCharHeaderWithCharName(this, role);
+                    resetList(resetListDiv, false);
                     fillHtmlDbuffList_Common(outputListDiv);;
                 };
 

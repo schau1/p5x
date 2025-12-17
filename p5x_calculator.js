@@ -76,7 +76,11 @@ function calculateEnemyDefenseFinal(enemyDefValue, additionalDefCoef, windSweptB
         windSwept = 0;
     }
 
-    var defenseCoefficient = (100 + additionalDefCoef) * (100 - pierceRate)/100 - defenseReduction;        
+    var defenseCoefficient = (100 + additionalDefCoef) * (100 - pierceRate) / 100 - defenseReduction;
+    if (defenseCoefficient < 0) {
+//        console.log("calculateEnemyDefenseFinal::Too many debuffs. defenseCoefficient is " + defenseCoefficient);
+        defenseCoefficient = 0;
+    }
     var value = (enemyDefValue * defenseCoefficient/100 * (100 - windSwept)/100);
 
     return (1 - value / (value + 1400));

@@ -17,7 +17,7 @@
 
         #result {
             width: 100%; /* Adjust width as needed */
-            height: 500px; /* Set a fixed height */
+            height: 550px; /* Set a fixed height */
             border: 1px solid #ccc; /* Add a border for visibility */
             overflow: auto; /* Add scrollbars when content exceeds height */
             padding: 10px;
@@ -74,7 +74,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill
-						<button class="w3-button w3-white w3-block w3-left-align" id="skillChoice" onmouseover="fillSkill()">Scarlet: Devouring Blaze</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="skillChoice" onmouseover="fillSkill()">Scarlet: Devouring Blaze::S3</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="skillListDiv">
 						</div>
 					</div>
@@ -164,7 +164,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Reforge Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="wreforgeChoice" onmouseover="show(event)">R0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="wreforgeChoice" onmouseover="show(event)">R6</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
@@ -229,6 +229,7 @@
 						Debuff
 						<button class="w3-button w3-white w3-block w3-left-align" id="bossDbList" onmouseover="fillHtmlDBuffList(event)">Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="bossDBuffListDiv">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterBossDBufflist">
 						</div>
 					</div>
 					<div class="w3-panel w3-block">
@@ -508,8 +509,16 @@
 				</div>
 			</div>
 
-			<input type="checkbox" id="checkClrOutput" class="w3-large" checked>
-			<label for="checkClrOutput">Clear Output When Displaying the Next Result</label><br>
+			<table>
+				<tr>
+					<td>Clear Output When Displaying the Next Result</td>
+					<td><input type="checkbox" id="checkClrOutput" class="w3-large w3-margin-right" checked></td>
+					<td>Display Stats</td>
+					<td><input type="checkbox" id="chkDetailOutput" class="w3-large w3-margin-right"></td>
+					<td>Display Selected Debuffs/Buffs</td>
+					<td><input type="checkbox" id="chkDBuffOutput" class="w3-large w3-margin-right"></td>
+				</tr>
+			</table>
 
 			<div class="w3-large w3-margin w3-sand" id="result">
 			</div>
