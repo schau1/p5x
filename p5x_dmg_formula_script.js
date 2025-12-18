@@ -217,6 +217,7 @@ function runCalculation() {
     iCharInfo.defenseReduction += data.defenseReduction;
     iCharInfo.windswept = data.windswept;
     iCharInfo.myriad_song = data.myriad_song;
+    iCharInfo.extraHit = data.extraHit;
 
     // testing:
 /*    iCharInfo.baseAtk = 1200 + 600;
@@ -257,7 +258,7 @@ function runCalculation() {
     iCharInfo.final_dmgBonus = calculateDmgBonusFinal(iCharInfo.dmgMult);
     iCharInfo.critStableDomain = 1;
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
-    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], SKILL_LEVEL_10);
+    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], iCharInfo.skillLevel, iCharInfo.extraHit);
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
 
     if (iCharInfo.includeCrit == "Yes") {
@@ -330,12 +331,13 @@ function initializeData() {
     iCharInfo.isSees = false;
     iCharInfo.finalBonus = 0;
     iCharInfo.myriad_song = false;  // may not really use it, but just in case I want to display the double damage
+    iCharInfo.extraHit = 0; // if something modify a dps skill and gives it 1 more hit
 }
 // Return a list of skill percentage for the skill and its follow up
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
 // @param   skill - item containing the skill from the database
 // @todo: Assuming the skill has only 2 parts at most. If it's more than 2, need to adjust this code
-function calculateSkillPerc(skill, skillLevel) {   
+function calculateSkillPerc(skill, skillLevel, extraHit) {   
     let skillPercList = [];
     // The first one should be a skill percent. If it's not, screw you.
     if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")) {
@@ -359,6 +361,10 @@ function calculateSkillPerc(skill, skillLevel) {
         }
         data.value = data.value / 100;
         data.numHit = skill.e1numHit;
+
+        if (extraHit) {
+            data.numHit += extraHit;
+        }
 
         skillPercList.push(data);
     }
@@ -400,6 +406,10 @@ function calculateSkillPerc(skill, skillLevel) {
             data.value = data.value / 100;
             data.numHit = skill.e2numHit;
 
+            if (extraHit) {
+                data.numHit += extraHit;
+            }
+
             skillPercList.push(data);
         }
     }
@@ -438,40 +448,42 @@ function IsValidAndCondition(name, type, skill, element, skillBehavior) {
     // Handle each of the condition. Since this is an & operation, any false means the whole thing is false, so
     // just return false
     for (var j = 0; j < searchName.length; j++) {
-        if (searchType[j].includes("DBuff") || searchType[j].includes("Dbuff")) {
-            if (!IsValidDBuffCondition(searchName[j])) {
-                return false;
+        if (searchType[j]) {
+            if (searchType[j].includes("DBuff") || searchType[j].includes("Dbuff")) {
+                if (!IsValidDBuffCondition(searchName[j])) {
+                    return false;
+                }
             }
-        }
-        else if (searchType[j].includes("Self Skill")) {
-            // self skill means it only applies to this skill, so check to see if the skill matches
-            if (skill != searchName[j]) {
-                return false;
+            else if (searchType[j].includes("Self Skill")) {
+                // self skill means it only applies to this skill, so check to see if the skill matches
+                if (skill != searchName[j]) {
+                    return false;
+                }
             }
-        }
-        else if (searchType[j].includes("Element")) {
-            if ((element != searchName[j]) && (searchName[j] != "Any")) {
-                return false;
+            else if (searchType[j].includes("Element")) {
+                if ((element != searchName[j]) && (searchName[j] != "Any")) {
+                    return false;
+                }
             }
-        }
-        else if (searchType[j].includes("Exclusive")) {
-            if (IsValidDBuffCondition(searchName[j])) {
-                // this is exclusive, meaning that if the buff is on the list, we can't use it
-                return false;
+            else if (searchType[j].includes("Exclusive")) {
+                if (IsValidDBuffCondition(searchName[j])) {
+                    // this is exclusive, meaning that if the buff is on the list, we can't use it
+                    return false;
+                }
             }
-        }
-        else if (searchType[j].includes("Skill_Behavior")) {
-            if (skillBehavior != searchName[j]) {
-                return false;
+            else if (searchType[j].includes("Skill_Behavior")) {
+                if (skillBehavior != searchName[j]) {
+                    return false;
+                }
             }
-        }
-        else if (searchType[j].includes("Chance")) {
-            //          not consistent... not sure if we want to include the x% chance to do this
-        }
-        else {
-            // not handled... Maybe I need to do something else in the future
-            // because right now, if I set this to true, it will basically ignore 
-            // any condition there.... like follow up skill would be assumed to be true
+            else if (searchType[j].includes("Chance")) {
+                //          not consistent... not sure if we want to include the x% chance to do this
+            }
+            else {
+                // not handled... Maybe I need to do something else in the future
+                // because right now, if I set this to true, it will basically ignore 
+                // any condition there.... like follow up skill would be assumed to be true
+            }
         }
     }
 
@@ -494,6 +506,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
     data.pierceRate = 0;
     data.defenseReduction = 0;
     data.windswept = false;
+    data.extraHit = 0;
     let buffConditionMet = true;
     let failBuff = [];  // Just info for now
 
@@ -598,14 +611,20 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     data.pierceRate += temp[4];
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
                     break;
+                case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
+                    data.extraHit += buffList[i].value;
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Extra hit", data.extraHit]);
+                    break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
 //                case "WARM_WELCOME":
 //                case "FURIOUS_PURSUE":
                 case "NO_VALUE_BUFF":
                 case "HIGHLIGHT_CHARGE_INC":
                 case "PARTY_DMG_TAKEN_DEC":
+                case "SELF_DBUFF_CHANCE":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
+                case "SELF_SPD_PERC":
                 case "PARTY_HP_PERC":
                 case "BLOSSOM":
                 case "HOLY_SONG":   // buffs by the number of stacks so I may want to add later
@@ -874,10 +893,6 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role
         }
     }
     while ((skillList[current].awareness == skillList[item].awareness) && (skillList[current].skillName == skillList[item].skillName)) {
-
-        console.log(skillList[item].awareness + "  " + skillList[current].awareness + " " + skillList[current + 1].awareness);
-        console.log(skillList[item].skillName + "  " + skillList[current].skillName + " " + skillList[current + 1].skillName);
-
         if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e1dbuff, skillList[current].e1condition, skillList[current].e1conditionType)) {
             let data = composeBuffData(skillList[current].e1dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e1Lvl10,
                 skillList[current].e1Lvl10m5, skillList[current].e1Lvl13, skillList[current].e1Lvl13m5, skillList[current].e1condition, skillList[current].e1conditionType);
@@ -1631,19 +1646,19 @@ function awarenessHandling(event) {
 
     switch (id) {
         case "awarenessListDiv":
-            resetList("dpsDBOutputDiv", false);
+//            resetList("dpsDBOutputDiv", false);
             fillHtmlDbuffList_Common('dpsDBuffListDiv');
             break;
         case "p1awarenessListDiv":
-            resetList("p1DBuffOutputDiv", false);
+//            resetList("p1DBuffOutputDiv", false);
             fillHtmlDbuffList_Common('p1DBuffListDiv');
             break;
         case "p2awarenessListDiv":
-            resetList("p2DBuffOutputDiv", false);
+//            resetList("p2DBuffOutputDiv", false);
             fillHtmlDbuffList_Common('p2DBuffListDiv');
             break;
         case "naviawarenessListDiv":
-            resetList("naviDBuffOutputDiv", false);
+//            resetList("naviDBuffOutputDiv", false);
             fillHtmlDbuffList_Common('naviDBuffListDiv');
             break;
         default:
