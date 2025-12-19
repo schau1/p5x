@@ -130,7 +130,7 @@ function runCalculation() {
             iCharInfo.hiddenCrit = charStatList[i].hiddenCrit;
             iCharInfo.hiddenCritMult = charStatList[i].hiddenCritMult;
             iCharInfo.role = charStatList[i].role;
-            iCharInfo.isSees = ((charStatList[i].isSees == 'Y') || (charStatList[i].isSees == 'y')) ? true : false;            
+            iCharInfo.isSees = ((charStatList[i].isSees == 'Y') || (charStatList[i].isSees == 'y')) ? true : false;
         }
     }
 
@@ -203,18 +203,12 @@ function runCalculation() {
 
     iCharInfo.pierceRate = iCharInfo.pierceRate;
     iCharInfo.baseAtk = 0 + getAtkValueFromAwareness(charStatList[iCharInfo.indexOfCharStatList]) + getWeapAtkValueFromAwareness(charStatList[iCharInfo.indexOfCharStatList]);
-    // Subtract out the atkFlat the user entered to get the atk bonus from the card
-    iCharInfo.atkFlat = iCharInfo.atkFlat - iCharInfo.baseAtk;
-    if (iCharInfo.atkFlat < 0) {
-        iCharInfo.atkFlat = iCharInfo.baseAtk;
-        console.log("Error::Input Attack is less than base Atk. Using baseAtk as the result.");
-    }
     iCharInfo.enemyDefense = convertEnemyNameToDefenseValue(iCharInfo.bossName);
     iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
     // Add buffs and debuffs to everything
     let data = processDBuffList(iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
-    iCharInfo.atkFlat += data.atkFlat; 
+    iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
     iCharInfo.critRate += data.critRate;
@@ -619,7 +613,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     break;
                 case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
                     data.extraHit += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Extra hit", buffList[i].value]);
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Extra hit", data.extraHit]);
                     break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
 //                case "WARM_WELCOME":
@@ -2180,13 +2174,8 @@ function readWonderDatabase() {
             var j = 0;
 
             data.name = row[i][j++];
-            data.released = row[i][j++];
             data.source = row[i][j++];
             data.type = row[i][j++];
-
-            if (data.released == "N") {
-                continue;
-            }
 
             data.e1r0 = parseFloat(row[i][j++]);
             data.e1r1 = parseFloat(row[i][j++]);
