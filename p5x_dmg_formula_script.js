@@ -613,7 +613,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     break;
                 case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
                     data.extraHit += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Extra hit", data.extraHit]);
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Extra hit", buffList[i].value]);
                     break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
 //                case "WARM_WELCOME":
@@ -1185,22 +1185,22 @@ function displayResult(dmgPerHit, dmgPerHit2) {
         li.innerHTML = "Stats (applied ONLY while using this skill): ";
         item.appendChild(li);
         li = document.createElement("li");
-        li.innerHTML = "Atk: " + iCharInfo.final_atk.toFixed(2);
+        li.innerHTML = "Atk: " + iCharInfo.final_atk.toFixed(1);
+//        item.appendChild(li);
+//        li = document.createElement("li");
+        li.innerHTML += "\t\t\t\tDmg Mult: " + iCharInfo.dmgMult.toFixed(1) + "%";
         item.appendChild(li);
         li = document.createElement("li");
-        li.innerHTML = "Dmg Mult: " + iCharInfo.dmgMult.toFixed(2) + "%";
+        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(1) + "%";
+//        item.appendChild(li);
+//        li = document.createElement("li");
+        li.innerHTML += "\t\t\tCrit Mult: " + iCharInfo.critMult.toFixed(1) + "%";
         item.appendChild(li);
         li = document.createElement("li");
-        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(2) + "%";
-        item.appendChild(li);
-        li = document.createElement("li");
-        li.innerHTML = "Crit Mult: " + iCharInfo.critMult.toFixed(2) + "%";
-        item.appendChild(li);
-        li = document.createElement("li");
-        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(2) + "%";
-        item.appendChild(li);
-        li = document.createElement("li");
-        li.innerHTML = "Defense Reduction: " + iCharInfo.final_defenseReduction.toFixed(2);
+        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(1) + "%";
+//        item.appendChild(li);
+//        li = document.createElement("li");
+        li.innerHTML += "\t\t\tDefense Reduction: " + iCharInfo.final_defenseReduction.toFixed(1);
         item.appendChild(li);
         if (iCharInfo.final_defenseReduction == 1) {
             li = document.createElement("li");
@@ -1249,6 +1249,15 @@ function displayResult(dmgPerHit, dmgPerHit2) {
     for (const party of partyMembers) {
         item.innerHTML += party.charName + "::" + party.awareness + party.reforgeLevel + " " + party.weapon + ". ";
     }
+
+    var firstChild = document.getElementById('wDBuffOutputDiv').firstElementChild;
+    item.innerHTML += "Wonder: ";
+
+    while (firstChild) {
+        item.innerHTML += firstChild.innerHTML + " ";
+        firstChild = firstChild.nextElementSibling;
+    }   
+
     element.prepend(item);
 
     item = document.createElement("p");
@@ -2174,8 +2183,13 @@ function readWonderDatabase() {
             var j = 0;
 
             data.name = row[i][j++];
+            data.released = row[i][j++];
             data.source = row[i][j++];
             data.type = row[i][j++];
+
+            if (data.released == "N") {
+                continue;
+            }
 
             data.e1r0 = parseFloat(row[i][j++]);
             data.e1r1 = parseFloat(row[i][j++]);
