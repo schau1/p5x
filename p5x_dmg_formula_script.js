@@ -622,10 +622,15 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "HIGHLIGHT_CHARGE_INC":
                 case "PARTY_DMG_TAKEN_DEC":
                 case "SELF_DBUFF_CHANCE":
+                case "ALLY_HEAL_PERC_CHANCE":
+                case "ALLY_SHIELD_HP":
+                case "PARTY_SHIELD_REC_PERC":
+                case "PARTY_HEAL_REC_PERC":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
                 case "SELF_SPD_PERC":
                 case "PARTY_HP_PERC":
+                case "PARTY_HP_FLAT":
                 case "BLOSSOM":
                 case "HOLY_SONG":   // buffs by the number of stacks so I may want to add later
                     break;
@@ -633,13 +638,13 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     data.myriad_song = true;
                     break;
                 default:
-                    failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, "N/A"]);
+                    failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "N/A"]);
                     break;
             }
         }
         else {
             // for debugging purpose
-            failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, "Failed"]);
+            failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Failed"]);
         }
     }
 
@@ -760,9 +765,10 @@ function isValidTargetBuff(dbuff, condition, conditionType) {
     if ((dbuff != "") && (dbuff.slice(0, 4) != "SELF")) {
         if ((conditionType != "") && (conditionType != "Debuff") && (conditionType != "Buff")) {
             // buff/debuff is ok, only need to check if this is a skill buff
-            if (conditionType == "Skill" && condition != iCharInfo.skillType) {
+            // Add to the list... Can check if valid skill by processing the list
+/*            if (conditionType == "Skill" && condition != iCharInfo.skillType) {
                 return false;
-            }
+            }*/
         }
 
         // since there is no requirement for this buff, it's valid
@@ -1481,7 +1487,7 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
         // that can be used to apply to S1 and S2 also
         for (const skill of skillList) {
             if (skill.charName == charName) {
-                if ((skill.skillType == "Support") && (skill.awareness <= awareness)) {
+                if ((skill.skillType.includes("Support")) && (skill.awareness <= awareness)) {
                     list.push(skill.skillName);
                 }
                 else if ((skill.skillPos == "Passive") && (skill.awareness <= awareness)) {
@@ -1495,7 +1501,7 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
         // Other people other than the dps, just add all the passive and support skill
         for (const skill of skillList) {
             if ((skill.charName == charName) && (skill.awareness <= awareness) &&
-                ((skill.skillType == "Passive") || (skill.skillType == "Support"))) {
+                ((skill.skillType == "Passive") || skill.skillType.includes("Support"))) {
                 if (skill.skillType == "Passive") {
                     // Add item to the output instead of letting the user choose since it's a passive the character always has
                     addItemToListNoButton(skill.skillName, outputDiv);
