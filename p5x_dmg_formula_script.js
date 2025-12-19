@@ -37,6 +37,7 @@
 // 5th: Should I have a stat rec??? For example, if all their buffs not adding up to 100% crit, probably not worth doing crit mull??? Nah... impossible
 // Still worth doing crit mult for stable domain...
 
+const USE_STAT_SCREEN = 0;      // 0 means use card summary, 1 means use character summary
 
 const ENEMY_DEFENSE_DEFAULT = 363.2;  // doesn't have it - use Dominion value instead
 const ENEMY_DEFENSE_ADDITIONAL_DEFAULT = 158.4; // doesn't have it - use NTMR value instead
@@ -203,6 +204,15 @@ function runCalculation() {
 
     iCharInfo.pierceRate = iCharInfo.pierceRate;
     iCharInfo.baseAtk = 0 + getAtkValueFromAwareness(charStatList[iCharInfo.indexOfCharStatList]) + getWeapAtkValueFromAwareness(charStatList[iCharInfo.indexOfCharStatList]);
+
+    if (USE_STAT_SCREEN) {
+        // Subtract out the atkFlat the user entered to get the atk bonus from the card
+        iCharInfo.atkFlat = iCharInfo.atkFlat - iCharInfo.baseAtk;
+        if (iCharInfo.atkFlat < 0) {
+            iCharInfo.atkFlat = iCharInfo.baseAtk;
+            console.log("Error::Input Attack is less than base Atk. Using baseAtk as the result.");
+        }
+    }
     iCharInfo.enemyDefense = convertEnemyNameToDefenseValue(iCharInfo.bossName);
     iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
@@ -423,6 +433,40 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
     return skillPercList;
 }
 
+// Enemy debuffed only
+function IsValidDebuffEnemyCondition(condition) {
+    if (condition != "") {
+        for (var i = 0; i < buffList.length; i++) {
+            if (condition == "Elemental Ailment") {
+                if ((buffList[i].buffName == "Freeze") || (buffList[i].buffName == "Burn") ||
+                    (buffList[i].buffName == "Shock") || (buffList[i].buffName == "Windswept") ||
+                    (buffList[i].buffName == "Elemental Ailment")) {
+                    return true;
+                }
+            }
+            if (condition == "Spiritual Ailment") {
+                if ((buffList[i].buffName == "Dizzy") || (buffList[i].buffName == "Forget") ||
+                    (buffList[i].buffName == "Despair") || (buffList[i].buffName == "Confuse") ||
+                    (buffList[i].buffName == "Fear") || (buffList[i].buffName == "Brainwash") ||
+                    (buffList[i].buffName == "Sleep") || (buffList[i].buffName == "Rage") ||
+                    (buffList[i].buffName == "Spiritual Ailment")) {
+                    return true;
+                }
+            }
+            else if (buffList[i].buffName == condition) {
+                return true;
+            }           
+        }
+
+        return false;
+    }
+    else {
+        // it does not have a requirement, so it's fine.
+        return true;
+    }
+}
+
+// User inflicted debuff/buff only
 function IsValidDBuffCondition(condition) {
     if (condition != "") {
         // this has a requirement, need to go through the buff to see if the user has the buff
@@ -473,6 +517,11 @@ function IsValidAndCondition(name, type, skill, element, skillBehavior) {
             }
             else if (searchType[j].includes("Skill_Behavior")) {
                 if (skillBehavior != searchName[j]) {
+                    return false;
+                }
+            }
+            else if (searchType[j].includes("Debuff")) {
+                if (IsValidDebuffEnemyCondition(searchName[j])) {
                     return false;
                 }
             }
@@ -540,6 +589,11 @@ function processDBuffList(skill, element, skillBehavior = "") {
 
         if (buffConditionMet) {
             switch (buffList[i].dbuff) {
+                case "OOB_SELF_ATK_PERC":   // out of battle
+                    if (USE_STAT_SCREEN) {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        break;              // if use stat screen, bonus already accounted for, so don't add again.
+                    }                       // if not, fall through
                 case "SELF_ATK_PERC":   // fall through
                 case "PARTY_ATK_PERC":
                 case "ALLY_ATK_PERC":
@@ -547,12 +601,40 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     data.atkPerc += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Percent", buffList[i].value]);
                     break;
+                case "ALLY_ATK_PERC_HL":
+                    if (skill == "Highlight") {
+                        data.atkPerc += buffList[i].value;
+                        htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Percent for HL", buffList[i].value]);
+                    }
+                    else {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Failed"]);
+                    }
+                    break;
+                case "ALLY_DMG_PERC_HL":
+                    if (skill == "Highlight") {
+                        data.dmgMult += buffList[i].value;
+                        htmlAppliedBuffList.push([buffList[i].buffName, "Increase Damage for HL", buffList[i].value]);
+                    }
+                    else {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Failed"]);
+                    }
+                    break;
+                case "OOB_SELF_ATK_FLAT":   // out of battle
+                    if (USE_STAT_SCREEN) {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        break;              // if use stat screen, bonus already accounted for, so don't add again.
+                    }                       // if not, fall through
                 case "SELF_ATK_FLAT":   // fall through
                 case "PARTY_ATK_FLAT":   // fall through
                 case "ALLY_ATK_FLAT":
                     data.atkFlat += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Flat", buffList[i].value]);
                     break;
+                case "OOB_SELF_CRIT_MULT_PERC":   // out of battle
+                    if (USE_STAT_SCREEN) {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        break;              // if use stat screen, bonus already accounted for, so don't add again.
+                    }                       // if not, fall through
                 case "SELF_CRIT_MULT_PERC":   // fall through
                 case "ALLIES_CRIT_MULT_PERC":   // fall through
                 case "PARTY_CRIT_MULT_PERC":   // fall through
@@ -568,6 +650,11 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     extraMath.push(item);
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", buffList[i].value]);
                     break;
+                case "OOB_SELF_CRIT_PERC":   // out of battle
+                    if (USE_STAT_SCREEN) {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        break;              // if use stat screen, bonus already accounted for, so don't add again.
+                    }                       // if not, fall through
                 case "SELF_CRIT_PERC":   // fall through
                 case "PARTY_CRIT_PERC":   // fall through
                 case "ALLY_CRIT_PERC":
@@ -575,12 +662,22 @@ function processDBuffList(skill, element, skillBehavior = "") {
                     data.critRate += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Rate", buffList[i].value]);
                     break;
+                case "OOB_SELF_DMG_PERC":   // out of battle
+                    if (USE_STAT_SCREEN) {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        break;              // if use stat screen, bonus already accounted for, so don't add again.
+                    }                       // if not, fall through
                 case "SELF_DMG_PERC":   // fall through
                 case "PARTY_DMG_PERC":   // fall through
                 case "ALLY_DMG_PERC":
                     data.dmgMult += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage", buffList[i].value]);
+                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Damage", buffList[i].value]);
                     break;
+                case "OOB_SELF_PIERCE_PERC":   // out of battle
+                    if (USE_STAT_SCREEN) {
+                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        break;              // if use stat screen, bonus already accounted for, so don't add again.
+                    }                       // if not, fall through
                 case "SELF_PIERCE_PERC":   // fall through
                 case "PARTY_PIERCE_PERC":   // fall through
                 case "ALLY_PIERCE_PERC":
@@ -601,6 +698,8 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "ELEMENTAL_AILMENT":
                     break;
                 case "NON_ELEMENTAL_AILMENT": // other status
+                    break;
+                case "SPIRITUAL_AILMENT":   // ???
                     break;
                 case "PARTY_ALL_PERC": // add a percertage of stats to the character - like Navi stats
                     let temp = addNaviStats(buffList[i].value);
@@ -760,9 +859,10 @@ function addUserSelectedBuffToBuffList() {
 
 // The only time it returns false is if the skillType doesn't match: Wind required but Skill is Fire
 // or if it's a self buff
+// TargetBuff means this buff is supposed to impact someone else and not self
 function isValidTargetBuff(dbuff, condition, conditionType) {
     // check if this is a party buff
-    if ((dbuff != "") && (dbuff.slice(0, 4) != "SELF")) {
+    if ((dbuff != "") && !dbuff.includes("SELF")) {
         if ((conditionType != "") && (conditionType != "Debuff") && (conditionType != "Buff")) {
             // buff/debuff is ok, only need to check if this is a skill buff
             // Add to the list... Can check if valid skill by processing the list
