@@ -434,17 +434,17 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
 }
 
 // Enemy debuffed only
-function IsValidDebuffEnemyCondition(condition) {
-    if (condition != "") {
+function IsValidDebuffEnemyCondition(conditionName) {
+    if (conditionName != "") {
         for (var i = 0; i < buffList.length; i++) {
-            if (condition == "Elemental Ailment") {
+            if (conditionName == "Elemental Ailment") {
                 if ((buffList[i].buffName == "Freeze") || (buffList[i].buffName == "Burn") ||
                     (buffList[i].buffName == "Shock") || (buffList[i].buffName == "Windswept") ||
                     (buffList[i].buffName == "Elemental Ailment")) {
                     return true;
                 }
             }
-            if (condition == "Spiritual Ailment") {
+            if (conditionName == "Spiritual Ailment") {
                 if ((buffList[i].buffName == "Dizzy") || (buffList[i].buffName == "Forget") ||
                     (buffList[i].buffName == "Despair") || (buffList[i].buffName == "Confuse") ||
                     (buffList[i].buffName == "Fear") || (buffList[i].buffName == "Brainwash") ||
@@ -453,11 +453,10 @@ function IsValidDebuffEnemyCondition(condition) {
                     return true;
                 }
             }
-            else if (buffList[i].buffName == condition) {
+            else if (buffList[i].buffName == conditionName) {
                 return true;
             }           
         }
-
         return false;
     }
     else {
@@ -467,11 +466,11 @@ function IsValidDebuffEnemyCondition(condition) {
 }
 
 // User inflicted debuff/buff only
-function IsValidDBuffCondition(condition) {
-    if (condition != "") {
+function IsValidDBuffCondition(conditionName) {
+    if (conditionName != "") {
         // this has a requirement, need to go through the buff to see if the user has the buff
         for (var i = 0; i < buffList.length; i++) {
-            if (buffList[i].buffName.includes(condition)) {
+            if (buffList[i].buffName.includes(conditionName)) {
                 return true;
             }
         }
@@ -486,8 +485,8 @@ function IsValidDBuffCondition(condition) {
 
 
 function IsValidAndCondition(name, type, skill, element, skillBehavior) {
-    const searchName = name.split('&');
-    const searchType = type.split('&');
+    const searchName = name.split('&'); // conditionName
+    const searchType = type.split('&'); // conditionType
 
     // Handle each of the condition. Since this is an & operation, any false means the whole thing is false, so
     // just return false
@@ -521,7 +520,7 @@ function IsValidAndCondition(name, type, skill, element, skillBehavior) {
                 }
             }
             else if (searchType[j].includes("Debuff")) {
-                if (IsValidDebuffEnemyCondition(searchName[j])) {
+                if (!IsValidDebuffEnemyCondition(searchName[j])) {
                     return false;
                 }
             }
@@ -1550,7 +1549,7 @@ function fillHtmlDbuffList_Common(id) {
         case "bossDBuffListDiv":
             outputDiv = "bossDBuffOutputDiv";
             listDiv = "bossDBuffListDiv";
-            debuffArray = ["Windswept", "Shocked", "Burn", "Freeze", "Curse"];
+            debuffArray = ["Windswept", "Shock", "Burn", "Freeze", "Curse", "Spiritual Ailment"];
             break;
         default:
             console.log("fillHtmlDBuffList::Cannot find html element");
