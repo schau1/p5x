@@ -179,7 +179,9 @@ function runCalculation() {
         return;
     }
 
-//    console.log(htmlDBuffList)
+    //    console.log(htmlDBuffList)
+    // Add boss status to buff list
+    addBossStatusToBuffList(iCharInfo.weakness);
 
     // Add buffs/debuffs from the user selected buff/debuff list
     addUserSelectedBuffToBuffList();    
@@ -724,8 +726,12 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "ALLY_SHIELD_HP":
                 case "PARTY_SHIELD_REC_PERC":
                 case "PARTY_HEAL_REC_PERC":
+                case "PARTY_EHR_RES_PERC":  // ailment resistance
+                case "ALLY_SHIELD_REC_PERC":
+//                case "PARTY_DMG_TAKEN_DEC":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
+                case "ALLY_DEF_PERC":
                 case "SELF_SPD_PERC":
                 case "PARTY_HP_PERC":
                 case "PARTY_HP_FLAT":
@@ -877,8 +883,19 @@ function isValidTargetBuff(dbuff, condition, conditionType) {
     return false;
 }
 
-// @todo: fix the card database later so less columns...
-// It is so trash right now
+function addBossStatusToBuffList(weakness) {
+    if (weakness == "Weakness") {
+        let data = [];
+        data.buffName = iCharInfo.weakness;
+        data.charName = "Boss";
+        data.value = 0;
+        data.dbuff = "NO_VALUE_BUFF";
+        data.condition = ""
+        data.conditionType = "";
+        buffList.push(data);
+    }
+}
+
 // @todo: There are some card stuff that does damage... I may need to add to skill list (not skill buff)
 function addCardToBuffList(name, charName, role) {
     for (var i = 0; i < cardList.length; i++) {
@@ -1056,7 +1073,8 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role
 function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5, condition, conditionType) {
     let data = [];
 
-    if ((dbuff != "") && !(dbuff.includes("DMG_SKILL_SINGLE") || dbuff.includes("DMG_SKILL_AOE") || dbuff.includes("HEAL_SKILL_"))) {
+    if ((dbuff != "") && !(dbuff.includes("DMG_SKILL_SINGLE") || dbuff.includes("DMG_SKILL_AOE")
+        || dbuff.includes("HEAL_SKILL_") || dbuff.includes("SHIELD_SKILL"))) {
         data.buffName = name;
         data.charName = charName;
         switch (skillLevel) {
