@@ -28,7 +28,7 @@ Sweet Pickaxe,Riddle,5*,30,39,OOB_SELF_ATK_PERC,,,,22,28,SELF_ATK_PERC,S3,Skill,
 Chirpy Pickaxe,Riddle,4*,12,16,OOB_SELF_ATK_PERC,,,,7.2,9.3,ALLY_ATK_PERC,S2&3|S3&3,Skill&Stack|Skill&Stack,,,,,,,,,,,,,,
 Infinite Moment,Rin,5*,15,20,OOB_SELF_SPD_FLAT,,,,21.6,28.8,PARTY_DMG_PERC,Meng Po Soup,DBuff,,15,15,SELF_SPD_FLAT,,,,,,,,,,
 Sunstaff,Rin,4*,12,16,OOB_SELF_ATK_PERC,,,,16,22,SELF_SPD_FLAT,Start|Inflict Debuffed,,,,,,,,,,,,,,,
-Rosethorn,Panther,5*,24.2,31.5,SELF_DMG_PERC,Fire,Element,,76,100,SELF_DMG_PERC,Each Burn,,,,,,,,,,,,,,,
+Rosethorn,Panther,5*,24.2,31.5,SELF_DMG_PERC,Fire,Element,,76,100,SELF_DMG_PERC,Burn&3,Debuff&Stack,,,,,,,,,,,,,,
 Masquerade Ribbon,Panther,4*,12,16,OOB_SELF_ATK_PERC,,,,23.7,30.8,SELF_ATK_PERC,Burn,Debuff,,,,,,,,,,,,,,
 Golden Legacy,Mona,5*,18,23.4,OOB_SELF_CRIT_PERC,,,,100,133.3,DMG_SKILL_SINGLE,Critical,,,9,11.8,HEAL_SKILL_SINGLE_HP,,,,,,,,,,
 Headhunter Ladle,Mona,4* Event,5.9,7.6,OOB_SELF_CRIT_PERC,,,,6.3,8,HEAL_SKILL_SINGLE,,,,2,3,SELF_DEBUFF_CHANCE,Chance to inflight Forget,,,,,,,,,
@@ -45,9 +45,9 @@ Shadowkiller,Fox,5*,45,59,SELF_DEF_PERC,,,,30,39,SELF_DMG_PERC,Follow,Skill_Beha
 Jagato,Fox,4*,18,23.5,SELF_DEF_PERC,,,,14.8,19.2,SELF_DMG_PERC,Follow,Skill_Behavior,,,,,,,,,,,,,,
 Jolting Pulse,Vino,5*,36,47,SELF_EHR_PERC,,,,33,43,DEF_DECR_PERC,Inflict Elemental Ailment,,,80,95,SELF_AILMENT_CHANCE,,,,,,,,,,
 Gravitational Force,Vino,4*,12,16,OOB_SELF_ATK_PERC,,,,9.6,12.4,DEF_DECR_PERC,Elemental Ailment,Debuff,,9.6,12.4,DEF_DECR_PERC,Radiation,Debuff,,,,,,,,
-Nuclear Finisher,Queen,5*,24.2,31.5,SELF_DMG_PERC,Nuke,Element,,30,39,SELF_ATK_PERC,Elemental Ailment,Debuff,,60,78,SELF_DMG_PERC,Crash Out,DBuff,,,,,,,,
+Nuclear Finisher,Queen,5*,24.2,31.5,SELF_DMG_PERC,Nuclear,Element,,30,39,SELF_ATK_PERC,Elemental Ailment,Debuff,,60,78,SELF_DMG_PERC,Crash Out,DBuff,,,,,,,,
 Omega Knuckle,Queen,4*,12,16,OOB_SELF_ATK_PERC,,,,22,28,SELF_DMG_PERC,Tenacity&5,DBuff&Stack,,,,,,,,,,,,,,
-Moonlit Feather,Phoebe,5*,30,39,OOB_SELF_ATK_PERC,,,,6,7.8,PARTY_ATK_PERC,Tailor-Made(2)::Atk|Standard(2)::Atk|Basic(2)::Atk,DBuff|DBuff|DBuff,120%|100%|50%,5,6.5,PARTY_DMG_PERC,Tailor-Made(2)::Dmg|Standard(2)::Dmg|Basic(2)::Dmg,DBuff|DBuff|DBuff,120%|100%|50%,4,5.2,PARTY_CRIT_PERC,Tailor-Made(2)::CR|Standard(2)::CR|Basic(2)::CR,DBuff|DBuff|DBuff,120%|100%|50%,Random effect gained...
+Moonlit Feather,Phoebe,5*,30,39,OOB_SELF_ATK_PERC,,,,7.2,9.36,PARTY_ATK_PERC,Tailor-Made,DBuff,,6,7.8,,PARTY_ATK_PERC,Standard&Tailor-Made&Basic,DBuff&Exclusive&Exclusive,3,3.9,PARTY_ATK_PERC,Basic&Tailor-Made&Standard,DBuff&Exclusive&Exclusive,,Random effect gained... assume atk 
 Starrynight Soothsayer,Phoebe,4*,12,16,OOB_SELF_ATK_PERC,,,,4.8,6,ALLY_DMG_PERC,Tailor-Made|Standard|Basic,,,3.6,4.5,ALLY_DMG_PERC,Tailor-Made|Standard|Basic,,,,,,,,,
 "Kunoichi: Sky's Edge, Blade’s Wings",Wind,5*,15,20,SELF_SPD_FLAT,,,,6,7.8,PARTY_DMG_PERC,,,,,,,,,,,,,,,,Increase max [Intel] stacks
 "Limpid Moonlight, Silver Needles",Wind,4*,12,16,OOB_SELF_ATK_PERC,,,,17.5,23,PARTY_ATK_PERC,Insight&5,DBuff&Stack,,,,,,,,,,,,,,

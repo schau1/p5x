@@ -264,15 +264,24 @@ function runCalculation() {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
 
-    let dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[0].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
-    let dmgPerHit2 = [0,0,0];
+    let dmgPerHit = [0, 0, 0];
+    if (iCharInfo.final_skillPerc[0].numHit > 0) {
+        dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[0].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
+    }
 
+    let dmgPerHit2 = [0, 0, 0];
     if (iCharInfo.final_skillPerc[1].numHit > 0) {
         dmgPerHit2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[1].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);        
     }
-    // calculate the first dmg, // calculate 2nd dmg // output all those + total dmg
 
-    displayResult(dmgPerHit, dmgPerHit2);
+    let dmgPerHit3 = [0, 0, 0];
+
+    if (iCharInfo.final_skillPerc[2].numHit > 0) {
+        dmgPerHit3 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[2].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
+    }
+    // calculate the first dmg, // calculate 2nd dmg // output all those + total dmg
+   
+    displayResult(dmgPerHit, dmgPerHit2, dmgPerHit3);
     
     console.log(iCharInfo);
 }
@@ -360,6 +369,27 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
     // The first one should be a skill percent. If it's not, screw you.
     if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")) {
         let data = [];
+        data.value = 0;
+        data.numHit = 0;
+
+        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
+        if ((skill.e1conditionType == "Exclusive") && IsValidDBuffCondition(skill.e1condition)) {
+            // Invalid skill... this skill doesn't exist
+            skillPercList.push(data);
+            skillPercList.push(data);
+            skillPercList.push(data);
+//            console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
+            return skillPercList;
+        }
+        else if ((skill.e1conditionType == "DBuff") && !IsValidDBuffCondition(skill.e1condition)) {
+            // Invalid skill... this skill doesn't exist
+            skillPercList.push(data);
+            skillPercList.push(data);
+            skillPercList.push(data);
+//            console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
+            return skillPercList;
+        }
+
         switch (skillLevel) {
             case SKILL_LEVEL_10:
                 data.value = skill.e1Lvl10;
@@ -400,7 +430,7 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
         data.numHit = 0;
 
         // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
-        if (!IsValidDBuffCondition(skill.e2condition)) {
+        if (!IsValidDBuffCondition(skill.e2condition) && !IsValidDebuffEnemyCondition(skill.e2condition)) {
             skillPercList.push(data);
         }
         else {
@@ -438,6 +468,50 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
         skillPercList.push(data);
     }
 
+    if ((skill.e3dbuff == "DMG_SKILL_SINGLE") || (skill.e3dbuff == "DMG_SKILL_AOE")) {
+        let data = [];
+        data.value = 0;
+        data.numHit = 0;
+
+        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
+        if (!IsValidDBuffCondition(skill.e3condition) && !IsValidDebuffEnemyCondition(skill.e3condition)) {
+            skillPercList.push(data);
+        }
+        else {
+            switch (skillLevel) {
+                case SKILL_LEVEL_10:
+                    data.value = skill.e3Lvl10;
+                    break;
+                case SKILL_LEVEL_10_MINDSCAPE_5:
+                    data.value = skill.e3Lvl10m5;
+                    break;
+                case SKILL_LEVEL_13:
+                    data.value = skill.e3Lvl13;
+                    break;
+                case SKILL_LEVEL_13_MINDSCAPE_5:
+                    data.value = skill.e3Lvl13m5;
+                    break;
+                default:
+                    data.value = 0;
+                    break;
+            }
+            data.value = data.value / 100;
+            data.numHit = skill.e3numHit;
+
+            if (extraHit) {
+                data.numHit += extraHit;
+            }
+
+            skillPercList.push(data);
+        }
+    }
+    else {
+        let data = [];
+        data.value = 0;
+        data.numHit = 0;
+        skillPercList.push(data);
+    }
+
     return skillPercList;
 }
 
@@ -445,6 +519,9 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
 function IsValidDebuffEnemyCondition(conditionName) {
     if (conditionName != "") {
         for (var i = 0; i < buffList.length; i++) {
+            if ((conditionName == "Any") && (buffList[i].buffName != "")) {
+                return true;
+            }
             if (conditionName == "Elemental Ailment") {
                 if ((buffList[i].buffName == "Freeze") || (buffList[i].buffName == "Burn") ||
                     (buffList[i].buffName == "Shock") || (buffList[i].buffName == "Windswept") ||
@@ -605,6 +682,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "PARTY_ATK_PERC":
                 case "ALLY_ATK_PERC":
                 case "ALLIES_ATK_PERC":
+                case "SELF_N_ALLY_ATK_PERC":
                     data.atkPerc += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Percent", buffList[i].value]);
                     break;
@@ -666,6 +744,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "PARTY_CRIT_PERC":   // fall through
                 case "ALLY_CRIT_PERC":
                 case "ALLIES_CRIT_PERC":
+                case "SELF_N_ALLY_CRIT_PERC":
                     data.critRate += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Rate", buffList[i].value]);
                     break;
@@ -727,6 +806,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "NO_VALUE_BUFF":
                 case "HIGHLIGHT_CHARGE_INC":    // increase highlight
                 case "PARTY_DMG_TAKEN_DEC":     // decrease dmg taken
+                case "SELF_DMG_TAKEN_DEC":
                 case "SELF_DBUFF_CHANCE":       // chance of self buff
                 case "ALLY_HEAL_PERC_CHANCE":
                 case "ALLY_SHIELD_HP":          // shield based on HP
@@ -737,11 +817,13 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "FOE_ATK_DEC_PERC":        // decrease enemy's atk
                 case "PARTY_SP_RES":            // restore sp
                 case "SELF_HEAL_SKILL":
+                case "HEAL_SKILL_SINGLE_FLAT":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
                 case "PARTY_EHR_PERC":
                 case "ALLY_EHR_PERC":
                 case "ALLY_DEF_PERC":
+                case "SELF_DEF_PERC":
                 case "SELF_SPD_PERC":
                 case "PARTY_HP_PERC":
                 case "PARTY_HP_FLAT":
@@ -1305,7 +1387,7 @@ function isValidWeaponBuff(dbuff, condition, conditionType, skill, role) {
 }
 
 // ------------------------------------------------ Code dealing with HTML
-function displayResult(dmgPerHit, dmgPerHit2) {
+function displayResult(dmgPerHit, dmgPerHit2, dmgPerHit3) {
     var element = document.getElementById("result");
     // Clear the output if the user wants to
     if (document.getElementById('checkClrOutput').checked) {
@@ -1314,6 +1396,12 @@ function displayResult(dmgPerHit, dmgPerHit2) {
 
     //    var item = document.createElement("p");
     var item;
+
+    if (dmgPerHit[0] == 0) {
+        item = document.createElement("p");
+        item.innerHTML = "Error: Invalid Skill. Skill may requires a buff to be active or has evolved to a different skill. Please check skill condition.";
+        element.prepend(item);      
+    }
 
     if (document.getElementById('chkDetailOutput').checked) {
         item = document.createElement("ul");
@@ -1367,12 +1455,17 @@ function displayResult(dmgPerHit, dmgPerHit2) {
     if (dmgPerHit2[0] > 0) {
         item = document.createElement("p");
         item.innerHTML = "Final Damage on main target: ~" + (dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit)
-            + " to ~" + (dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit) + ".";
+            + " to ~" + (dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit + dmgPerHit3[1] * iCharInfo.final_skillPerc[2].numHit) + ".";
         element.prepend(item);
 
         item = document.createElement("p");
-        item.innerHTML = "In addition, the skill also deals ~" + dmgPerHit2[0] + " to ~" + dmgPerHit2[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[1].numHit +
+        item.innerHTML = "In addition, the skill deals ~" + dmgPerHit2[0] + " to ~" + dmgPerHit2[1] + " per hit, " + iCharInfo.final_skillPerc[1].numHit +
             "x for a total of ~" + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit + " to ~" + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit + ".";
+
+        if (dmgPerHit3[0] > 0) {
+            item.innerHTML += " And the skill also deals ~" + dmgPerHit3[0] + " to ~" + dmgPerHit3[1] + " per hit, " + iCharInfo.final_skillPerc[2].numHit +
+                "x for a total of ~" + dmgPerHit3[0] * iCharInfo.final_skillPerc[2].numHit + " to ~" + dmgPerHit3[1] * iCharInfo.final_skillPerc[2].numHit + ".";
+        }
         element.prepend(item);
     }
 
