@@ -37,7 +37,7 @@
 // 5th: Should I have a stat rec??? For example, if all their buffs not adding up to 100% crit, probably not worth doing crit mull??? Nah... impossible
 // Still worth doing crit mult for stable domain...
 
-const USE_STAT_SCREEN = 0;      // 0 means use card summary, 1 means use character summary
+const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
 const ENEMY_DEFENSE_DEFAULT = 363.2;  // doesn't have it - use Dominion value instead
 const ENEMY_DEFENSE_ADDITIONAL_DEFAULT = 158.4; // doesn't have it - use NTMR value instead
