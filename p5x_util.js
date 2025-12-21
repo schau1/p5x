@@ -1,11 +1,12 @@
 ﻿/*
- * File: p5x_calculator
- * Description: 
- *  
+ * File: p5x_utils.js
+ *
+ * Description: Common utility functions. Could be quickly modified for another future project  
  * 
  * Author: schau1 / cantiga
  * 
  * Copyright (c) 2025
+ * DO NOT TAKE OR MODIFY MY CODE FOR YOUR USE WITHOUT ASKING 
  * 
 */
 

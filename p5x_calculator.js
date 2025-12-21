@@ -1,11 +1,13 @@
 ﻿/*
- * File: p5x_calculator
- * Description: 
+ * File: p5x_calculator.js
+ *
+ * Description: P5X damage calculator and simulator.
  *  
  * 
  * Author: schau1 / cantiga
  * 
  * Copyright (c) 2025
+ * DO NOT TAKE OR MODIFY MY CODE FOR YOUR USE WITHOUT ASKING
  * 
 */
 

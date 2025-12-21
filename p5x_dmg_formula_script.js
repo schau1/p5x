@@ -1,41 +1,18 @@
 ﻿/*
- * File: p5x_calculator
- * Description: 
- *  
+ * File: p5x_dmg_formula_script.js
+ *
+ * Description: Main file dealing with HTML interface and the back-end
+ * This tool allows user inputs of characters and skills, and calculate
+ * the damage based on what the user enters  
  * 
  * Author: schau1 / cantiga
  * 
  * Copyright (c) 2025
+ * DO NOT TAKE OR MODIFY MY CODE FOR YOUR USE WITHOUT ASKING 
  * 
 */
 
 // python -m http.server
-
-// 1. rotation simulation - 6T
-// List of 5 characters - input inportant stats: Speed (for turn order), atk, atk mul, crit, crit mul, card set
-// Pick a boss for defense stats
-// Pick Wonder knife... (should be able to simulation with his knife at later version???)
-// Other characters should have fixed rotation. The only one changing would just be Wonder and Navi and Chord???
-//
-// Loop would be Rotation X, one change skill A->B->C
-// Rotation X1, 2nd change skill A->B->C
-
-// 2nd: Card compare: which card and which set is better... probably pretty hard to do since support wants certain
-// things. Maybe just dps stats?? Or just make it for Makoto Yuki, my beloved
-
-// 3rd: give me a list of team members and their rev card set and their weapons / awareness, and I'll calculate and tell
-// you what buffs/debuffs you should use on Wonder.
-// May have to tie persona + overwrite persona level to the buffs/debuffs
-// Wonder can only have 3 buffs, so I can list all the available buffs out, and do simple calculation based on that
-// probably should also list dps stats in battle: attack, dmg mul, crit rate, crit mult, pierce rate
-// maybe that is not as important...? buffs are based on user stats, so just wonder stats..., but the dmg will be based on
-// the dps stats... may need to check more atk vs. more defense down...
-// I think this is the calculation I need to be honest for the best dps
-
-// 4th: Is awareness worth it? Which awareness is better for my BIS team?...
-
-// 5th: Should I have a stat rec??? For example, if all their buffs not adding up to 100% crit, probably not worth doing crit mull??? Nah... impossible
-// Still worth doing crit mult for stable domain...
 
 const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
@@ -194,20 +171,24 @@ function runCalculation() {
 
     console.table(buffList);
 
-    iCharInfo.atkPerc = iCharInfo.hiddenAtk + iCharInfo.atkPerc;
-    iCharInfo.dmgMult = iCharInfo.dmgMult;
-    if (iCharInfo.hiddenCrit > 0) {
-        iCharInfo.critRate = iCharInfo.hiddenCrit + iCharInfo.critRate;
-    }
-    else {
-        iCharInfo.critRate = BASE_CRIT_RATE + iCharInfo.critRate;
-    }
+    if (!USE_STAT_SCREEN) {
+        // if we are already use the stat screen, we don't need to care about the hidden value
+        iCharInfo.atkPerc = iCharInfo.hiddenAtk + iCharInfo.atkPerc;
+        iCharInfo.dmgMult = iCharInfo.dmgMult;
 
-    if (iCharInfo.hiddenCritMult > 0) {
-        iCharInfo.critMult = iCharInfo.hiddenCritMult + iCharInfo.critMult;
-    }
-    else {
-        iCharInfo.critMult = BASE_CRIT_MULT + iCharInfo.critMult;
+        if (iCharInfo.hiddenCrit > 0) {
+            iCharInfo.critRate = iCharInfo.hiddenCrit + iCharInfo.critRate;
+        }
+        else {
+            iCharInfo.critRate = BASE_CRIT_RATE + iCharInfo.critRate;
+        }
+
+        if (iCharInfo.hiddenCritMult > 0) {
+            iCharInfo.critMult = iCharInfo.hiddenCritMult + iCharInfo.critMult;
+        }
+        else {
+            iCharInfo.critMult = BASE_CRIT_MULT + iCharInfo.critMult;
+        }
     }
 
     iCharInfo.pierceRate = iCharInfo.pierceRate;
@@ -1319,6 +1300,10 @@ function isValidWeaponBuff(dbuff, condition, conditionType, skill, role) {
 }
 
 // ------------------------------------------------ Code dealing with HTML
+
+function show(event) {
+
+}
 
 function displayResult(dmgPerHit, dmgPerHit2) {
     var element = document.getElementById("result");
