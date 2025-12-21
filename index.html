@@ -40,7 +40,7 @@
 		<p>1. If an ability has different percentages per stack, assume Max stacks. For example, Makoto can have a max of 4 [Moon Stacks]. The tool will use 4 stacks for calculation (he should always have 4 moon stacks before S3 if you have his rotation down correctly). This also means that you need to check the unit yourself to see if they can hit the max stack with the team's composition (future improvement to allow stack input).</p>
 		<p>2. Party members have enough stats to max out any skill that has a max of % stat up to X amount. For example, the description for Leon's Ultima Boosters is "Increase 1 ally's Attack by 19.5% for 2 turns. For each stack of Power of Friendship the target has, increase Attack by 20% of Kamiyama's Attack more (up to 1516.7)," the tool assumes that you hit the max of 1516.7.</p>
 		<p>3. For any ability that has no max, assume max stat from other Skill. For example, 5 stacks of Bloom increases ATK based on 8% own CRIT DMG over 100%. This ability has no max. The calculator will assume CRIT DMG 338% at LVL10 and 418% at LVL 13 and so on.</p>
-		<p>3. If something has a chance to happen, assume it will always happen if you pick that option. If something randomly gives an effect, assume the first effect (future improvement).</p>
+		<p>4. If something has a chance to happen, assume it will always happen if you pick that option. If something randomly gives an effect, assume the first effect (future improvement).</p>
 		<p>The final calculation may also be off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, more stats from your support than expected (#3 assumption as stated above), unclear translation (increased by x% - interpreted as multiplication instead of addition), and of course bugs. <b>Use this as something to compare builds with the same baseline instead of as an absolute number calculator.</b> For example, use it to compare Wonder's knives and see if it's worth getting one reforged with your limited currency or use it to see which card set is better. Just play the game if the exact number is what you need.</p>
 		<p>This tool was created out of love for the Persona 3 Protagonist (Makoto Yuki). As a result, it only contains useful characters already released + Makoto and his supports and only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). The Makoto's #2 biggest fan is still working on adding the rest of the characters and any new one, but they are unpaid and not a web developer (ugly UI proved it), so it may take some time.</p>
 	</div>
@@ -61,7 +61,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
-						<button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice" onmouseover="show(event)">A0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="awarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -82,7 +82,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="skillLevelChoice">Level 10</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="skillLevelChoice" onmouseover="show(event)">Level 10</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
@@ -93,7 +93,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="weaponChoice">5*</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="weaponChoice" onmouseover="show(event)">5*</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
@@ -102,7 +102,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Reforge Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="reforgeChoice">R0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="reforgeChoice" onmouseover="show(event)">R0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
@@ -165,7 +165,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Reforge Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="wreforgeChoice">R6</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="wreforgeChoice" onmouseover="show(event)">R6</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
@@ -196,7 +196,7 @@
 
 					<div class=" w3-dropdown-hover w3-block w3-margin-bottom">
 						Weakness
-						<button class="w3-button w3-white w3-block w3-left-align" id="enemyElemWeakness">Weakness</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="enemyElemWeakness" onmouseover="show(event)">Weakness</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Normal</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Resist</a>
@@ -206,7 +206,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Stable Domain
-						<button class="w3-button w3-white w3-block w3-left-align" id="critChoice">Yes</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="critChoice" onmouseover="show(event)">Yes</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Yes</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">No</a>
@@ -256,7 +256,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1awarenessChoice">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p1awarenessChoice" onmouseover="show(event)">A0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1awarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -270,7 +270,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1skillLevelChoice">Level 10</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p1skillLevelChoice" onmouseover="show(event)">Level 10</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
@@ -281,7 +281,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1weaponChoice">5*</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p1weaponChoice" onmouseover="show(event)">5*</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
@@ -290,7 +290,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Reforge Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1reforgeChoice">R0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p1reforgeChoice" onmouseover="show(event)">R0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
@@ -335,7 +335,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2awarenessChoice">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p2awarenessChoice" onmouseover="show(event)">A0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2awarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -349,7 +349,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2skillLevelChoice">Level 10</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p2skillLevelChoice" onmouseover="show(event)">Level 10</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
@@ -360,7 +360,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2weaponChoice">5*</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p2weaponChoice" onmouseover="show(event)">5*</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
@@ -369,7 +369,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Reforge Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2reforgeChoice">R0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p2reforgeChoice" onmouseover="show(event)">R0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
@@ -416,7 +416,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Awareness
-						<button class="w3-button w3-white w3-block w3-left-align" id="naviawarenessChoice">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="naviawarenessChoice" onmouseover="show(event)">A0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="naviawarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -430,7 +430,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Skill Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="naviskillLevelChoice">Level 10</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="naviskillLevelChoice" onmouseover="show(event)">Level 10</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
@@ -441,7 +441,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Weapon
-						<button class="w3-button w3-white w3-block w3-left-align" id="naviweaponChoice">5*</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="naviweaponChoice" onmouseover="show(event)">5*</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
@@ -450,7 +450,7 @@
 
 					<div class="w3-dropdown-hover w3-block w3-margin-bottom">
 						Reforge Level
-						<button class="w3-button w3-white w3-block w3-left-align" id="navireforgeChoice">R0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="navireforgeChoice" onmouseover="show(event)">R0</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>

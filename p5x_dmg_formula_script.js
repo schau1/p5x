@@ -736,6 +736,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "ALLY_SHIELD_REC_PERC":    // increase shield received
                 case "FOE_ATK_DEC_PERC":        // decrease enemy's atk
                 case "PARTY_SP_RES":            // restore sp
+                case "SELF_HEAL_SKILL":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
                 case "PARTY_EHR_PERC":
@@ -1300,11 +1301,6 @@ function isValidWeaponBuff(dbuff, condition, conditionType, skill, role) {
 }
 
 // ------------------------------------------------ Code dealing with HTML
-
-function show(event) {
-
-}
-
 function displayResult(dmgPerHit, dmgPerHit2) {
     var element = document.getElementById("result");
     // Clear the output if the user wants to
