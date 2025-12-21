@@ -148,3 +148,34 @@ function calculateSkillDamage(atkFinal, dmgMultFinal, enemyDefFinal, critMultFin
 
     return [minSkillDamage, maxSkillDamage, averageSkillDamage];
 }
+
+function bestCombination(items, k, scoreFn) {
+    let bestScore = -Infinity;
+    let bestCombo = null;
+
+    const n = items.length;
+    const combo = [];
+
+    function generate(startIndex, depth) {
+        // depth == current number of picked items
+        if (depth === k) {
+            const s = scoreFn(combo);
+            if (s > bestScore) {
+                bestScore = s;
+                bestCombo = combo.slice(); // clone
+            }
+            return;
+        }
+
+        // Avoid unnecessary recursion
+        const remaining = k - depth;
+        for (let i = startIndex; i <= n - remaining; i++) {
+            combo[depth] = items[i];
+            generate(i + 1, depth + 1);
+        }
+    }
+
+    generate(0, 0);
+
+    return { bestCombo, bestScore };
+}

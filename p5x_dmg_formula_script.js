@@ -162,7 +162,13 @@ function runCalculation() {
     // Get skills and add buffs from the user selected skill (S1/S3) to buff list
     var skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName, DPS_ROLE);
     if (skillIndex >= 0) {
-        iCharInfo.skillType = skillList[skillIndex].skillType;
+        // Set the skillType (element or support or passive) to element if we have multiple type
+        const element = skillList[skillIndex].skillType.split("|");
+        for (var item of element) {
+            if (item != "Support") {
+                iCharInfo.skillType = item;
+            }
+        }
         iCharInfo.skillBehavior = skillList[skillIndex].skillBehavior;
     }
     else {
@@ -288,6 +294,25 @@ function runCalculation() {
     displayResult(dmgPerHit, dmgPerHit2);
     
     console.log(iCharInfo);
+}
+
+function scoreFn(simWonderList) {
+    // I can't just add the buff to buff list cause I will need to remove either remove it later or something
+    // when I sim the next one... so I need to do something else. I thought it may be quick to add this, but it's not
+    // what I need to do is to make another buffList with the buffList + Wonder stuff and go from there...
+    // all my function are using the global buff list, so that doesn't work..
+
+/*    for (var i = 0; i < simWonderList.length; i++) {
+        // Check wonder list. If found, move to the next item
+        if (addWonderBuffToBuffList(simWonderList[i].name)) {
+            continue;
+        }
+        const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, role);
+        // check skillList next
+        if (item) {
+            continue;
+        }
+    }*/
 }
 
 function addNaviStats(percent) {
@@ -719,22 +744,26 @@ function processDBuffList(skill, element, skillBehavior = "") {
 //                case "WARM_WELCOME":
 //                case "FURIOUS_PURSUE":
                 case "NO_VALUE_BUFF":
-                case "HIGHLIGHT_CHARGE_INC":
-                case "PARTY_DMG_TAKEN_DEC":
-                case "SELF_DBUFF_CHANCE":
+                case "HIGHLIGHT_CHARGE_INC":    // increase highlight
+                case "PARTY_DMG_TAKEN_DEC":     // decrease dmg taken
+                case "SELF_DBUFF_CHANCE":       // chance of self buff
                 case "ALLY_HEAL_PERC_CHANCE":
-                case "ALLY_SHIELD_HP":
+                case "ALLY_SHIELD_HP":          // shield based on HP
                 case "PARTY_SHIELD_REC_PERC":
-                case "PARTY_HEAL_REC_PERC":
-                case "PARTY_EHR_RES_PERC":  // ailment resistance
-                case "ALLY_SHIELD_REC_PERC":
-//                case "PARTY_DMG_TAKEN_DEC":
+                case "PARTY_HEAL_REC_PERC":     // increase heals received
+                case "PARTY_EHR_RES_PERC":      // ailment resistance
+                case "ALLY_SHIELD_REC_PERC":    // increase shield received
+                case "FOE_ATK_DEC_PERC":        // decrease enemy's atk
+                case "PARTY_SP_RES":            // restore sp
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
+                case "PARTY_EHR_PERC":
+                case "ALLY_EHR_PERC":
                 case "ALLY_DEF_PERC":
                 case "SELF_SPD_PERC":
                 case "PARTY_HP_PERC":
                 case "PARTY_HP_FLAT":
+                case "ALLY_HP_FLAT":
                 case "BLOSSOM":
                 case "HOLY_SONG":   // buffs by the number of stacks so I may want to add later
                     break;
@@ -2232,6 +2261,9 @@ function readSkillDatabase() {
             data.e1dbuff = row[i][j++];
             data.e1condition = row[i][j++];
             data.e1conditionType = row[i][j++];
+
+            data.e2skillType = row[i][j++];    // support or fire or passive
+            data.e2skillBehavior = row[i][j++];    // support or fire or passive
 
             data.e2Lvl10 = parseFloat(row[i][j++]);
             data.e2Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
