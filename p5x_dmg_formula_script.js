@@ -864,6 +864,10 @@ function addUserSelectedBuffToBuffList() {
             role = SUPPORT_ROLE;
         }
 
+        // remove the skill from the list first since we already took the buff from this skill
+        // to avoid duplicate
+        htmlDBuffList = htmlDBuffList.filter(item => item.name !== iCharInfo.skillName);
+
         const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, role);
         // check skillList next
         if (item) {
@@ -1362,7 +1366,7 @@ function displayResult(dmgPerHit, dmgPerHit2) {
 
     if (dmgPerHit2[0] > 0) {
         item = document.createElement("p");
-        item.innerHTML = "Final Damage: ~" + (dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit)
+        item.innerHTML = "Final Damage on main target: ~" + (dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit)
             + " to ~" + (dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit) + ".";
         element.prepend(item);
 
