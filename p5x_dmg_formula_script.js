@@ -206,7 +206,7 @@ function runCalculation() {
     iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
     // Add buffs and debuffs to everything
-    let data = processDBuffList(iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
+    let data = processDBuffList(iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
     iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
@@ -569,7 +569,7 @@ function IsValidDBuffCondition(conditionName) {
 }
 
 
-function IsValidAndCondition(name, type, skill, element, skillBehavior) {
+function IsValidAndCondition(name, type, skillName, skill, element, skillBehavior) {
     const searchName = name.split('&'); // conditionName
     const searchType = type.split('&'); // conditionType
 
@@ -578,7 +578,10 @@ function IsValidAndCondition(name, type, skill, element, skillBehavior) {
     for (var j = 0; j < searchName.length; j++) {
         if (searchType[j]) {
             if (searchType[j].includes("DBuff") || searchType[j].includes("Dbuff")) {
-                if (!IsValidDBuffCondition(searchName[j])) {
+                if (skillName.includes(searchName[j])) {
+                    continue;
+                }
+                else if (!IsValidDBuffCondition(searchName[j])) {
                     return false;
                 }
             }
@@ -629,7 +632,7 @@ function IsValidAndCondition(name, type, skill, element, skillBehavior) {
 // how should I deal with condition?? I could go through the list to make sure I have the buff condition first
 // before I add?? Like if he requires HL, I need to make sure I have that buff name on the list first 
 // if the dps only buffs allies with some skills, I may need to filter it out when I add selfBuff/passive skills
-function processDBuffList(skill, element, skillBehavior = "") {
+function processDBuffList(skillName, skill, element, skillBehavior = "") {
     let data = [];
     data.atkFlat = 0;
     data.atkPerc = 0;
@@ -655,7 +658,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
             var andResult;
 
             for (var m = 0; m < conditionName.length; m++) {
-                andResult = IsValidAndCondition(conditionName[m], conditionType[m], skill, element, skillBehavior);
+                andResult = IsValidAndCondition(conditionName[m], conditionType[m], skillName, skill, element, skillBehavior);
 
                 if (andResult) {
                     // Since this is an OR operation, any true result means the final result is true
@@ -724,6 +727,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "ALLIES_CRIT_MULT_PERC":   // fall through
                 case "PARTY_CRIT_MULT_PERC":   // fall through
                 case "ALLY_CRIT_MULT_PERC":
+                case "SELF_N_ALLY_CRIT_MULT_PERC":
                     data.critMult += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage", buffList[i].value]);
                     break;
@@ -767,6 +771,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "SELF_PIERCE_PERC":   // fall through
                 case "PARTY_PIERCE_PERC":   // fall through
                 case "ALLY_PIERCE_PERC":
+                case "SELF_N_ALLY_PIERCE_PERC":
                     data.pierceRate += buffList[i].value;
                     htmlAppliedBuffList.push([buffList[i].buffName, "Increase Pierce Rate", buffList[i].value]);
                     break;
@@ -825,6 +830,7 @@ function processDBuffList(skill, element, skillBehavior = "") {
                 case "ALLY_DEF_PERC":
                 case "SELF_DEF_PERC":
                 case "SELF_SPD_PERC":
+                case "SELF_EHR_PERC":
                 case "PARTY_HP_PERC":
                 case "PARTY_HP_FLAT":
                 case "ALLY_HP_FLAT":
