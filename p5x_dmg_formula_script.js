@@ -264,25 +264,29 @@ function runCalculation() {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
 
-    let dmgPerHit = [0, 0, 0];
-    if (iCharInfo.final_skillPerc[0].numHit > 0) {
-        dmgPerHit = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[0].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
+    let dmgPerHit = [];
+    var totalMin = 0, totalMax = 0;
+
+    for (const skill of iCharInfo.final_skillPerc) {
+        if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {
+            let dmg = [];
+            dmg = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
+            dmg.numHit = skill.numHit;
+            dmg.skillBehavior = skill.skillBehavior;
+            dmgPerHit.push(dmg);
+            totalMin += dmg[0] * dmg.numHit;
+            totalMax += dmg[1] * dmg.numHit;
+        }
+        else if (skill.skillBehavior == "DoT") {
+            var hp =  skill.value * 100;
+            let dmg = [hp, hp, hp]
+            dmg.numHit = skill.numHit;
+            dmg.skillBehavior = skill.skillBehavior;
+            dmgPerHit.push(dmg);
+        }
     }
 
-    let dmgPerHit2 = [0, 0, 0];
-    if (iCharInfo.final_skillPerc[1].numHit > 0) {
-        dmgPerHit2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[1].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);        
-    }
-
-    let dmgPerHit3 = [0, 0, 0];
-
-    if (iCharInfo.final_skillPerc[2].numHit > 0) {
-        dmgPerHit3 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, iCharInfo.final_skillPerc[2].value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
-    }
-    // calculate the first dmg, // calculate 2nd dmg // output all those + total dmg
-   
-    displayResult(dmgPerHit, dmgPerHit2, dmgPerHit3);
-    
+    displayResult(dmgPerHit, totalMin, totalMax);
     console.log(iCharInfo);
 }
 
@@ -367,10 +371,12 @@ function initializeData() {
 function calculateSkillPerc(skill, skillLevel, extraHit) {   
     let skillPercList = [];
     // The first one should be a skill percent. If it's not, screw you.
-    if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")) {
+    if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")
+        || skill.e1dbuff == "DMG_SKILL_DOT_HP") {
         let data = [];
         data.value = 0;
         data.numHit = 0;
+        data.skillBehavior = skill.skillBehavior;
 
         // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
         if ((skill.e1conditionType == "Exclusive") && IsValidDBuffCondition(skill.e1condition)) {
@@ -1393,7 +1399,7 @@ function isValidWeaponBuff(dbuff, condition, conditionType, skill, role) {
 }
 
 // ------------------------------------------------ Code dealing with HTML
-function displayResult(dmgPerHit, dmgPerHit2, dmgPerHit3) {
+function displayResult(dmgList, min, max) {
     var element = document.getElementById("result");
     // Clear the output if the user wants to
     if (document.getElementById('checkClrOutput').checked) {
@@ -1403,10 +1409,12 @@ function displayResult(dmgPerHit, dmgPerHit2, dmgPerHit3) {
     //    var item = document.createElement("p");
     var item;
 
-    if (dmgPerHit[0] == 0) {
+    if (dmgList[0].skillBehavior != "DoT" && dmgList[0][0] == 0) {
         item = document.createElement("p");
         item.innerHTML = "Error: Invalid Skill. Skill may requires a buff to be active or has evolved to a different skill. Please check skill condition.";
-        element.prepend(item);      
+        element.prepend(item);
+
+        return;
     }
 
     if (document.getElementById('chkDetailOutput').checked) {
@@ -1458,36 +1466,32 @@ function displayResult(dmgPerHit, dmgPerHit2, dmgPerHit3) {
         element.prepend(item);
     }
 
-    if (dmgPerHit2[0] > 0) {
-        item = document.createElement("p");
-        item.innerHTML = "Final Damage on main target: ~" + (dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit)
-            + " to ~" + (dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit + dmgPerHit3[1] * iCharInfo.final_skillPerc[2].numHit) + ".";
-        element.prepend(item);
-
-        item = document.createElement("p");
-        item.innerHTML = "In addition, the skill deals ~" + dmgPerHit2[0] + " to ~" + dmgPerHit2[1] + " per hit, " + iCharInfo.final_skillPerc[1].numHit +
-            "x for a total of ~" + dmgPerHit2[0] * iCharInfo.final_skillPerc[1].numHit + " to ~" + dmgPerHit2[1] * iCharInfo.final_skillPerc[1].numHit + ".";
-
-        if (dmgPerHit3[0] > 0) {
-            item.innerHTML += " And the skill also deals ~" + dmgPerHit3[0] + " to ~" + dmgPerHit3[1] + " per hit, " + iCharInfo.final_skillPerc[2].numHit +
-                "x for a total of ~" + dmgPerHit3[0] * iCharInfo.final_skillPerc[2].numHit + " to ~" + dmgPerHit3[1] * iCharInfo.final_skillPerc[2].numHit + ".";
-        }
-        element.prepend(item);
-    }
-
     item = document.createElement("p");
-    item.innerHTML = "Damage: ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit. Skill hits " + iCharInfo.final_skillPerc[0].numHit +
-        "x for a total of ~" + dmgPerHit[0] * iCharInfo.final_skillPerc[0].numHit + " to ~" + dmgPerHit[1] * iCharInfo.final_skillPerc[0].numHit + ".";
+    item.innerHTML = "Final damage on main target: ~" + min + " to ~" + max + " + any DoT (if listed above).";
     element.prepend(item);
 
     item = document.createElement("p");
-    item.innerHTML = "Party::" + iCharInfo.charName + "::" + iCharInfo.awareness + "R" + iCharInfo.reforgeLevel + " " + iCharInfo.weapon + ". ";
+//    item.innerHTML = "The skill deals ";
+
+    for (const dmgPerHit of dmgList) {
+        if (dmgPerHit.skillBehavior != "DoT") {
+            item.innerHTML += "The skill deals ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit, total " + dmgPerHit.numHit + " hit(s). ";
+        }
+        else {
+            item.innerHTML += "The skill deals " + dmgPerHit[0] + "% of the enemy's HP " + dmgPerHit.numHit + " time(s). "
+        }
+    }
+
+    element.prepend(item);
+
+    item = document.createElement("p");
+    item.innerHTML = "Skill:: " + iCharInfo.skillName + ". Party::" + iCharInfo.charName + "::" + iCharInfo.awareness + "R" + iCharInfo.reforgeLevel + " " + iCharInfo.weapon + ". ";
     for (const party of partyMembers) {
         item.innerHTML += party.charName + "::" + party.awareness + party.reforgeLevel + " " + party.weapon + ". ";
     }
 
     var firstChild = document.getElementById('wDBuffOutputDiv').firstElementChild;
-    item.innerHTML += "Wonder: ";
+    item.innerHTML += "Wonder: " + document.getElementById('wweaponChoice').innerHTML + " " + document.getElementById('wreforgeChoice').innerHTML + " ";
 
     while (firstChild) {
         item.innerHTML += firstChild.innerHTML + " ";
