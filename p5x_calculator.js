@@ -151,6 +151,17 @@ function calculateSkillDamage(atkFinal, dmgMultFinal, enemyDefFinal, critMultFin
     return [minSkillDamage, maxSkillDamage, averageSkillDamage];
 }
 
+/*
+*   Return the best combination and score from an array
+*
+*   @param  unit        must have unit to be combined with item combo
+*   @param  items       array / list of objects
+*   @param  k           number of items to choose
+*   @param  scoreFn     function that takes an array of chosen items and returns a numeric score
+*   
+*   @return {array of best combo, score} 
+*/
+
 function bestCombination(items, k, scoreFn) {
     let bestScore = -Infinity;
     let bestCombo = null;

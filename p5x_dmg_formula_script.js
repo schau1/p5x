@@ -29,6 +29,7 @@ const WEAPON_FILE_NAME = encodeURIComponent("P5X database - weapon.csv");
 const WONDER_FILE_NAME = encodeURIComponent("P5X database - wonder.csv");
 const BOSS_FILE_NAME = encodeURIComponent("P5X database - boss.csv");
 const FILE_NUM_SKIP_LINE = 2;   // skip the first 2 lines of the csv file
+const MAX_NUM_DATABASE_EFFECT = 6;  // database has 6 effects right now
 
 const NAV_BUFF_PERC = 0.20;     // Used for now. Once I do party member, I can remove this and get the correct value
 
@@ -62,6 +63,8 @@ let weaponList = [];
 let wonderList = [];
 let bossList = [];
 let wonderKnifeList = [];
+let personaPassive = [];    // mostly used for sim
+let personaSkill = [];      // mostly used for sim
 
 // Store data that will be used to output as an entry to the html file
 let htmlWonderDbList = [];
@@ -89,7 +92,164 @@ readWeaponDatabase();
 readWonderDatabase();
 readBossDatabase();
 
+/**
+ *   HMTL function, onClick, will run the damage calculation formula with the user input
+ */
 function runCalculation() {
+    simCommon();
+
+    let dmgPerHit = [];
+    var totalMin = 0, totalMax = 0;
+
+    for (const skill of iCharInfo.final_skillPerc) {
+        if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {
+            let dmg = [];
+            dmg = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
+            dmg.numHit = skill.numHit;
+            dmg.skillBehavior = skill.skillBehavior;
+            dmgPerHit.push(dmg);
+            totalMin += dmg[0] * dmg.numHit;
+            totalMax += dmg[1] * dmg.numHit;
+        }
+        else if (skill.skillBehavior == "DoT") {
+            var hp =  skill.value * 100;
+            let dmg = [hp, hp, hp]
+            dmg.numHit = skill.numHit;
+            dmg.skillBehavior = skill.skillBehavior;
+            dmgPerHit.push(dmg);
+        }
+    }
+
+    displayResult(dmgPerHit, totalMin, totalMax);
+    console.log(iCharInfo);
+}
+
+/*
+*   Combine passive with the persona abilities in the personaList and return a damage score
+*
+*   @param      passive           must have passive to be combined with item combo
+*   @param      personaList       array / list of objects
+*
+*   @return     damage score of this combo
+*/
+function damageFn(personaList) {
+    // I can't just add the buff to buff list cause I will need to remove either remove it later or something
+    // when I sim the next one... so I need to do something else. I thought it may be quick to add this, but it's not
+    // what I need to do is to make another buffList with the buffList + Wonder stuff and go from there...
+    // all my function are using the global buff list, so that doesn't work..
+
+    /*    for (var i = 0; i < simWonderList.length; i++) {
+            // Check wonder list. If found, move to the next item
+            if (addWonderBuffToBuffList(simWonderList[i].name)) {
+                continue;
+            }
+            const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, role);
+            // check skillList next
+            if (item) {
+                continue;
+            }
+        }*/
+
+    // since we have 1 passive sent in, we are only allowing at most 2 more passive since Wonder can only equip 3 personas (what kind of wild card is this?
+    // got outclassed in his own game. At least Makoto is shown to have 4.)
+ /*   var maxAllowPassive = 2;
+    const uniqueElements = new Set();
+
+    personaList.foreach(item => {
+        if (uniqueElements.has(item)) {
+            // If the item is already in the Set, it's a duplicate
+            return 0;
+        } else {
+            uniqueElements.add(item);
+        }
+
+    });
+
+
+
+
+    for (const persona of personaList) {
+        // if there is any passive in the list from a persona that is not the same as the passive we send in, we're done because
+        // we should allow only 1 passsive, unless it's a passive that doesn't require to be active
+        // if it's a persona that doesn't need a passive to be enable, we can add that persona passive if to our sim if we're using
+        // the signature of that persona. I think that is too complicated though, so maybe only 1 passive is allowed for now
+
+        // should i just combine passive + active in 1 line?? no cause there are generic abilities....
+        if (passive.source == persona.source) {
+
+
+        }
+
+
+    }*/
+
+
+    return 0;
+}
+
+/**
+ *  HMTL function, onClick, will run the simulation formula with the user input
+ *  to find the best Persona
+ */
+function runSimPersona() {
+    simCommon();
+
+    let newSkill = [];
+
+    // first, make a new personaSkills list will a combination of all the possible skills
+    for (const persona of personaPassive) {
+        for (const skill of personaSkill) {
+            if ((skill.source == "") || persona.name.includes(skill.source)){
+                let item = combinePassiveWithSkill(persona, skill);
+                if (item) {
+                    newSkill.push(item);
+                }
+            }
+        }
+    }
+
+    console.log(newSkill);
+
+    // Now we find the best 3 skills
+    let result = bestCombination(newSkill, 3, damageFn);
+
+    console.log(result);
+}
+
+function combinePassiveWithSkill(persona, skill) {
+    if (persona.source != "") {
+        // first, add the persona passive first
+        let item = [];
+        const nameList = persona.name.split("::");
+        item.personaName = nameList[0];
+        item.personaSkill = [];
+        item.personaSkill.push(nameList[1]);
+        item.dbuff = [];
+        for (const dbuff of persona.dbuff) {
+            if (dbuff.dbuff != "") {
+                item.dbuff.push(dbuff);
+            }
+
+        }
+
+        // add the skill
+        item.personaSkill.push(skill.name);
+
+        for (const dbuff of skill.dbuff) {
+            if (dbuff.dbuff != "") {
+                item.dbuff.push(dbuff);
+            }
+        }
+
+        return item;
+    }
+
+    return null;
+}
+
+
+
+function simCommon() {
     readCharStatDatabase();
     readCardDatabase();
     readSkillDatabase();
@@ -167,7 +327,7 @@ function runCalculation() {
     addBossStatusToBuffList(iCharInfo.weakness);
 
     // Add buffs/debuffs from the user selected buff/debuff list
-    addUserSelectedBuffToBuffList();    
+    addUserSelectedBuffToBuffList();
 
     console.table(buffList);
 
@@ -206,7 +366,7 @@ function runCalculation() {
     iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
     // Add buffs and debuffs to everything
-    let data = processDBuffList(iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
+    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
     iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
@@ -219,21 +379,22 @@ function runCalculation() {
     iCharInfo.extraHit = data.extraHit;
 
     // testing:
-/*    iCharInfo.baseAtk = 1200 + 600;
-    iCharInfo.atkFlat = 500;
-    iCharInfo.atkPerc = 50;
-    iCharInfo.dmgMult = 50 + 20 + 20;
-    iCharInfo.enemyDefense = 400;
-    iCharInfo.additionalDefCoef = 158.3;
-    iCharInfo.pierceRate = 10;
-    iCharInfo.defenseReduction = 80;
-    iCharInfo.windswept = true;
-    iCharInfo.critRate = 40;
-    iCharInfo.critMult = 220;
-    iCharInfo.weakness = "Weakness";
-    iCharInfo.final_skillPerc[0].value = 1.2;
-    */
+    /*    iCharInfo.baseAtk = 1200 + 600;
+        iCharInfo.atkFlat = 500;
+        iCharInfo.atkPerc = 50;
+        iCharInfo.dmgMult = 50 + 20 + 20;
+        iCharInfo.enemyDefense = 400;
+        iCharInfo.additionalDefCoef = 158.3;
+        iCharInfo.pierceRate = 10;
+        iCharInfo.defenseReduction = 80;
+        iCharInfo.windswept = true;
+        iCharInfo.critRate = 40;
+        iCharInfo.critMult = 220;
+        iCharInfo.weakness = "Weakness";
+        iCharInfo.final_skillPerc[0].value = 1.2;
+        */
 
+    // Final Skill calculation
     if (extraMath.length > 0) {
         for (const item of extraMath) {
             if (item.statType = "CR") {
@@ -244,7 +405,7 @@ function runCalculation() {
                     else {
                         console.log("Extra Math statBuff not handled");
                     }
-                }                
+                }
             }
             else {
                 console.log("Extra Math statType not handled");
@@ -252,19 +413,18 @@ function runCalculation() {
         }
     }
 
-
+    // Final stats calculation
     iCharInfo.final_atk = calculateAtkFinal(iCharInfo.baseAtk, iCharInfo.atkFlat, iCharInfo.atkPerc);
     iCharInfo.final_dmgBonus = calculateDmgBonusFinal(iCharInfo.dmgMult);
     iCharInfo.critStableDomain = 1;
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
     iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], iCharInfo.skillLevel, iCharInfo.extraHit);
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
-
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
 
-    let dmgPerHit = [];
+ /*   let dmgPerHit = [];
     var totalMin = 0, totalMax = 0;
 
     for (const skill of iCharInfo.final_skillPerc) {
@@ -278,33 +438,11 @@ function runCalculation() {
             totalMax += dmg[1] * dmg.numHit;
         }
         else if (skill.skillBehavior == "DoT") {
-            var hp =  skill.value * 100;
+            var hp = skill.value * 100;
             let dmg = [hp, hp, hp]
             dmg.numHit = skill.numHit;
             dmg.skillBehavior = skill.skillBehavior;
             dmgPerHit.push(dmg);
-        }
-    }
-
-    displayResult(dmgPerHit, totalMin, totalMax);
-    console.log(iCharInfo);
-}
-
-function scoreFn(simWonderList) {
-    // I can't just add the buff to buff list cause I will need to remove either remove it later or something
-    // when I sim the next one... so I need to do something else. I thought it may be quick to add this, but it's not
-    // what I need to do is to make another buffList with the buffList + Wonder stuff and go from there...
-    // all my function are using the global buff list, so that doesn't work..
-
-/*    for (var i = 0; i < simWonderList.length; i++) {
-        // Check wonder list. If found, move to the next item
-        if (addWonderBuffToBuffList(simWonderList[i].name)) {
-            continue;
-        }
-        const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, role);
-        // check skillList next
-        if (item) {
-            continue;
         }
     }*/
 }
@@ -638,7 +776,7 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
 // how should I deal with condition?? I could go through the list to make sure I have the buff condition first
 // before I add?? Like if he requires HL, I need to make sure I have that buff name on the list first 
 // if the dps only buffs allies with some skills, I may need to filter it out when I add selfBuff/passive skills
-function processDBuffList(skillName, skill, element, skillBehavior = "") {
+function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
     let data = [];
     data.atkFlat = 0;
     data.atkPerc = 0;
@@ -652,15 +790,15 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
     let buffConditionMet = true;
     let failBuff = [];  // Just info for now
 
-    for (var i = 0; i < buffList.length; i++) {
+    for (var i = 0; i < list.length; i++) {
         buffConditionMet = true;
 
         // Go through the buff list to make sure we meet the condiditon required required before we add it.
-        if (buffList[i].condition != "") {
+        if (list[i].condition != "") {
             // What I should do is split OR first, then send it to a function to split AND
             // and check the AND Result
-            const conditionName = buffList[i].condition.split("|");
-            const conditionType = buffList[i].conditionType.split("|");
+            const conditionName = list[i].condition.split("|");
+            const conditionType = list[i].conditionType.split("|");
             var andResult;
 
             for (var m = 0; m < conditionName.length; m++) {
@@ -681,10 +819,10 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
         }
 
         if (buffConditionMet) {
-            switch (buffList[i].dbuff) {
+            switch (list[i].dbuff) {
                 case "OOB_SELF_ATK_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_ATK_PERC":   // fall through
@@ -692,41 +830,41 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
                 case "ALLY_ATK_PERC":
                 case "ALLIES_ATK_PERC":
                 case "SELF_N_ALLY_ATK_PERC":
-                    data.atkPerc += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Percent", buffList[i].value]);
+                    data.atkPerc += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase ATK Percent", list[i].value]);
                     break;
                 case "ALLY_ATK_PERC_HL":
                     if (skill == "Highlight") {
-                        data.atkPerc += buffList[i].value;
-                        htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Percent for HL", buffList[i].value]);
+                        data.atkPerc += list[i].value;
+                        htmlAppliedBuffList.push([list[i].buffName, "Increase ATK Percent for HL", list[i].value]);
                     }
                     else {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Failed"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
                     }
                     break;
                 case "ALLY_DMG_PERC_HL":
                     if (skill == "Highlight") {
-                        data.dmgMult += buffList[i].value;
-                        htmlAppliedBuffList.push([buffList[i].buffName, "Increase Damage for HL", buffList[i].value]);
+                        data.dmgMult += list[i].value;
+                        htmlAppliedBuffList.push([list[i].buffName, "Increase Damage for HL", list[i].value]);
                     }
                     else {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Failed"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
                     }
                     break;
                 case "OOB_SELF_ATK_FLAT":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_ATK_FLAT":   // fall through
                 case "PARTY_ATK_FLAT":   // fall through
                 case "ALLY_ATK_FLAT":
-                    data.atkFlat += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase ATK Flat", buffList[i].value]);
+                    data.atkFlat += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase ATK Flat", list[i].value]);
                     break;
                 case "OOB_SELF_CRIT_MULT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_CRIT_MULT_PERC":   // fall through
@@ -734,20 +872,20 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
                 case "PARTY_CRIT_MULT_PERC":   // fall through
                 case "ALLY_CRIT_MULT_PERC":
                 case "SELF_N_ALLY_CRIT_MULT_PERC":
-                    data.critMult += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage", buffList[i].value]);
+                    data.critMult += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase Crit Damage", list[i].value]);
                     break;
                 case "ALLY_CRIT_MULT_PERC_CR_OVER_100":
                     let item = [];
                     item.statType = "CR";
                     item.statBuff = "CM";
-                    item.multiplier = buffList[i].value;
+                    item.multiplier = list[i].value;
                     extraMath.push(item);
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", buffList[i].value]);
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
                     break;
                 case "OOB_SELF_CRIT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_CRIT_PERC":   // fall through
@@ -755,41 +893,41 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
                 case "ALLY_CRIT_PERC":
                 case "ALLIES_CRIT_PERC":
                 case "SELF_N_ALLY_CRIT_PERC":
-                    data.critRate += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Crit Rate", buffList[i].value]);
+                    data.critRate += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase Crit Rate", list[i].value]);
                     break;
                 case "OOB_SELF_DMG_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_DMG_PERC":   // fall through
                 case "PARTY_DMG_PERC":   // fall through
                 case "ALLY_DMG_PERC":
-                    data.dmgMult += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Damage", buffList[i].value]);
+                    data.dmgMult += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase Damage", list[i].value]);
                     break;
                 case "OOB_SELF_PIERCE_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_PIERCE_PERC":   // fall through
                 case "PARTY_PIERCE_PERC":   // fall through
                 case "ALLY_PIERCE_PERC":
                 case "SELF_N_ALLY_PIERCE_PERC":
-                    data.pierceRate += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase Pierce Rate", buffList[i].value]);
+                    data.pierceRate += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
                     break;
                 case "DEF_DECR_PERC":   // fall through
                 case "DEF_DECR_PERC_AOE":
-                    data.defenseReduction += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Decrement Enemy Defense", buffList[i].value]);
+                    data.defenseReduction += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Decrement Enemy Defense", list[i].value]);
                     break;
                 case "WINDSWEEP_AOE":   // fall through
                 case "WINDSWEEP":   // fall through
                     data.windswept = true;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Windswept", data.windswept]);
+                    htmlAppliedBuffList.push([list[i].buffName, "Windswept", data.windswept]);
                     break;
                 case "SHOCKED":    // Elemental Ailments
                 case "ELEMENTAL_AILMENT":
@@ -799,17 +937,17 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
                 case "SPIRITUAL_AILMENT":   // ???
                     break;
                 case "PARTY_ALL_PERC": // add a percertage of stats to the character - like Navi stats
-                    let temp = addNaviStats(buffList[i].value);
+                    let temp = addNaviStats(list[i].value);
                     data.atkFlat += temp[0];
                     data.dmgMult += temp[1];
                     data.critRate += temp[2];
                     data.critMult += temp[3];
                     data.pierceRate += temp[4];
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
+                    htmlAppliedBuffList.push([list[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
                     break;
                 case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
-                    data.extraHit += buffList[i].value;
-                    htmlAppliedBuffList.push([buffList[i].buffName, "Extra hit", buffList[i].value]);
+                    data.extraHit += list[i].value;
+                    htmlAppliedBuffList.push([list[i].buffName, "Extra hit", list[i].value]);
                     break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
 //                case "WARM_WELCOME":
@@ -847,13 +985,13 @@ function processDBuffList(skillName, skill, element, skillBehavior = "") {
                     data.myriad_song = true;
                     break;
                 default:
-                    failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "N/A"]);
+                    failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "N/A"]);
                     break;
             }
         }
         else {
             // for debugging purpose
-            failBuff.push([buffList[i].buffName, buffList[i].dbuff, buffList[i].condition, buffList[i].conditionType, "Failed"]);
+            failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
         }
     }
 
@@ -870,70 +1008,17 @@ function addWonderBuffToBuffList(name) {
     var buffItem = wonderList.find(item => item.name == name);
     if (buffItem) {
         // this buff is from Wonder
-        if (isValidTargetBuff(buffItem.e1dbuff, buffItem.e1condition, buffItem.e1conditionType)) {
-            let data = [];
-            data.buffName = buffItem.name;
-            data.charName = "Wonder";
-            data.value = buffItem.e1r0;
-            data.dbuff = buffItem.e1dbuff;
-            data.condition = buffItem.e1condition;
-            data.conditionType = buffItem.e1conditionType;
-            buffList.push(data);
-        }
-
-        if (isValidTargetBuff(buffItem.e2dbuff, buffItem.e1condition, buffItem.e2conditionType)) {
-            let data = [];
-            data.buffName = buffItem.name;
-            data.charName = "Wonder";
-            data.value = buffItem.e2r0;
-            data.dbuff = buffItem.e2dbuff;
-            data.condition = buffItem.e2condition;
-            data.conditionType = buffItem.e2conditionType;
-            buffList.push(data);
-        }
-
-        if (isValidTargetBuff(buffItem.e3dbuff, buffItem.e3condition, buffItem.e3conditionType)) {
-            let data = [];
-            data.buffName = buffItem.name;
-            data.charName = "Wonder";
-            data.value = buffItem.e3r0;
-            data.dbuff = buffItem.e3dbuff;
-            data.condition = buffItem.e3condition;
-            data.conditionType = buffItem.e3conditionType;
-            buffList.push(data);
-        }
-
-        if (isValidTargetBuff(buffItem.e4dbuff, buffItem.e4condition, buffItem.e4conditionType)) {
-            let data = [];
-            data.buffName = buffItem.name;
-            data.charName = "Wonder";
-            data.value = buffItem.e4r0;
-            data.dbuff = buffItem.e4dbuff;
-            data.condition = buffItem.e4condition;
-            data.conditionType = buffItem.e4conditionType;
-            buffList.push(data);
-        }
-
-        if (isValidTargetBuff(buffItem.e5dbuff, buffItem.e5condition, buffItem.e5conditionType)) {
-            let data = [];
-            data.buffName = buffItem.name;
-            data.charName = "Wonder";
-            data.value = buffItem.e5r0;
-            data.dbuff = buffItem.e5dbuff;
-            data.condition = buffItem.e5condition;
-            data.conditionType = buffItem.e5conditionType;
-            buffList.push(data);
-        }
-
-        if (isValidTargetBuff(buffItem.e6dbuff, buffItem.e6condition, buffItem.e6conditionType)) {
-            let data = [];
-            data.buffName = buffItem.name;
-            data.charName = "Wonder";
-            data.value = buffItem.e6r0;
-            data.dbuff = buffItem.e6dbuff;
-            data.condition = buffItem.e6condition;
-            data.conditionType = buffItem.e6conditionType;
-            buffList.push(data);
+        for (var buff of buffItem.dbuff) {
+            if (isValidTargetBuff(buff.dbuff, buff.condition, buff.conditionType)) {
+                let data = [];
+                data.buffName = buffItem.name;
+                data.charName = "Wonder";
+                data.value = buff.r0;
+                data.dbuff = buff.dbuff;
+                data.condition = buff.condition;
+                data.conditionType = buff.conditionType;
+                buffList.push(data);
+            }
         }
 
         return true;
@@ -1272,82 +1357,18 @@ function addWeaponBuffToBuffList(charName, rarity, reforge, role) {
 function addWonderWeaponToBuffList(name, reforge) {
     for (const weapon of wonderList) {      
         if (weapon.name.includes(name)) {
-            if (isValidWeaponBuff(weapon.e1dbuff, weapon.e1condition, weapon.e1conditionType, "", SUPPORT_ROLE)) {
-                let data = [];
-                data.buffName = weapon.name;    // where the buff is from
-                data.charName = "Wonder";
-                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e1r0, weapon.e1r1, weapon.e1r2, weapon.e1r3, weapon.e1r4, weapon.e1r5, weapon.e1r6);
 
-                data.dbuff = weapon.e1dbuff;
-                data.condition = weapon.e1condition;
-                data.conditionType = weapon.e1conditionType;
-
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weapon.e2dbuff, weapon.e2condition, weapon.e2conditionType, "", SUPPORT_ROLE)) {
-                let data = [];
-                data.buffName = name;    // where the buff is from
-                data.charName = "Wonder";
-                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e2r0, weapon.e2r1, weapon.e2r2, weapon.e2r3, weapon.e2r4, weapon.e2r5, weapon.e2r6);
-
-                data.dbuff = weapon.e2dbuff;
-                data.condition = weapon.e2condition;
-                data.conditionType = weapon.e2conditionType;
-
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weapon.e3dbuff, weapon.e3condition, weapon.e3conditionType, "", SUPPORT_ROLE)) {
-                let data = [];
-                data.buffName = name;    // where the buff is from
-                data.charName = "Wonder";
-                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e3r0, weapon.e3r1, weapon.e3r2, weapon.e3r3, weapon.e3r4, weapon.e3r5, weapon.e3r6);
-
-                data.dbuff = weapon.e3dbuff;
-                data.condition = weapon.e3condition;
-                data.conditionType = weapon.e3conditionType;
-
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weapon.e4dbuff, weapon.e4condition, weapon.e4conditionType, "", SUPPORT_ROLE)) {
-                let data = [];
-                data.buffName = name;    // where the buff is from
-                data.charName = "Wonder";
-                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e4r0, weapon.e4r1, weapon.e4r2, weapon.e4r3, weapon.e4r4, weapon.e4r5, weapon.e4r6);
-
-                data.dbuff = weapon.e4dbuff;
-                data.condition = weapon.e4condition;
-                data.conditionType = weapon.e4conditionType;
-
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weapon.e5dbuff, weapon.e5condition, weapon.e5conditionType, "", SUPPORT_ROLE)) {
-                let data = [];
-                data.buffName = name;    // where the buff is from
-                data.charName = "Wonder";
-                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e5r0, weapon.e5r1, weapon.e5r2, weapon.e5r3, weapon.e5r4, weapon.e5r5, weapon.e5r6);
-
-                data.dbuff = weapon.e5dbuff;
-                data.condition = weapon.e5condition;
-                data.conditionType = weapon.e5conditionType;
-
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weapon.e6dbuff, weapon.e6condition, weapon.e6conditionType, "", SUPPORT_ROLE)) {
-                let data = [];
-                data.buffName = name;    // where the buff is from
-                data.charName = "Wonder";
-                data.value = getWonderWeaponStatBasedOnReforge(reforge, weapon.e6r0, weapon.e6r1, weapon.e6r2, weapon.e6r3, weapon.e6r4, weapon.e6r5, weapon.e6r6);
-
-                data.dbuff = weapon.e6dbuff;
-                data.condition = weapon.e6condition;
-                data.conditionType = weapon.e6conditionType;
-
-                buffList.push(data);
+            for (var buff of weapon.dbuff) {
+                if (isValidTargetBuff(buff.dbuff, buff.condition, buff.conditionType)) {
+                    let data = [];
+                    data.buffName = weapon.name;
+                    data.charName = "Wonder";
+                    data.value = getWonderWeaponStatBasedOnReforge(reforge, buff.r0, buff.r1, buff.r2, buff.r3, buff.r4, buff.r5, buff.r6)
+                    data.dbuff = buff.dbuff;
+                    data.condition = buff.condition;
+                    data.conditionType = buff.conditionType;
+                    buffList.push(data);
+                }
             }
         }
     }    
@@ -2429,87 +2450,45 @@ function readWonderDatabase() {
             data.released = row[i][j++];
             data.source = row[i][j++];
             data.type = row[i][j++];
+            data.dbuff = [];
 
             if (data.released == "N") {
                 continue;
             }
 
-            data.e1r0 = parseFloat(row[i][j++]);
-            data.e1r1 = parseFloat(row[i][j++]);
-            data.e1r2 = parseFloat(row[i][j++]);
-            data.e1r3 = parseFloat(row[i][j++]);
-            data.e1r4 = parseFloat(row[i][j++]);
-            data.e1r5 = parseFloat(row[i][j++]);
-            data.e1r6 = parseFloat(row[i][j++]);
-            data.e1dbuff = row[i][j++];
-            data.e1condition = row[i][j++];
-            data.e1conditionType = row[i][j++];
-
-            data.e2r0 = parseFloat(row[i][j++]);
-            data.e2r1 = parseFloat(row[i][j++]);
-            data.e2r2 = parseFloat(row[i][j++]);
-            data.e2r3 = parseFloat(row[i][j++]);
-            data.e2r4 = parseFloat(row[i][j++]);
-            data.e2r5 = parseFloat(row[i][j++]);
-            data.e2r6 = parseFloat(row[i][j++]);
-            data.e2dbuff = row[i][j++];
-            data.e2condition = row[i][j++];
-            data.e2conditionType = row[i][j++];
-
-            data.e3r0 = parseFloat(row[i][j++]);
-            data.e3r1 = parseFloat(row[i][j++]);
-            data.e3r2 = parseFloat(row[i][j++]);
-            data.e3r3 = parseFloat(row[i][j++]);
-            data.e3r4 = parseFloat(row[i][j++]);
-            data.e3r5 = parseFloat(row[i][j++]);
-            data.e3r6 = parseFloat(row[i][j++]);
-            data.e3dbuff = row[i][j++];
-            data.e3condition = row[i][j++];
-            data.e3conditionType = row[i][j++];
-
-            data.e4r0 = parseFloat(row[i][j++]);
-            data.e4r1 = parseFloat(row[i][j++]);
-            data.e4r2 = parseFloat(row[i][j++]);
-            data.e4r3 = parseFloat(row[i][j++]);
-            data.e4r4 = parseFloat(row[i][j++]);
-            data.e4r5 = parseFloat(row[i][j++]);
-            data.e4r6 = parseFloat(row[i][j++]);
-            data.e4dbuff = row[i][j++];
-            data.e4condition = row[i][j++];
-            data.e4conditionType = row[i][j++];
-
-            data.e5r0 = parseFloat(row[i][j++]);
-            data.e5r1 = parseFloat(row[i][j++]);
-            data.e5r2 = parseFloat(row[i][j++]);
-            data.e5r3 = parseFloat(row[i][j++]);
-            data.e5r4 = parseFloat(row[i][j++]);
-            data.e5r5 = parseFloat(row[i][j++]);
-            data.e5r6 = parseFloat(row[i][j++]);
-            data.e5dbuff = row[i][j++];
-            data.e5condition = row[i][j++];
-            data.e5conditionType = row[i][j++];
-
-            data.e6r0 = parseFloat(row[i][j++]);
-            data.e6r1 = parseFloat(row[i][j++]);
-            data.e6r2 = parseFloat(row[i][j++]);
-            data.e6r3 = parseFloat(row[i][j++]);
-            data.e6r4 = parseFloat(row[i][j++]);
-            data.e6r5 = parseFloat(row[i][j++]);
-            data.e6r6 = parseFloat(row[i][j++]);
-            data.e6dbuff = row[i][j++];
-            data.e6condition = row[i][j++];
-            data.e6conditionType = row[i][j++];
+            for (var dbuffItem = 0; dbuffItem < MAX_NUM_DATABASE_EFFECT; dbuffItem++) {
+                var dbuff = [];
+                dbuff.r0 = parseFloat(row[i][j++]);
+                dbuff.r1 = parseFloat(row[i][j++]);
+                dbuff.r2 = parseFloat(row[i][j++]);
+                dbuff.r3 = parseFloat(row[i][j++]);
+                dbuff.r4 = parseFloat(row[i][j++]);
+                dbuff.r5 = parseFloat(row[i][j++]);
+                dbuff.r6 = parseFloat(row[i][j++]);
+                dbuff.dbuff = row[i][j++];
+                dbuff.condition = row[i][j++];
+                dbuff.conditionType = row[i][j++];
+                data.dbuff.push(dbuff);
+            }
 
             wonderList.push(data);
 
-            if (data.type != "Weapon") {
+            if (data.type == "Weapon") {
+                wonderKnifeList.push(data);
+            }
+            else {
                 if (data.type != "Debuff") {
                     htmlWonderDbList.push(data.name);
                 }
+
+                if ((data.type == "Passive") && (data.source != "")) {  // don't add general passive since it can be learnt by anyone
+                    personaPassive.push(data);
+                }
+                else if ((data.type != "Highlight") && (data.type != "Debuff") && (data.type != "Weapon Buff")) {
+                    personaSkill.push(data);
+                }
             }
-            else {
-                wonderKnifeList.push(data);
-            }
+
         }
     }
 

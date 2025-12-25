@@ -362,6 +362,13 @@ function addItemToList(cell, outputDiv, listDiv) {
     }
 }
 
+/**
+*  Remove an item from HTML
+*
+*  @param cell    the html object 
+*  @param name    the element to be removed
+* 
+**/
 function removeItemFromList(cell, name) {
     var divParent = document.getElementById(name);
 
@@ -375,5 +382,7 @@ function removeItemFromList(cell, name) {
         el = el.nextSibling;
     }
  }
+
+
 // ----------------- End of General HTML Support -------------------------------//
 
