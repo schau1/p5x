@@ -14,6 +14,8 @@
 
 // python -m http.server
 
+const DEBUG = 1;
+
 const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
 const ENEMY_DEFENSE_DEFAULT = 363.2;  // doesn't have it - use Dominion value instead
@@ -133,56 +135,51 @@ function runCalculation() {
 *   @return     damage score of this combo
 */
 function damageFn(personaList) {
-    // I can't just add the buff to buff list cause I will need to remove either remove it later or something
-    // when I sim the next one... so I need to do something else. I thought it may be quick to add this, but it's not
-    // what I need to do is to make another buffList with the buffList + Wonder stuff and go from there...
-    // all my function are using the global buff list, so that doesn't work..
-
-    /*    for (var i = 0; i < simWonderList.length; i++) {
-            // Check wonder list. If found, move to the next item
-            if (addWonderBuffToBuffList(simWonderList[i].name)) {
-                continue;
-            }
-            const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, role);
-            // check skillList next
-            if (item) {
-                continue;
-            }
-        }*/
-
-    // since we have 1 passive sent in, we are only allowing at most 2 more passive since Wonder can only equip 3 personas (what kind of wild card is this?
-    // got outclassed in his own game. At least Makoto is shown to have 4.)
- /*   var maxAllowPassive = 2;
-    const uniqueElements = new Set();
-
-    personaList.foreach(item => {
-        if (uniqueElements.has(item)) {
-            // If the item is already in the Set, it's a duplicate
-            return 0;
-        } else {
-            uniqueElements.add(item);
-        }
-
-    });
-
-
-
+    // Add buffs and debuffs to everything
+    let newDbuffList = [];
+    let simCharInfo = structuredClone(iCharInfo);
 
     for (const persona of personaList) {
-        // if there is any passive in the list from a persona that is not the same as the passive we send in, we're done because
-        // we should allow only 1 passsive, unless it's a passive that doesn't require to be active
-        // if it's a persona that doesn't need a passive to be enable, we can add that persona passive if to our sim if we're using
-        // the signature of that persona. I think that is too complicated though, so maybe only 1 passive is allowed for now
+        newDbuffList = newDbuffList.concat(persona.dbuff);
+    }
 
-        // should i just combine passive + active in 1 line?? no cause there are generic abilities....
-        if (passive.source == persona.source) {
+    let data = processDBuffList(newDbuffList, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
 
+    simCharInfo.atkFlat += data.atkFlat;
+    simCharInfo.atkPerc += data.atkPerc;
+    simCharInfo.critMult += data.critMult;
+    simCharInfo.critRate += data.critRate;
+    simCharInfo.dmgMult += data.dmgMult;
+    simCharInfo.pierceRate += data.pierceRate;
+    simCharInfo.ampSkill += data.ampSkill;
+    simCharInfo.defenseReduction += data.defenseReduction;
+    if (data.windswept) {
+        simCharInfo.windswept = data.windswept;
+    }
 
-        }
+    // Final stats calculation
+    simCharInfo.final_atk = calculateAtkFinal(simCharInfo.baseAtk, simCharInfo.atkFlat, simCharInfo.atkPerc);
+    simCharInfo.final_dmgBonus = calculateDmgBonusFinal(simCharInfo.dmgMult);
+    simCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReduction);
+    simCharInfo.final_weakness = convertEnemyWeaknessTextToValue(simCharInfo.weakness);
+    if (simCharInfo.includeCrit == "Yes") {
+        simCharInfo.final_critStableDomain = calculateCritStableDomain(simCharInfo.critRate, simCharInfo.critMult);
+    }    
 
+    for (const skill of simCharInfo.final_skillPerc) {
+       if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {           
+           let dmg = calculateSkillDamage(simCharInfo.final_atk, simCharInfo.final_dmgBonus, simCharInfo.final_defenseReduction, simCharInfo.final_critStableDomain, skill.value, simCharInfo.final_weakness, simCharInfo.finalBonus, OTHER_DMG_BONUS);
 
-    }*/
+//         Testing with our original without wonder buff
+//         let dmg2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
+//           console.log(dmg2)
+///           console.log(dmg)
+           return dmg[0];   // return the min dmg. should be fine.
+       }
+    }
 
+//    console.log(simCharInfo);
+//    console.log(iCharInfo);
 
     return 0;
 }
@@ -193,6 +190,8 @@ function damageFn(personaList) {
  */
 function runSimPersona() {
     simCommon();
+
+//    console.log(buffList)
 
     let newSkill = [];
 
@@ -208,11 +207,12 @@ function runSimPersona() {
         }
     }
 
-    console.log(newSkill);
+//    console.log(newSkill);
+
+//    damageFn([newSkill[0], newSkill[1], newSkill[2]]);
 
     // Now we find the best 3 skills
     let result = bestCombination(newSkill, 3, damageFn);
-
     console.log(result);
 }
 
@@ -227,7 +227,14 @@ function combinePassiveWithSkill(persona, skill) {
         item.dbuff = [];
         for (const dbuff of persona.dbuff) {
             if (dbuff.dbuff != "") {
-                item.dbuff.push(dbuff);
+                let buff = [];
+                buff.buffName = nameList[1];
+                buff.charName = "Wonder";
+                buff.value = dbuff.r0;
+                buff.dbuff = dbuff.dbuff;
+                buff.condition = dbuff.condition;
+                buff.conditionType = dbuff.conditionType;
+                item.dbuff.push(buff);
             }
 
         }
@@ -237,7 +244,14 @@ function combinePassiveWithSkill(persona, skill) {
 
         for (const dbuff of skill.dbuff) {
             if (dbuff.dbuff != "") {
-                item.dbuff.push(dbuff);
+                let buff = [];
+                buff.buffName = skill.name;
+                buff.charName = "Wonder";
+                buff.value = dbuff.r0;
+                buff.dbuff = dbuff.dbuff;
+                buff.condition = dbuff.condition;
+                buff.conditionType = dbuff.conditionType;
+                item.dbuff.push(buff);
             }
         }
 
@@ -246,8 +260,6 @@ function combinePassiveWithSkill(persona, skill) {
 
     return null;
 }
-
-
 
 function simCommon() {
     readCharStatDatabase();
@@ -329,7 +341,9 @@ function simCommon() {
     // Add buffs/debuffs from the user selected buff/debuff list
     addUserSelectedBuffToBuffList();
 
-    console.table(buffList);
+    if (DEBUG) {
+        console.table(buffList);
+    }
 
     if (!USE_STAT_SCREEN) {
         // if we are already use the stat screen, we don't need to care about the hidden value
@@ -377,6 +391,7 @@ function simCommon() {
     iCharInfo.windswept = data.windswept;
     iCharInfo.myriad_song = data.myriad_song;
     iCharInfo.extraHit = data.extraHit;
+    iCharInfo.ampSkill = data.ampSkill;
 
     // testing:
     /*    iCharInfo.baseAtk = 1200 + 600;
@@ -416,9 +431,10 @@ function simCommon() {
     // Final stats calculation
     iCharInfo.final_atk = calculateAtkFinal(iCharInfo.baseAtk, iCharInfo.atkFlat, iCharInfo.atkPerc);
     iCharInfo.final_dmgBonus = calculateDmgBonusFinal(iCharInfo.dmgMult);
-    iCharInfo.critStableDomain = 1;
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
-    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], iCharInfo.skillLevel, iCharInfo.extraHit);
+
+    // Skill Perc should be done after all the buffs is done
+    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
@@ -501,12 +517,13 @@ function initializeData() {
     iCharInfo.finalBonus = 0;
     iCharInfo.myriad_song = false;  // may not really use it, but just in case I want to display the double damage
     iCharInfo.extraHit = 0; // if something modify a dps skill and gives it 1 more hit
+    iCharInfo.ampSkill = 1;
 }
 // Return a list of skill percentage for the skill and its follow up
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
 // @param   skill - item containing the skill from the database
 // @todo: Assuming the skill has only 2 parts at most. If it's more than 2, need to adjust this code
-function calculateSkillPerc(skill, skillLevel, extraHit) {   
+function calculateSkillPerc(skill, skillLevel, extraHit, ampSkill) {   
     let skillPercList = [];
     // The first one should be a skill percent. If it's not, screw you.
     if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")
@@ -551,7 +568,7 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
                 data.value = 0;
                 break;
         }
-        data.value = data.value / 100;
+        data.value = data.value / 100 * ampSkill;
         data.numHit = skill.e1numHit;
 
         if (extraHit) {
@@ -595,7 +612,7 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
                     data.value = 0;
                     break;
             }
-            data.value = data.value / 100;
+            data.value = data.value / 100 * ampSkill;
             data.numHit = skill.e2numHit;
 
             if (extraHit) {
@@ -639,7 +656,7 @@ function calculateSkillPerc(skill, skillLevel, extraHit) {
                     data.value = 0;
                     break;
             }
-            data.value = data.value / 100;
+            data.value = data.value / 100 * ampSkill;
             data.numHit = skill.e3numHit;
 
             if (extraHit) {
@@ -719,7 +736,7 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
 
     // Handle each of the condition. Since this is an & operation, any false means the whole thing is false, so
     // just return false
-    for (var j = 0; j < searchName.length; j++) {
+     for (var j = 0; j < searchName.length; j++) {
         if (searchType[j]) {
             if (searchType[j].includes("DBuff") || searchType[j].includes("Dbuff")) {
                 if (skillName.includes(searchName[j])) {
@@ -787,6 +804,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
     data.defenseReduction = 0;
     data.windswept = false;
     data.extraHit = 0;
+    data.ampSkill = 1;
     let buffConditionMet = true;
     let failBuff = [];  // Just info for now
 
@@ -915,7 +933,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
                 case "SELF_PIERCE_PERC":   // fall through
                 case "PARTY_PIERCE_PERC":   // fall through
                 case "ALLY_PIERCE_PERC":
-                case "SELF_N_ALLY_PIERCE_PERC":
+                case "SELFN_ALLY_PIERCE_PERC":
                     data.pierceRate += list[i].value;
                     htmlAppliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
                     break;
@@ -948,6 +966,10 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
                 case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
                     data.extraHit += list[i].value;
                     htmlAppliedBuffList.push([list[i].buffName, "Extra hit", list[i].value]);
+                    break;
+                case "ALLY_SKILL_AMP_PERC":
+                    data.ampSkill += list[i].value/100;
+                    htmlAppliedBuffList.push([list[i].buffName, "Skill Amplification", list[i].value]);
                     break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
 //                case "WARM_WELCOME":
@@ -995,7 +1017,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
         }
     }
 
-    if (failBuff.length > 0) {
+    if (failBuff.length > 0 && DEBUG) {
         console.log(failBuff);
     }
 /*    else {
@@ -1061,7 +1083,7 @@ function addUserSelectedBuffToBuffList() {
 // TargetBuff means this buff is supposed to impact someone else and not self
 function isValidTargetBuff(dbuff, condition, conditionType) {
     // check if this is a party buff
-    if ((dbuff != "") && !dbuff.includes("SELF")) {
+    if ((dbuff != "") && !dbuff.includes("SELF_")) {
         if ((conditionType != "") && (conditionType != "Debuff") && (conditionType != "Buff")) {
             // buff/debuff is ok, only need to check if this is a skill buff
             // Add to the list... Can check if valid skill by processing the list
@@ -1527,7 +1549,7 @@ function displayResult(dmgList, min, max) {
 }
 
 function getHtmlInfo() {
-    iCharInfo.charName = document.getElementById('charName').innerHTML;
+    iCharInfo.charName = document.getElementById('charName').innerHTML.replaceAll("&amp;", "&");
     iCharInfo.skillName = document.getElementById('skillChoice').innerHTML; // Will also filter out support skill so only DPS skill is listed
     iCharInfo.awareness = document.getElementById('awarenessChoice').innerHTML;
     iCharInfo.weapon = document.getElementById('weaponChoice').innerHTML;
@@ -1552,7 +1574,7 @@ function getHtmlInfo() {
     iCharInfo.skillPos = getSkillPosFromSkillName(iCharInfo.charName, iCharInfo.skillName, skillList);
 
     let party = [];
-    party.charName = document.getElementById('p1charName').innerHTML;
+    party.charName = document.getElementById('p1charName').innerHTML.replaceAll("&amp;", "&");
     party.awareness = document.getElementById('p1awarenessChoice').innerHTML;
     party.skillLevel = document.getElementById('p1skillLevelChoice').innerHTML;
     party.weapon = document.getElementById('p1weaponChoice').innerHTML;
@@ -1560,7 +1582,7 @@ function getHtmlInfo() {
     party.card = document.getElementById('p1cardChoice').innerHTML;
     partyMembers.push(party);
     party = [];
-    party.charName = document.getElementById('p2charName').innerHTML;
+    party.charName = document.getElementById('p2charName').innerHTML.replaceAll("&amp;", "&");
     party.awareness = document.getElementById('p2awarenessChoice').innerHTML;
     party.skillLevel = document.getElementById('p2skillLevelChoice').innerHTML;
     party.weapon = document.getElementById('p2weaponChoice').innerHTML;
@@ -1568,7 +1590,7 @@ function getHtmlInfo() {
     party.card = document.getElementById('p2cardChoice').innerHTML;
     partyMembers.push(party);
     party = [];
-    party.charName = document.getElementById('naviName').innerHTML;
+    party.charName = document.getElementById('naviName').innerHTML.replaceAll("&amp;", "&");
     party.awareness = document.getElementById('naviawarenessChoice').innerHTML;
     party.skillLevel = document.getElementById('naviskillLevelChoice').innerHTML;
     party.weapon = document.getElementById('naviweaponChoice').innerHTML;
@@ -1623,8 +1645,8 @@ function htmlProcessDefDebuff(id, charName, awareness, skillLevel) {
 
     while (el) {
         let list = [];
-        list.name = el.innerHTML;
-        list.charName = charName;
+        list.name = el.innerHTML.replaceAll("&amp;", "&");
+        list.charName = charName.replaceAll("&amp;", "&");
         list.awareness = awareness;
         list.skillLevel = skillLevel;
         htmlDBuffList.push(list);
@@ -1734,6 +1756,9 @@ function fillHtmlDBuffList(event) {
 
 function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, role, outputDiv) {
     let list = [];
+
+    charName = charName.replaceAll("&amp;", "&");
+
     if (role == DPS_ROLE) {
         // only add passive, buff and support
         // if a dps skill hits and gives a self-buff that last more than just that one dps turn
@@ -2106,8 +2131,10 @@ function filterFunctionName() {
     filterFunction("userFilterCharlist", "charListDiv", "a");
 }
 
-function filterFunctionCard() {
-    filterFunction("userFilterCardlist", "cardListDiv", "a");
+function filterFunctionCard(event) {
+    var child = event.target.parentNode.children[0];
+
+    filterFunction(child.id, event.target.parentNode.id, "a");
 }
 
 function filterFunctionwDBuff() {
