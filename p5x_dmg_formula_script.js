@@ -126,6 +126,33 @@ function runCalculation() {
     console.log(iCharInfo);
 }
 
+function removeFullDuplicates(arr) {
+    const map = new Map();
+    let hasDuplicate = false;
+
+    for (const obj of arr) {
+        const key = JSON.stringify({
+            buffName: obj.buffName,
+            charName: obj.charName,
+            dbuff: obj.dbuff,
+            value: obj.value,
+            condition: obj.condition,
+            conditionType: obj.conditionType
+        });
+
+        if (map.has(key)) {
+            hasDuplicate = true; // duplicate detected
+        } else {
+            map.set(key, obj);
+        }
+    }
+
+    return {
+        unique: [...map.values()],
+        hasDuplicate
+    };
+}
+
 /*
 *   Combine passive with the persona abilities in the personaList and return a damage score
 *
@@ -139,11 +166,19 @@ function damageFn(personaList) {
     let newDbuffList = [];
     let simCharInfo = structuredClone(iCharInfo);
 
+//    console.log(personaList);
+
     for (const persona of personaList) {
         newDbuffList = newDbuffList.concat(persona.dbuff);
     }
+    newDbuffList = removeFullDuplicates(newDbuffList);
 
-    let data = processDBuffList(newDbuffList, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
+    if (newDbuffList.hasDuplicate) {
+        // if it has duplicate, most likely it's bad anyway
+        return 0;
+    }
+
+    let data = processDBuffList(newDbuffList.unique, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
 
     simCharInfo.atkFlat += data.atkFlat;
     simCharInfo.atkPerc += data.atkPerc;
@@ -190,9 +225,6 @@ function damageFn(personaList) {
  */
 function runSimPersona() {
     simCommon();
-
-//    console.log(buffList)
-
     let newSkill = [];
 
     // first, make a new personaSkills list will a combination of all the possible skills
@@ -207,13 +239,19 @@ function runSimPersona() {
         }
     }
 
-//    console.log(newSkill);
-
-//    damageFn([newSkill[0], newSkill[1], newSkill[2]]);
+//  Testing with just 1 item
+//  damageFn([newSkill[0], newSkill[1], newSkill[2]]);
 
     // Now we find the best 3 skills
-    let result = bestCombination(newSkill, 3, damageFn);
-    console.log(result);
+    let result = bestCombinationYielding(newSkill, 3, damageFn, {
+        yieldEvery: 2000,
+        onProgress: ({ checked, bestScore }) => {
+//            console.log("Checked:", checked, "Best:", bestScore);
+        }
+    }).then(result => {
+        //      console.log("DONE:", result);
+        displaySimResult(result);
+    });
 }
 
 function combinePassiveWithSkill(persona, skill) {
@@ -229,7 +267,7 @@ function combinePassiveWithSkill(persona, skill) {
             if (dbuff.dbuff != "") {
                 let buff = [];
                 buff.buffName = nameList[1];
-                buff.charName = "Wonder";
+                buff.charName = item.personaName;
                 buff.value = dbuff.r0;
                 buff.dbuff = dbuff.dbuff;
                 buff.condition = dbuff.condition;
@@ -1016,10 +1054,10 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
             failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
         }
     }
-
+/*
     if (failBuff.length > 0 && DEBUG) {
         console.log(failBuff);
-    }
+    }*/
 /*    else {
         console.log("processDBuffList::All buffs were added.");
     }*/
@@ -1442,6 +1480,47 @@ function isValidWeaponBuff(dbuff, condition, conditionType, skill, role) {
 }
 
 // ------------------------------------------------ Code dealing with HTML
+
+function displaySimResult(result) {
+    var element = document.getElementById("result");
+    // Clear the output if the user wants to
+    if (document.getElementById('checkClrOutput').checked) {
+        element.innerHTML = "";
+    }
+
+//    console.log(result);
+
+    for (const persona of result.bestCombo) {
+        var item = document.createElement("p");
+        item.innerHTML = "\t- " + persona.personaName + "::" + persona.personaSkill[0] + " and " + persona.personaSkill[1];
+        element.prepend(item);
+    }
+
+    var item = document.createElement("p");
+    item.innerHTML = "Best Persona Combo: ";
+    element.prepend(item);
+
+    item = document.createElement("p");
+    item.innerHTML = "Skill:: " + iCharInfo.skillName + ". Party::" + iCharInfo.charName + "::" + iCharInfo.awareness + "R" + iCharInfo.reforgeLevel + " " + iCharInfo.weapon + ". ";
+    for (const party of partyMembers) {
+        item.innerHTML += party.charName + "::" + party.awareness + party.reforgeLevel + " " + party.weapon + ". ";
+    }
+
+    var firstChild = document.getElementById('wDBuffOutputDiv').firstElementChild;
+    item.innerHTML += "Wonder: " + document.getElementById('wweaponChoice').innerHTML + " " + document.getElementById('wreforgeChoice').innerHTML + " ";
+
+    while (firstChild) {
+        item.innerHTML += firstChild.innerHTML + " ";
+        firstChild = firstChild.nextElementSibling;
+    }
+
+    element.prepend(item);
+
+    item = document.createElement("p");
+    item.innerHTML = "---------------- RESULT ------------------";
+    element.prepend(item);
+}
+
 function displayResult(dmgList, min, max) {
     var element = document.getElementById("result");
     // Clear the output if the user wants to

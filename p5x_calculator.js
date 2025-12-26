@@ -162,33 +162,50 @@ function calculateSkillDamage(atkFinal, dmgMultFinal, enemyDefFinal, critMultFin
 *   @return {array of best combo, score} 
 */
 
-function bestCombination(items, k, scoreFn) {
+async function bestCombinationYielding(items, k, scoreFn, {
+    yieldEvery = 5000,   // tune this
+    onProgress = null
+} = {}) {
     let bestScore = -Infinity;
     let bestCombo = null;
+    let checked = 0;
 
     const n = items.length;
-    const combo = [];
+    const combo = new Array(k);
 
-    function generate(startIndex, depth) {
-        // depth == current number of picked items
-        if (depth === k) {
-            const s = scoreFn(combo);
-            if (s > bestScore) {
-                bestScore = s;
-                bestCombo = combo.slice(); // clone
-            }
-            return;
-        }
-
-        // Avoid unnecessary recursion
-        const remaining = k - depth;
-        for (let i = startIndex; i <= n - remaining; i++) {
-            combo[depth] = items[i];
-            generate(i + 1, depth + 1);
+    async function maybeYield() {
+        if (checked % yieldEvery === 0) {
+            // Yield back to event loop
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
 
-    generate(0, 0);
+    async function dfs(startIndex, depth) {
+        if (depth === k) {
+            const score = scoreFn(combo);
+            checked++;
 
-    return { bestCombo, bestScore };
+            if (score > bestScore) {
+                bestScore = score;
+                bestCombo = combo.slice();
+            }
+
+            if (onProgress && checked % yieldEvery === 0) {
+                onProgress({ checked, bestScore });
+            }
+
+            await maybeYield();
+            return;
+        }
+
+        for (let i = startIndex; i <= n - (k - depth); i++) {
+            combo[depth] = items[i];
+            await dfs(i + 1, depth + 1);
+        }
+    }
+
+    await dfs(0, 0);
+
+    return { bestCombo, bestScore, checked };
 }
+
