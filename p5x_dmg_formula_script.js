@@ -32,6 +32,10 @@ const WONDER_FILE_NAME = encodeURIComponent("P5X database - wonder.csv");
 const BOSS_FILE_NAME = encodeURIComponent("P5X database - boss.csv");
 const FILE_NUM_SKIP_LINE = 2;   // skip the first 2 lines of the csv file
 const MAX_NUM_DATABASE_EFFECT = 6;  // database has 6 effects right now
+const MAX_NUM_CARD_DATABASE_EFFECT = 9;  // card database has 9 effects right now
+const MAX_NUM_WEAP_DATABASE_EFFECT = 4; // weapon database has 4 effects
+
+
 
 const NAV_BUFF_PERC = 0.20;     // Used for now. Once I do party member, I can remove this and get the correct value
 
@@ -166,15 +170,13 @@ function damageFn(personaList) {
     let newDbuffList = [];
     let simCharInfo = structuredClone(iCharInfo);
 
-//    console.log(personaList);
-
     for (const persona of personaList) {
         newDbuffList = newDbuffList.concat(persona.dbuff);
     }
     newDbuffList = removeFullDuplicates(newDbuffList);
 
     if (newDbuffList.hasDuplicate) {
-        // if it has duplicate, most likely it's bad anyway
+        // if it has duplicate, most likely it's bad anyway, so do this to reduce the time it takes
         return 0;
     }
 
@@ -207,8 +209,8 @@ function damageFn(personaList) {
 
 //         Testing with our original without wonder buff
 //         let dmg2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
-//           console.log(dmg2)
-///           console.log(dmg)
+//         console.log(dmg2)
+///        console.log(dmg)
            return dmg[0];   // return the min dmg. should be fine.
        }
     }
@@ -249,11 +251,18 @@ function runSimPersona() {
 //            console.log("Checked:", checked, "Best:", bestScore);
         }
     }).then(result => {
-        //      console.log("DONE:", result);
+        // Done. Display the result
         displaySimResult(result);
     });
 }
 
+/*
+*   Combine persona debuff list with skill list
+*
+*   @param  persona - persona passive object
+*   @param  skill   - persona skill object
+*
+*/
 function combinePassiveWithSkill(persona, skill) {
     if (persona.source != "") {
         // first, add the persona passive first
@@ -299,6 +308,12 @@ function combinePassiveWithSkill(persona, skill) {
     return null;
 }
 
+/**
+ *  Common sim function. This gets html values, initialize from the database, and set up
+ *  all the buffs/debuffs into a buff/debuff list and calculate all the necessary value
+ *  Note that this uses global variables. Need to be careful.
+ *   
+ */
 function simCommon() {
     readCharStatDatabase();
     readCardDatabase();
@@ -350,13 +365,13 @@ function simCommon() {
     var skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName, DPS_ROLE);
     if (skillIndex >= 0) {
         // Set the skillType (element or support or passive) to element if we have multiple type
-        const element = skillList[skillIndex].skillType.split("|");
+        const element = skillList[skillIndex].skillInfo[0].skillType.split("|");
         for (var item of element) {
             if (item != "Support") {
                 iCharInfo.skillType = item;
             }
         }
-        iCharInfo.skillBehavior = skillList[skillIndex].skillBehavior;
+        iCharInfo.skillBehavior = skillList[skillIndex].skillInfo[0].skillBehavior;
     }
     else {
         var element = document.getElementById("result");
@@ -472,7 +487,7 @@ function simCommon() {
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
 
     // Skill Perc should be done after all the buffs is done
-    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex], iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
+    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex].skillInfo, iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
@@ -501,6 +516,11 @@ function simCommon() {
     }*/
 }
 
+/**
+ *  Get Navi stats from HTML and calculate the stats as a percentage of the param
+ * @param {any} percent     this is used to get a fraction of the navi stats
+ * @returns     [atkFlat, dmgMult, critRate, critMult, pierceRate] from the user entered stats
+ */
 function addNaviStats(percent) {
     atkFlat = parseFloat(document.getElementById('naviAtk').value) * percent / 100;
     dmgMult = parseFloat(document.getElementById('naviDmgMult').value) * percent / 100;
@@ -511,6 +531,9 @@ function addNaviStats(percent) {
     return [atkFlat, dmgMult, critRate, critMult, pierceRate];
 }
 
+/**
+ * Initialize global variables
+ */
 function initializeData() {
     buffList = [];
     htmlDBuffList = [];
@@ -561,97 +584,54 @@ function initializeData() {
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
 // @param   skill - item containing the skill from the database
 // @todo: Assuming the skill has only 2 parts at most. If it's more than 2, need to adjust this code
-function calculateSkillPerc(skill, skillLevel, extraHit, ampSkill) {   
+function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {   
     let skillPercList = [];
-    // The first one should be a skill percent. If it's not, screw you.
-    if ((skill.e1dbuff == "DMG_SKILL_SINGLE") || (skill.e1dbuff == "DMG_SKILL_AOE")
-        || skill.e1dbuff == "DMG_SKILL_DOT_HP") {
-        let data = [];
-        data.value = 0;
-        data.numHit = 0;
-        data.skillBehavior = skill.skillBehavior;
 
-        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
-        if ((skill.e1conditionType == "Exclusive") && IsValidDBuffCondition(skill.e1condition)) {
-            // Invalid skill... this skill doesn't exist
-            skillPercList.push(data);
-            skillPercList.push(data);
-            skillPercList.push(data);
-//            console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
-            return skillPercList;
-        }
-        else if ((skill.e1conditionType == "DBuff") && !IsValidDBuffCondition(skill.e1condition)) {
-            // Invalid skill... this skill doesn't exist
-            skillPercList.push(data);
-            skillPercList.push(data);
-            skillPercList.push(data);
-//            console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
-            return skillPercList;
-        }
+    for (const skill of skillInfo) {
+        if ((skill.dbuff == "DMG_SKILL_SINGLE") || (skill.dbuff == "DMG_SKILL_AOE")
+            || skill.dbuff == "DMG_SKILL_DOT_HP") {
+            let data = [];
+            data.value = 0;
+            data.numHit = 0;
+            data.skillBehavior = skill.skillBehavior;
 
-        switch (skillLevel) {
-            case SKILL_LEVEL_10:
-                data.value = skill.e1Lvl10;
-                break;
-            case SKILL_LEVEL_10_MINDSCAPE_5:
-                data.value = skill.e1Lvl10m5;
-                break;
-            case SKILL_LEVEL_13:
-                data.value = skill.e1Lvl13;
-                break;
-            case SKILL_LEVEL_13_MINDSCAPE_5:
-                data.value = skill.e1Lvl13m5;
-                break;
-            default:
-                data.value = 0;
-                break;
-        }
-        data.value = data.value / 100 * ampSkill;
-        data.numHit = skill.e1numHit;
+            // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
+            if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(skill.condition)) {
+                // Invalid skill... this skill doesn't exist
+                skillPercList.push(data);
+                skillPercList.push(data);
+                skillPercList.push(data);
+                //            console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
+                return skillPercList;
+            }
+            else if ((skill.conditionType == "DBuff") && !IsValidDBuffCondition(skill.condition)) {
+                // Invalid skill... this skill doesn't exist
+                skillPercList.push(data);
+                skillPercList.push(data);
+                skillPercList.push(data);
+                //            console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
+                return skillPercList;
+            }
 
-        if (extraHit) {
-            data.numHit += extraHit;
-        }
-
-        skillPercList.push(data);
-    }
-    else {
-        let data = [];
-        data.value = 0;
-        data.numHit = 0;
-        skillPercList.push(data);
-        skillPercList.push(data);
-    }
-
-    if ((skill.e2dbuff == "DMG_SKILL_SINGLE") || (skill.e2dbuff == "DMG_SKILL_AOE")) {
-        let data = [];
-        data.value = 0;
-        data.numHit = 0;
-
-        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
-        if (!IsValidDBuffCondition(skill.e2condition) && !IsValidDebuffEnemyCondition(skill.e2condition)) {
-            skillPercList.push(data);
-        }
-        else {
             switch (skillLevel) {
                 case SKILL_LEVEL_10:
-                    data.value = skill.e2Lvl10;
+                    data.value = skill.lvl10;
                     break;
                 case SKILL_LEVEL_10_MINDSCAPE_5:
-                    data.value = skill.e2Lvl10m5;
+                    data.value = skill.lvl10m5;
                     break;
                 case SKILL_LEVEL_13:
-                    data.value = skill.e2Lvl13;
+                    data.value = skill.lvl13;
                     break;
                 case SKILL_LEVEL_13_MINDSCAPE_5:
-                    data.value = skill.e2Lvl13m5;
+                    data.value = skill.lvl13m5;
                     break;
                 default:
                     data.value = 0;
                     break;
             }
             data.value = data.value / 100 * ampSkill;
-            data.numHit = skill.e2numHit;
+            data.numHit = skill.numHit;
 
             if (extraHit) {
                 data.numHit += extraHit;
@@ -659,62 +639,27 @@ function calculateSkillPerc(skill, skillLevel, extraHit, ampSkill) {
 
             skillPercList.push(data);
         }
-    }
-    else {
-        let data = [];
-        data.value = 0;
-        data.numHit = 0;
-        skillPercList.push(data);
-    }
-
-    if ((skill.e3dbuff == "DMG_SKILL_SINGLE") || (skill.e3dbuff == "DMG_SKILL_AOE")) {
-        let data = [];
-        data.value = 0;
-        data.numHit = 0;
-
-        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
-        if (!IsValidDBuffCondition(skill.e3condition) && !IsValidDebuffEnemyCondition(skill.e3condition)) {
-            skillPercList.push(data);
-        }
         else {
-            switch (skillLevel) {
-                case SKILL_LEVEL_10:
-                    data.value = skill.e3Lvl10;
-                    break;
-                case SKILL_LEVEL_10_MINDSCAPE_5:
-                    data.value = skill.e3Lvl10m5;
-                    break;
-                case SKILL_LEVEL_13:
-                    data.value = skill.e3Lvl13;
-                    break;
-                case SKILL_LEVEL_13_MINDSCAPE_5:
-                    data.value = skill.e3Lvl13m5;
-                    break;
-                default:
-                    data.value = 0;
-                    break;
-            }
-            data.value = data.value / 100 * ampSkill;
-            data.numHit = skill.e3numHit;
-
-            if (extraHit) {
-                data.numHit += extraHit;
-            }
-
+            let data = [];
+            data.value = 0;
+            data.numHit = 0;
+            skillPercList.push(data);
             skillPercList.push(data);
         }
-    }
-    else {
-        let data = [];
-        data.value = 0;
-        data.numHit = 0;
-        skillPercList.push(data);
     }
 
     return skillPercList;
 }
 
-// Enemy debuffed only
+/**
+ *  Check to see if the enemy's debuffs is found in the buff list and is valid
+ *  It goes through the full buffList and look for the buff in the buffList
+ * 
+ * @param   conditionName   the name of the condition we're looking for
+ * 
+ * @returns true if valid, false if not
+ * 
+ * */
 function IsValidDebuffEnemyCondition(conditionName) {
     if (conditionName != "") {
         for (var i = 0; i < buffList.length; i++) {
@@ -749,7 +694,15 @@ function IsValidDebuffEnemyCondition(conditionName) {
     }
 }
 
-// User inflicted debuff/buff only
+/**
+ *  Check to see the user inflicted debuff/buff is found in the buff list and is valid
+ *  It goes through the full buffList and look for the buff in the buffList 
+ * 
+ * @param   conditionName   the name of the condition we're looking for
+ * 
+ * @returns true if valid, false if not
+ * 
+ * */
 function IsValidDBuffCondition(conditionName) {
     if (conditionName != "") {
         // this has a requirement, need to go through the buff to see if the user has the buff
@@ -767,7 +720,22 @@ function IsValidDBuffCondition(conditionName) {
     }
 }
 
-
+/**
+ *  This function handles the NAND (&) operation in the database
+ *  It goes through the full buffList and look for the buff in the buffList
+ *  Both of the conditions need to be valid for it to return true
+ *  If either side of the & is invalid, it will return false
+ * 
+ * @param   name   the name of the condition we're looking for (name of the buff or debuff)
+ * @param   type   the type of the conditon we're looking for (Dbuff or Skill or Debuffed, etc)
+ * @param   skillName   the name of the skill that the user enters (that we're trying to find the best DPS for)
+ * @param   skill   the skill Position of the skill that the user enters 
+ * @param   element the elemment of the skill that the user enters
+ * @param   skillBehavior   the behavior the skill that the user enters (DoT, Follow, Normal, etc)
+ * 
+ * @returns true if valid, false if not
+ * 
+ * */
 function IsValidAndCondition(name, type, skillName, skill, element, skillBehavior) {
     const searchName = name.split('&'); // conditionName
     const searchType = type.split('&'); // conditionType
@@ -826,11 +794,16 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
 }
 
 
-// using the buff list to add up all the the values
-// check the condition to make sure it is ok before I can add
-// how should I deal with condition?? I could go through the list to make sure I have the buff condition first
-// before I add?? Like if he requires HL, I need to make sure I have that buff name on the list first 
-// if the dps only buffs allies with some skills, I may need to filter it out when I add selfBuff/passive skills
+/* 
+* Check the entered list to add up all the values in the buff list
+* This will also check the condition to make sure it is ok before it can be added.
+* These are the values matching the database
+*
+* @param   list    the buff list to be added
+* @param  skillName   the name of the skill that the user enteres
+* @param  skill   the skill position (S1, S2, HL)
+* @pram   skillBehavior   how the skill behaves: normal, DoT, Follow
+*/
 function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
     let data = [];
     data.atkFlat = 0;
@@ -1054,16 +1027,20 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
             failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
         }
     }
-/*
-    if (failBuff.length > 0 && DEBUG) {
+
+/*    if (failBuff.length > 0 && DEBUG) {
         console.log(failBuff);
     }*/
-/*    else {
-        console.log("processDBuffList::All buffs were added.");
-    }*/
+
     return data;
 }
 
+/**
+ * Add WonderBuff to the buff List
+ * 
+ * @param   name    name of the buff
+ * 
+ */
 function addWonderBuffToBuffList(name) {
     var buffItem = wonderList.find(item => item.name == name);
     if (buffItem) {
@@ -1087,6 +1064,11 @@ function addWonderBuffToBuffList(name) {
     return false;
 }
 
+/**
+ * Add user selected buff to the global buffList
+ * The user selected buffs are stored in htmlDBuffList
+ * 
+ */
 function addUserSelectedBuffToBuffList() {
     for (var i = 0; i < htmlDBuffList.length; i++) {        
         // Check wonder list. If found, move to the next item
@@ -1152,53 +1134,18 @@ function addBossStatusToBuffList(weakness) {
 
 // @todo: There are some card stuff that does damage... I may need to add to skill list (not skill buff)
 function addCardToBuffList(name, charName, role) {
-    for (var i = 0; i < cardList.length; i++) {
-        if ((cardList[i].name == name)) {
-            // Not a dps, then check buff to make sure we don't add self buff
-            if (((role == DPS_ROLE) && (cardList[i].e1dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].e1dbuff, cardList[i].e1condition, cardList[i].e1conditionType))) {
-                let data = composeBuffData(cardList[i].e1dbuff, charName, SKILL_LEVEL_10, name, cardList[i].e1value, 0, 0, 0, cardList[i].e1condition, cardList[i].e1conditionType)
-                buffList.push(data);                
+    for (const card of cardList) {   
+        if (card.name == name) {
+            for (const cardInfo of card.cardInfo) {
+                // Not a dps, then check buff to make sure we don't add self buff
+                if (((role == DPS_ROLE) && (cardInfo.dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardInfo.dbuff, cardInfo.condition, cardInfo.conditionType))) {
+                    let data = composeBuffData(cardInfo.dbuff, charName, SKILL_LEVEL_10, name, cardInfo.value, 0, 0, 0, cardInfo.condition, cardInfo.conditionType)
+                    if (data.buffName) {
+                        buffList.push(data);
+                    }
+                }
             }
 
-            if (((role == DPS_ROLE) && (cardList[i].e2dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].e2dbuff, cardList[i].e2condition, cardList[i].e2conditionType))) {
-                let data = composeBuffData(cardList[i].e2dbuff, charName, SKILL_LEVEL_10, name, cardList[i].e2value, 0, 0, 0, cardList[i].e2condition, cardList[i].e2conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].e3dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].e3dbuff, cardList[i].e3condition, cardList[i].e3conditionType))) {
-                let data = composeBuffData(cardList[i].e3dbuff, charName, SKILL_LEVEL_10, name, cardList[i].e3value, 0, 0, 0, cardList[i].e3condition, cardList[i].e3conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].e4dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].e4dbuff, cardList[i].e4condition, cardList[i].e4conditionType))) {
-                let data = composeBuffData(cardList[i].e4dbuff, charName, SKILL_LEVEL_10, name, cardList[i].e4value, 0, 0, 0, cardList[i].e4condition, cardList[i].e4conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].s1dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].s1dbuff, cardList[i].s1condition, cardList[i].s1conditionType))) {
-                let data = composeBuffData(cardList[i].s1dbuff, charName, SKILL_LEVEL_10, name, cardList[i].s1value, 0, 0, 0, cardList[i].s1condition, cardList[i].s1conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].s2dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].s2dbuff, cardList[i].s2condition, cardList[i].s2conditionType))) {
-                let data = composeBuffData(cardList[i].s2dbuff, charName, SKILL_LEVEL_10, name, cardList[i].s2value, 0, 0, 0, cardList[i].s2condition, cardList[i].s2conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].s3dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].s3dbuff, cardList[i].s3condition, cardList[i].s3conditionType))) {
-                let data = composeBuffData(cardList[i].s3dbuff, charName, SKILL_LEVEL_10, name, cardList[i].s3value, 0, 0, 0, cardList[i].s3condition, cardList[i].s3conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].s4dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].s4dbuff, cardList[i].s4condition, cardList[i].s4conditionType))) {
-                let data = composeBuffData(cardList[i].s4dbuff, charName, SKILL_LEVEL_10, name, cardList[i].s4value, 0, 0, 0, cardList[i].s4condition, cardList[i].s4conditionType)
-                buffList.push(data);
-            }
-
-            if (((role == DPS_ROLE) && (cardList[i].s5dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardList[i].s5dbuff, cardList[i].s5condition, cardList[i].s5conditionType))) {
-                let data = composeBuffData(cardList[i].s5dbuff, charName, SKILL_LEVEL_10, name, cardList[i].s5value, 0, 0, 0, cardList[i].s5condition, cardList[i].s5conditionType)
-                buffList.push(data);
-            }
         }
     }
 }
@@ -1268,59 +1215,22 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role
             break;
         }
     }
+
     while ((skillList[current].awareness == skillList[item].awareness) && (skillList[current].skillName == skillList[item].skillName)) {
-        if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e1dbuff, skillList[current].e1condition, skillList[current].e1conditionType)) {
-            let data = composeBuffData(skillList[current].e1dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e1Lvl10,
-                skillList[current].e1Lvl10m5, skillList[current].e1Lvl13, skillList[current].e1Lvl13m5, skillList[current].e1condition, skillList[current].e1conditionType);
-            if (data.buffName) {
-                buffList.push(data);
+        for (const skillInfo of skillList[current].skillInfo) {
+            if ((role == DPS_ROLE) || isValidTargetBuff(skillInfo.dbuff, skillInfo.condition, skillInfo.conditionType)) {
+                let data = composeBuffData(skillInfo.dbuff, charName, skillLevel, skillList[current].skillName, skillInfo.lvl10,
+                    skillInfo.lvl10m5, skillInfo.lvl13, skillInfo.lvl13m5, skillInfo.condition, skillInfo.conditionType);
+                if (data.buffName) {
+                    buffList.push(data);
+                }
             }
-        }
-
-        if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e2dbuff, skillList[current].e2condition, skillList[current].e2conditionType)) {
-            data = composeBuffData(skillList[current].e2dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e2Lvl10,
-                skillList[current].e2Lvl10m5, skillList[current].e2Lvl13, skillList[current].e2Lvl13m5, skillList[current].e2condition, skillList[current].e2conditionType);
-            if (data.buffName) {
-                buffList.push(data);
-            }
-        }
-
-        if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e3dbuff, skillList[current].e3condition, skillList[current].e3conditionType)) {
-            data = composeBuffData(skillList[current].e3dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e3Lvl10,
-                skillList[current].e3Lvl10m5, skillList[current].e3Lvl13, skillList[current].e3Lvl13m5, skillList[current].e3condition, skillList[current].e3conditionType);
-            if (data.buffName) {
-                buffList.push(data);
-            }
-        }
-
-        if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e4dbuff, skillList[current].e4condition, skillList[current].e4conditionType)) {
-            data = composeBuffData(skillList[current].e4dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e4Lvl10,
-                skillList[current].e4Lvl10m5, skillList[current].e4Lvl13, skillList[current].e4Lvl13m5, skillList[current].e4condition, skillList[current].e4conditionType);
-            if (data.buffName) {
-                buffList.push(data);
-            }
-        }
-
-        if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e5dbuff, skillList[current].e5condition, skillList[current].e5conditionType)) {
-            data = composeBuffData(skillList[current].e5dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e5Lvl10,
-                skillList[current].e5Lvl10m5, skillList[current].e5Lvl13, skillList[current].e5Lvl13m5, skillList[current].e5condition, skillList[current].e5conditionType);
-            if (data.buffName) {
-                buffList.push(data);
-            }
-        }
-        if ((role == DPS_ROLE) || isValidTargetBuff(skillList[current].e6dbuff, skillList[current].e6condition, skillList[current].e6conditionType)) {
-            data = composeBuffData(skillList[current].e6dbuff, charName, skillLevel, skillList[current].skillName, skillList[current].e6Lvl10,
-                skillList[current].e6Lvl10m5, skillList[current].e6Lvl13, skillList[current].e6Lvl13m5, skillList[current].e6condition, skillList[current].e6conditionType);
-            if (data.buffName) {
-                buffList.push(data);
-            }
-        }
+        }        
 
         current++;
     }
     
     return item;   // save the index - probably needed for later to calculate skill damage
-
 }
     
 // Trash function, but at least it's less copy and paste making it less prone to bug
@@ -1363,52 +1273,18 @@ function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl1
 function addWeaponBuffToBuffList(charName, rarity, reforge, role) {
     for (var i = 0; i < weaponList.length; i++) {
         if ((weaponList[i].charName == charName) && (rarity == weaponList[i].rarity)) {
-            // Such trash code... I really could do better than this...
-            // should input these in an array when I read the database... seriously...
-            if (isValidWeaponBuff(weaponList[i].e1dbuff, weaponList[i].e1condition, weaponList[i].e1conditionType, iCharInfo.skillPos, role)) {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.charName = charName;
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e1r0, 0, weaponList[i].e1r2, reforge);
-                data.dbuff = weaponList[i].e1dbuff;
-                data.condition = weaponList[i].e1condition;
-                data.conditionType = weaponList[i].e1conditionType;
-                buffList.push(data);
+            for (const info of weaponList[i].weapInfo) {
+                if (isValidWeaponBuff(info.dbuff, info.condition, info.conditionType, iCharInfo.skillPos, role)) {
+                    let data = [];
+                    data.buffName = weaponList[i].name;    // where the buff is from
+                    data.charName = charName;
+                    data.value = calcWeaponBasedOnReforge(info.r0, 0, info.r2, reforge);
+                    data.dbuff = info.dbuff;
+                    data.condition = info.condition;
+                    data.conditionType = info.conditionType;
+                    buffList.push(data);
+                }
             }
-
-            if (isValidWeaponBuff(weaponList[i].e2dbuff, weaponList[i].e2condition, weaponList[i].e2conditionType, iCharInfo.skillPos, role)) {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.charName = charName;
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e2r0, weaponList[i].e2r1, 0, reforge);
-                data.dbuff = weaponList[i].e2dbuff;
-                data.condition = weaponList[i].e2condition;
-                data.conditionType = weaponList[i].e2conditionType;
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weaponList[i].e3dbuff, weaponList[i].e3condition, weaponList[i].e3conditionType, iCharInfo.skill, role)) {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.charName = charName;
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e3r0, weaponList[i].e3r1, 0, reforge);
-                data.dbuff = weaponList[i].e3dbuff;
-                data.condition = weaponList[i].e3condition;
-                data.conditionType = weaponList[i].e3conditionType;
-                buffList.push(data);
-            }
-
-            if (isValidWeaponBuff(weaponList[i].e4dbuff, weaponList[i].e4condition, weaponList[i].e4conditionType, iCharInfo.skillPos, role)) {
-                let data = [];
-                data.buffName = weaponList[i].name;    // where the buff is from
-                data.charName = charName;
-                data.value = calcWeaponBasedOnReforge(weaponList[i].e4r0, weaponList[i].e4r1, 0, reforge);
-                data.dbuff = weaponList[i].e4dbuff;
-                data.condition = weaponList[i].e4condition;
-                data.conditionType = weaponList[i].e4conditionType;
-                buffList.push(data);
-            }
-
 //            return i;   // save the index
         }
     }    
@@ -1846,7 +1722,7 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
         // that can be used to apply to S1 and S2 also
         for (const skill of skillList) {
             if (skill.charName == charName) {
-                if ((skill.skillType.includes("Support")) && (skill.awareness <= awareness)) {
+                if ((skill.skillInfo[0].skillType.includes("Support")) && (skill.awareness <= awareness)) {
                     list.push(skill.skillName);
                 }
                 else if ((skill.skillPos == "Passive") && (skill.awareness <= awareness)) {
@@ -1860,8 +1736,8 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
         // Other people other than the dps, just add all the passive and support skill
         for (const skill of skillList) {
             if ((skill.charName == charName) && (skill.awareness <= awareness) &&
-                ((skill.skillType == "Passive") || skill.skillType.includes("Support"))) {
-                if (skill.skillType == "Passive") {
+                ((skill.skillInfo[0].skillType == "Passive") || skill.skillInfo[0].skillType.includes("Support"))) {
+                if (skill.skillInfo[0].skillType == "Passive") {
                     // Add item to the output instead of letting the user choose since it's a passive the character always has
                     addItemToListNoButton(skill.skillName, outputDiv);
                 }
@@ -2327,33 +2203,20 @@ function readWeaponDatabase() {
             data.charName = row[i][j++];
             data.rarity = row[i][j++]; // This will be used to determine if it's a 4* or 5* weapon
 
-            data.e1r0 = parseFloat(row[i][j++]);
-            data.e1r2 = parseFloat(row[i][j++]);
-            data.e1dbuff = row[i][j++];
-            data.e1condition = row[i][j++];
-            data.e1conditionType = row[i][j++];
-            data.e1multipliler = row[i][j++];
+            data.weapInfo = [];
 
-            data.e2r0 = parseFloat(row[i][j++]);
-            data.e2r1 = parseFloat(row[i][j++]);
-            data.e2dbuff = row[i][j++];
-            data.e2condition = row[i][j++];
-            data.e2conditionType = row[i][j++];
-            data.e2multipliler = row[i][j++];
-
-            data.e3r0 = parseFloat(row[i][j++]);
-            data.e3r1 = parseFloat(row[i][j++]);
-            data.e3dbuff = row[i][j++];
-            data.e3condition = row[i][j++];
-            data.e3conditionType = row[i][j++];
-            data.e3multipliler = row[i][j++];
-
-            data.e4r0 = parseFloat(row[i][j++]);
-            data.e4r1 = parseFloat(row[i][j++]);
-            data.e4dbuff = row[i][j++];
-            data.e4condition = row[i][j++];
-            data.e4conditionType = row[i][j++];
-            data.e4multipliler = row[i][j++];
+            for (var dbuffItem = 0; dbuffItem < MAX_NUM_WEAP_DATABASE_EFFECT; dbuffItem++) {
+                var dbuff = [];
+                dbuff.r0 = parseFloat(row[i][j++]);
+                dbuff.r2 = row[i][j++];
+                dbuff.dbuff = row[i][j++];
+                dbuff.condition = row[i][j++];
+                dbuff.conditionType = row[i][j++];
+                dbuff.multipliler = row[i][j++];
+                if (dbuff.dbuff != "") {
+                    data.weapInfo.push(dbuff);
+                }
+            }
 
             weaponList.push(data);
         }
@@ -2387,52 +2250,18 @@ function readCardDatabase() {
             // Space card bonus
             data.name = row[i][j++];
 
-            data.e1value = parseFloat(row[i][j++]);
-            data.e1dbuff = row[i][j++];
-            data.e1condition = row[i][j++];    
-            data.e1conditionType = row[i][j++];
+            data.cardInfo = [];
 
-            data.e2value = parseFloat(row[i][j++]);
-            data.e2dbuff = row[i][j++];
-            data.e2condition = row[i][j++];
-            data.e2conditionType = row[i][j++];
-
-            data.e3value = parseFloat(row[i][j++]);
-            data.e3dbuff = row[i][j++];
-            data.e3condition = row[i][j++];
-            data.e3conditionType = row[i][j++];
-
-            data.e4value = parseFloat(row[i][j++]);
-            data.e4dbuff = row[i][j++];
-            data.e4condition = row[i][j++];
-            data.e4conditionType = row[i][j++];
-
-            // 2 set bonus
-            data.s1value = parseFloat(row[i][j++]);
-            data.s1dbuff = row[i][j++];
-            data.s1condition = row[i][j++];
-            data.s1conditionType = row[i][j++];
-
-            // 4 set bonus
-            data.s2value = parseFloat(row[i][j++]);
-            data.s2dbuff = row[i][j++];
-            data.s2condition = row[i][j++];
-            data.s2conditionType = row[i][j++];
-
-            data.s3value = parseFloat(row[i][j++]);
-            data.s3dbuff = row[i][j++];
-            data.s3condition = row[i][j++];
-            data.s3conditionType = row[i][j++];
-
-            data.s4value = parseFloat(row[i][j++]);
-            data.s4dbuff = row[i][j++];
-            data.s4condition = row[i][j++];
-            data.s4conditionType = row[i][j++];
-
-            data.s5value = parseFloat(row[i][j++]);
-            data.s5dbuff = row[i][j++];
-            data.s5condition = row[i][j++];
-            data.s5conditionType = row[i][j++];
+            for (var dbuffItem = 0; dbuffItem < MAX_NUM_CARD_DATABASE_EFFECT; dbuffItem++) {
+                var dbuff = [];
+                dbuff.value = parseFloat(row[i][j++]);
+                dbuff.dbuff = row[i][j++];
+                dbuff.condition = row[i][j++];
+                dbuff.conditionType = row[i][j++];
+                if (dbuff.dbuff != "") {
+                    data.cardInfo.push(dbuff);
+                }
+            }
 
             cardList.push(data);
         }
@@ -2465,65 +2294,22 @@ function readSkillDatabase() {
             data.skillPos = row[i][j++];
             data.awareness = row[i][j++];
             data.skillName = row[i][j++];
-            data.skillType = row[i][j++];    // support or fire or passive
-            data.skillBehavior = row[i][j++];    // support or fire or passive
+            data.skillInfo = [];
 
-            data.e1Lvl10 = parseFloat(row[i][j++]);
-            data.e1Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
-            data.e1Lvl13 = parseFloat(row[i][j++]);
-            data.e1Lvl13m5 = parseFloat(row[i][j++]);   // level 13 mindscape 5
-            data.e1numHit = parseFloat(row[i][j++]);
-            data.e1dbuff = row[i][j++];
-            data.e1condition = row[i][j++];
-            data.e1conditionType = row[i][j++];
-
-            data.e2skillType = row[i][j++];    // support or fire or passive
-            data.e2skillBehavior = row[i][j++];    // support or fire or passive
-
-            data.e2Lvl10 = parseFloat(row[i][j++]);
-            data.e2Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
-            data.e2Lvl13 = parseFloat(row[i][j++]);
-            data.e2Lvl13m5 = parseFloat(row[i][j++]);   // level 13 mindscape 5
-            data.e2numHit = parseFloat(row[i][j++]);
-            data.e2dbuff = row[i][j++];
-            data.e2condition = row[i][j++];
-            data.e2conditionType = row[i][j++];
-
-            data.e3Lvl10 = parseFloat(row[i][j++]);
-            data.e3Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
-            data.e3Lvl13 = parseFloat(row[i][j++]);
-            data.e3Lvl13m5 = parseFloat(row[i][j++]);   // level 13 mindscape 5
-            data.e3numHit = parseFloat(row[i][j++]);
-            data.e3dbuff = row[i][j++];
-            data.e3condition = row[i][j++];
-            data.e3conditionType = row[i][j++];
-
-            data.e4Lvl10 = parseFloat(row[i][j++]);
-            data.e4Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
-            data.e4Lvl13 = parseFloat(row[i][j++]);
-            data.e4Lvl13m5 = parseFloat(row[i][j++]);   // level 13 mindscape 5
-            data.e4numHit = parseFloat(row[i][j++]);
-            data.e4dbuff = row[i][j++];
-            data.e4condition = row[i][j++];
-            data.e4conditionType = row[i][j++];
-
-            data.e5Lvl10 = parseFloat(row[i][j++]);
-            data.e5Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
-            data.e5Lvl13 = parseFloat(row[i][j++]);
-            data.e5Lvl13m5 = parseFloat(row[i][j++]);   // level 13 mindscape 5
-            data.e5numHit = parseFloat(row[i][j++]);
-            data.e5dbuff = row[i][j++];
-            data.e5condition = row[i][j++];
-            data.e5conditionType = row[i][j++];
-
-            data.e6Lvl10 = parseFloat(row[i][j++]);
-            data.e6Lvl10m5 = parseFloat(row[i][j++]);   // level 10 mindscape 5
-            data.e6Lvl13 = parseFloat(row[i][j++]);
-            data.e6Lvl13m5 = parseFloat(row[i][j++]);   // level 13 mindscape 5
-            data.e6numHit = parseFloat(row[i][j++]);
-            data.e6dbuff = row[i][j++];
-            data.e6condition = row[i][j++];
-            data.e6conditionType = row[i][j++];
+            for (var dbuffItem = 0; dbuffItem < MAX_NUM_DATABASE_EFFECT; dbuffItem++) {
+                var dbuff = [];
+                dbuff.skillType = row[i][j++];    // support or fire or passive
+                dbuff.skillBehavior = row[i][j++];    // support or fire or passive
+                dbuff.lvl10 = parseFloat(row[i][j++]);
+                dbuff.lvl10m5 = parseFloat(row[i][j++]);
+                dbuff.lvl13 = parseFloat(row[i][j++]);
+                dbuff.lvl13m5 = parseFloat(row[i][j++]);
+                dbuff.numHit = parseFloat(row[i][j++]);
+                dbuff.dbuff = row[i][j++];
+                dbuff.condition = row[i][j++];
+                dbuff.conditionType = row[i][j++];
+                data.skillInfo.push(dbuff);
+            }
 
             skillList.push(data);
         }
