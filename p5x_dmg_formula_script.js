@@ -80,7 +80,6 @@ let iCharInfo = [];
 
 // party members
 let partyMembers = [];
-let bDebuffList = [];
 
 // store a list of all the buff/debuff that will be processed by the app as part of the calculation
 let buffList = [];
@@ -180,7 +179,7 @@ function damageFn(personaList) {
         return 0;
     }
 
-    let data = processDBuffList(newDbuffList.unique, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
+    let data = processDBuffList(newDbuffList.unique, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior, iCharInfo.numHit);
 
     simCharInfo.atkFlat += data.atkFlat;
     simCharInfo.atkPerc += data.atkPerc;
@@ -432,8 +431,19 @@ function simCommon() {
     iCharInfo.enemyDefense = convertEnemyNameToDefenseValue(iCharInfo.bossName);
     iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
+    var totalHit = 0;
+    for (const info of skillList[skillIndex].skillInfo) {
+        // @todo: some skill may have some condition for additional hit...
+        // I need to figure out how to handle it... I may need to do 2 passes...
+        // One to apply the debuff, then get the skill calculation, then one more to
+        // fix anything that skill related...
+        if (isDpsSkill(info.skillType)) {
+            totalHit += info.numHit;
+        }
+    }
+
     // Add buffs and debuffs to everything
-    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior);
+    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior, skillList[skillIndex].skillInfo[0].numHit, DEBUG);
     iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
@@ -492,28 +502,6 @@ function simCommon() {
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
-
- /*   let dmgPerHit = [];
-    var totalMin = 0, totalMax = 0;
-
-    for (const skill of iCharInfo.final_skillPerc) {
-        if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {
-            let dmg = [];
-            dmg = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
-            dmg.numHit = skill.numHit;
-            dmg.skillBehavior = skill.skillBehavior;
-            dmgPerHit.push(dmg);
-            totalMin += dmg[0] * dmg.numHit;
-            totalMax += dmg[1] * dmg.numHit;
-        }
-        else if (skill.skillBehavior == "DoT") {
-            var hp = skill.value * 100;
-            let dmg = [hp, hp, hp]
-            dmg.numHit = skill.numHit;
-            dmg.skillBehavior = skill.skillBehavior;
-            dmgPerHit.push(dmg);
-        }
-    }*/
 }
 
 /**
@@ -537,7 +525,6 @@ function addNaviStats(percent) {
 function initializeData() {
     buffList = [];
     htmlDBuffList = [];
-    bDebuffList = [];
     partyMembers = [];
     htmlAppliedBuffList = [];
     extraMath = [];
@@ -578,7 +565,7 @@ function initializeData() {
     iCharInfo.finalBonus = 0;
     iCharInfo.myriad_song = false;  // may not really use it, but just in case I want to display the double damage
     iCharInfo.extraHit = 0; // if something modify a dps skill and gives it 1 more hit
-    iCharInfo.ampSkill = 1;
+    iCharInfo.ampSkill = 1; // multiply with skill. this is for ability that changes skill percentage
 }
 // Return a list of skill percentage for the skill and its follow up
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
@@ -736,7 +723,7 @@ function IsValidDBuffCondition(conditionName) {
  * @returns true if valid, false if not
  * 
  * */
-function IsValidAndCondition(name, type, skillName, skill, element, skillBehavior) {
+function IsValidAndCondition(name, type, skillName, skill, element, skillBehavior, numHit) {
     const searchName = name.split('&'); // conditionName
     const searchType = type.split('&'); // conditionType
 
@@ -779,6 +766,11 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
                     return false;
                 }
             }
+            else if (searchType[j].includes("NumHit")) {
+                if (numHit.toString() != searchName[j]) {
+                    return false;
+                }
+            }
             else if (searchType[j].includes("Chance")) {
                 //          not consistent... not sure if we want to include the x% chance to do this
             }
@@ -804,7 +796,7 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
 * @param  skill   the skill position (S1, S2, HL)
 * @pram   skillBehavior   how the skill behaves: normal, DoT, Follow
 */
-function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
+function processDBuffList(list, skillName, skill, element, skillBehavior = "", numHit=0, verbose=false) {
     let data = [];
     data.atkFlat = 0;
     data.atkPerc = 0;
@@ -831,7 +823,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
             var andResult;
 
             for (var m = 0; m < conditionName.length; m++) {
-                andResult = IsValidAndCondition(conditionName[m], conditionType[m], skillName, skill, element, skillBehavior);
+                andResult = IsValidAndCondition(conditionName[m], conditionType[m], skillName, skill, element, skillBehavior, numHit);
 
                 if (andResult) {
                     // Since this is an OR operation, any true result means the final result is true
@@ -1028,9 +1020,9 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "") {
         }
     }
 
-/*    if (failBuff.length > 0 && DEBUG) {
+    if (failBuff.length > 0 && verbose) {
         console.log(failBuff);
-    }*/
+    }
 
     return data;
 }
@@ -1567,11 +1559,6 @@ function getHtmlInfo() {
     htmlProcessDefDebuff('dpsDBOutputDiv', iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel);
     htmlProcessDefDebuff('bossDBuffOutputDiv', document.getElementById('bossName').innerHTML, 0, 0);
 
-    // May need to go down to just DefReductionList/DmgMult and Atk/DmgMult list together since some buff does both...
-    // Probably have a buff list and a debuff list... that makes the most sense I think...
-    // I don't think anything does both buff and debuff...
-    // I have to see how I enter info in the database.. I guess
-
 //    console.log(htmlDBuffList);
 }
 
@@ -2019,7 +2006,7 @@ function outputCharSkillHeader(charName, id, list) {
 }
 
 function isDpsSkill(skillType) {
-    if ((skillType != "Passive") && (skillType != "Support")) {
+    if ((skillType != "") && (skillType != "Passive") && (skillType != "Support")) {
         return true;
     }
 
