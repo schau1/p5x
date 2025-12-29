@@ -10,6 +10,10 @@
  * 
 */
 
+function toggleDropdown(id) {
+    document.getElementById(id).classList.toggle("w3-show");
+}
+
 function filterFunction(inputId, divId, tagId) {
     var input, filter, ul, li, a, i;
     input = document.getElementById(inputId);
@@ -156,9 +160,7 @@ function replaceHeaderWithOptionName(event) {
 
     var x = targetElement.parentNode;
 
-    if (x.className.indexOf("w3-hide") == -1) {
-        x.className += " w3-hide";
-    }
+    toggleDropdown(divSibling.id);
 }
 
 function replaceHeaderWithName(cell) {
@@ -169,16 +171,18 @@ function replaceHeaderWithName(cell) {
 
     var x = cell.parentNode;
 
-    if (x.className.indexOf("w3-hide") == -1) {
-        x.className += " w3-hide";
-    }
+    toggleDropdown(x.id);
 }
 
 function show(event) {
     const targetElement = event.target;
     var x = targetElement.parentNode.firstElementChild.nextElementSibling;
 
-    x.className = x.className.replace(" w3-hide", "");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else {
+        x.className = x.className.replace(" w3-show", "");
+    }
 }
 
 function outputNameCommon(dropdown, list) {
@@ -212,7 +216,11 @@ function fillHtmlCommon(htmlDivId, filterHmtlId, list, addSearchField = true) {
     const targetElement = dropdown;
     var x = targetElement.parentNode.firstElementChild.nextElementSibling;
 
-    x.className = x.className.replace(" w3-hide", "");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else {
+        x.className = x.className.replace(" w3-show", "");
+    }
 }
 
 function fillListWithOutputPanel(event, debuffArray) {
@@ -277,7 +285,7 @@ function fillListWithOutputPanel(event, debuffArray) {
     outputList(dropdown, debuffArray, outputDiv, listDiv);
 
     var x = dropdown.parentNode.firstElementChild.nextElementSibling;
-    x.className = x.className.replace(" w3-hide", "");
+    x.className = x.className.replace(" w3-show", "");
 }
 
 function resetList(listName, saveFirstChild) {

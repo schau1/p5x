@@ -97,6 +97,14 @@ readWeaponDatabase();
 readWonderDatabase();
 readBossDatabase();
 
+window.addEventListener("click", function (event) {
+    document.querySelectorAll(".w3-dropdown-content").forEach(dropdown => {
+        if (!dropdown.parentElement.contains(event.target)) {
+            dropdown.classList.remove("w3-show");
+        }
+    });
+});
+
 /**
  *   HMTL function, onClick, will run the damage calculation formula with the user input
  */
@@ -1607,9 +1615,7 @@ function FillWonderKnife(event) {
 
     outputNameCommon(dropdown, wonderKnifeList);
 
-    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
-
-    x.className = x.className.replace(" w3-hide", "");
+    toggleDropdown(id);
 }
 
 function fillHtmlDbuffList_Common(id) {
@@ -1685,8 +1691,7 @@ function fillHtmlDbuffList_Common(id) {
         outputList(dropdown, debuffArray, outputDiv, listDiv);
     }
 
-    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
-    x.className = x.className.replace(" w3-hide", "");
+    toggleDropdown(id);
 }
 
 function fillHtmlDBuffList(event) {
@@ -1945,9 +1950,7 @@ function fillCharacter(event) {
             break;
     }
 
-    var x = dropdown.parentNode.firstElementChild.nextElementSibling;
-
-    x.className = x.className.replace(" w3-hide", "");
+    toggleDropdown(id);
 }
 
 function outputCharName(event, dropdown, list, outputListDiv, resetListDiv, role) {
@@ -1982,8 +1985,8 @@ function replaceCharHeaderWithCharName(cell, role) {
 
     var x = cell.parentNode;
 
-    if (x.className.indexOf("w3-hide") == -1) {
-        x.className += " w3-hide";
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
     }
 }
 
@@ -2027,7 +2030,7 @@ function fillSkill() {
 
     for (const skill of skillList) {
         if (charName == skill.charName) {
-            if (isDpsSkill(skill.skillType)) {
+            if (isDpsSkill(skill.skillInfo[0].skillType)) {
                 if (!list.find(item => item.name == skill.skillName)) {
                     let m = [];
                     m.name = skill.skillName;
@@ -2331,7 +2334,7 @@ function readWonderDatabase() {
             data.type = row[i][j++];
             data.dbuff = [];
 
-            if (data.released == "N") {
+            if (data.released == "N" || data.released == "NA") {
                 continue;
             }
 
