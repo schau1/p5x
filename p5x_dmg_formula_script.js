@@ -2045,6 +2045,20 @@ function fillSkill() {
     }
 }
 
+function toggleDarkMode() {
+    const element = document.querySelector('body');
+
+    // Clear the output if the user wants to
+    if (document.getElementById('checkLightMode').checked) {
+        element.style.backgroundColor = '#FFE4C4';
+        element.style.color = 'midnightblue';
+    }
+    else {
+        element.style.backgroundColor = '#0D181C';
+        element.style.color = '#F5ECDC';
+    }
+}
+
 function fillCard(event) {
     readCardDatabase();
     var divSibling = event.target.parentNode.children[1];
