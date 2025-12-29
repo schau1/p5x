@@ -160,7 +160,7 @@ function replaceHeaderWithOptionName(event) {
 
     var x = targetElement.parentNode;
 
-    toggleDropdown(divSibling.id);
+    toggleDropdown(divSibling.nextElementSibling.id);
 }
 
 function replaceHeaderWithName(cell) {

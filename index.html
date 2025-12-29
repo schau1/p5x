@@ -59,7 +59,7 @@
 						Character
 						<button class="w3-button w3-white w3-block w3-left-align" id="charName" onclick="fillCharacter(event)">Makoto Yuki</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="charListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCharlist" onkeyup="filterFunctionName()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCharlist" onkeyup="filterFunctionName(event)">
 						</div>
 					</div>
 
@@ -98,7 +98,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Weapon
 						<button class="w3-button w3-white w3-block w3-left-align" id="weaponChoice" onclick="show(event)">5*</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="weaponChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
 						</div>
@@ -107,7 +107,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Reforge Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="reforgeChoice" onclick="show(event)">R0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="reforgeChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R2</a>
@@ -149,7 +149,7 @@
 						From Main Damage Dealer
 						<button class="w3-white w3-button w3-left-align w3-block" onclick="fillHtmlDBuffList(event)" id="dpsDBuffList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="dpsDBuffListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterDpsDbufflist" onkeyup="filterFunctionDpsDBuff()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterDpsDbufflist" onkeyup="filterFunctionDBuff(event)">
 						</div>
 					</div>
 					<div class="w3-panel">
@@ -170,7 +170,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Reforge Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="wreforgeChoice" onclick="show(event)">R6</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="wreforgeChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R2</a>
@@ -185,7 +185,7 @@
 						From Wonder
 						<button class="w3-button w3-white w3-block w3-left-align" onclick="fillHtmlDBuffList(event)" id="wDBuffList">Debuff/Buff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="wDBuffListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterwDBuffList" onkeyup="filterFunctionwDBuff()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterwDBuffList" onkeyup="filterFunctionDBuff(event)">
 						</div>
 					</div>
 
@@ -201,7 +201,7 @@
 					<div class=" w3-dropdown-click w3-block w3-margin-bottom">
 						Weakness
 						<button class="w3-button w3-white w3-block w3-left-align" id="enemyElemWeakness" onclick="show(event)">Weakness</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="enemyElemWeaknessDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Normal</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Resist</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Weakness</a>
@@ -211,7 +211,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Stable Domain
 						<button class="w3-button w3-white w3-block w3-left-align" id="critChoice" onclick="show(event)">Yes</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="critChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Yes</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">No</a>
 						</div>
@@ -254,7 +254,7 @@
 						Character
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1charName" onclick="fillCharacter(event)">Wind-Vast</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1charListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1Charlist" onkeyup="filterFunctionP1Name()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1Charlist" onkeyup="filterFunctionName(event)">
 						</div>
 					</div>
 
@@ -275,7 +275,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Skill Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1skillLevelChoice" onclick="show(event)">Level 10</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1skillLevelChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10 Mindscape 5</a>
@@ -286,7 +286,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Weapon
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1weaponChoice" onclick="show(event)">5*</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1weaponChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
 						</div>
@@ -295,7 +295,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Reforge Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1reforgeChoice" onclick="show(event)">R0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1reforgeChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R2</a>
@@ -318,7 +318,7 @@
 						From Party Member
 						<button class="w3-white w3-button w3-left-align w3-block" onclick="fillHtmlDBuffList(event)" id="p1DBuffList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p1DBuffListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1DBuffList" onkeyup="filterFunctionP1DBuff()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1DBuffList" onkeyup="filterFunctionDBuff(event)">
 						</div>
 					</div>
 					<div class="w3-panel">
@@ -333,7 +333,7 @@
 						Character
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2charName" onclick="fillCharacter(event)">Howler</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2charListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2Charlist" onkeyup="filterFunctionP1Name()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2Charlist" onkeyup="filterFunctionName(event)">
 						</div>
 					</div>
 
@@ -354,7 +354,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Skill Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2skillLevelChoice" onclick="show(event)">Level 10</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2skillLevelChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10 Mindscape 5</a>
@@ -365,7 +365,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Weapon
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2weaponChoice" onclick="show(event)">5*</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2weaponChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
 						</div>
@@ -374,7 +374,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Reforge Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2reforgeChoice" onclick="show(event)">R0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2reforgeChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R2</a>
@@ -397,7 +397,7 @@
 						From Party Member
 						<button class="w3-white w3-button w3-left-align w3-block" onclick="fillHtmlDBuffList(event)" id="p2DBuffList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p2DBuffListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2DBuffList" onkeyup="filterFunctionP2DBuff()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2DBuffList" onkeyup="filterFunctionDBuff(event)">
 						</div>
 					</div>
 					<div class="w3-panel">
@@ -414,7 +414,7 @@
 						Character
 						<button class="w3-button w3-white w3-block w3-left-align" id="naviName" onclick="fillCharacter(event)">Ange</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="naviListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterNavilist" onkeyup="filterFunctionNaviName()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterNavilist" onkeyup="filterFunctionName(event)">
 						</div>
 					</div>
 
@@ -435,7 +435,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Skill Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="naviskillLevelChoice" onclick="show(event)">Level 10</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border"id="naviskillLevelChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 13</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 10 Mindscape 5</a>
@@ -446,7 +446,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Weapon
 						<button class="w3-button w3-white w3-block w3-left-align" id="naviweaponChoice" onclick="show(event)">5*</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="naviweaponChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">5*</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">4*</a>
 						</div>
@@ -455,7 +455,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Reforge Level
 						<button class="w3-button w3-white w3-block w3-left-align" id="navireforgeChoice" onclick="show(event)">R0</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border">
+						<div class="w3-dropdown-content w3-bar-block w3-border" id="navireforgeChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R0</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R1</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">R2</a>
@@ -478,7 +478,7 @@
 						From Navi
 						<button class="w3-left-align w3-button w3-white w3-block" onclick="fillHtmlDBuffList(event)" id="naviDbList">Buff/Debuff List</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="naviDBuffListDiv">
-							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilternaviDBuffList" onkeyup="filterFunctionNaviDBuff()">
+							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilternaviDBuffList" onkeyup="filterFunctionDBuff(event)">
 						</div>
 					</div>
 					<div class="w3-panel w3-block">

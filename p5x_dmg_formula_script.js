@@ -1984,10 +1984,7 @@ function replaceCharHeaderWithCharName(cell, role) {
     }
 
     var x = cell.parentNode;
-
-    if (x.className.indexOf("w3-show") == -1) {
-        x.className += " w3-show";
-    }
+    toggleDropdown(x.id);
 }
 
 function outputCharSkillHeader(charName, id, list) {
@@ -2086,8 +2083,11 @@ function filterFunctionBoss() {
     filterFunction("userFilterBosslist", "bossListDiv", "a");
 }
 
-function filterFunctionName() {
-    filterFunction("userFilterCharlist", "charListDiv", "a");
+function filterFunctionName(event) {
+//    filterFunction("userFilterCharlist", "charListDiv", "a");
+    var child = event.target.parentNode.children[0];
+
+    filterFunction(child.id, event.target.parentNode.id, "a");
 }
 
 function filterFunctionCard(event) {
@@ -2096,16 +2096,10 @@ function filterFunctionCard(event) {
     filterFunction(child.id, event.target.parentNode.id, "a");
 }
 
-function filterFunctionwDBuff() {
-    filterFunction("userFilterwDBuffList", "wDBuffListDiv", "a");
-}
+function filterFunctionDBuff(event) {
+    var child = event.target.parentNode.children[0];
 
-function filterFunctionAtk() {
-    filterFunction("userFilterAtklist", "atkListDiv", "a");
-}
-
-function filterFunctionDmg() {
-    filterFunction("userFilterDmgList", "dmgListDiv", "a");
+    filterFunction(child.id, event.target.parentNode.id, "a");
 }
 
 // --------------- End of HTML Interface ---------------------------------------------------------------------------

@@ -45,3 +45,4 @@ Creation and Worry,45,SELF_CRIT_MULT_PERC,200% SP Recovery,,,,,,,,,,,,,,80,OOB_S
 Freedom and Defeat,8,PARTY_DMG_PERC,Debuffed,,,,,,,,,,,,,,15,OOB_SELF_EHR_PERC,,,20,PARTY_DMG_PERC,Fire,Element,,,,,,,,,,,,
 Freedom and Success,16,SELF_PIERCE_PERC,Follow,Skill_Behavior,,,,,,,,,,,,,7.5,OOB_SELF_CRIT_PERC,,,40,SELF_DMG_PERC,Follow,Skill_Behavior,,,,,,,,,,,,
 Freedom and Despair,35,SELF_ATK_PERC,Almighty,Skill,12,SELF_CRIT_PERC,Almighty,Skill,,,,,,,,,12,OOB_SELF_ATK_PERC,,,25,SELF_SKILL_PERC,Different element,,,,,,,,,,,,,
+Nativity and Power,5,SELF_DESIRE_LVL,,,,,,,,,,,,,,,10,OOB_SELF_ATK_PERC,,,30,SELF_ATK_PERC,3 Stack, ,,,,,,,,,,,,
