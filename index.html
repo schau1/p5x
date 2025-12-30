@@ -24,6 +24,11 @@
             white-space: pre-wrap; /* Preserve whitespace and wrap text */
             font-family: monospace; /* Optional: good for output/log text */
         }
+
+        .custom-scrollbar {
+            max-height: 250px; /* Set the maximum visible height */
+            overflow-y: auto; /* Enable vertical scrolling when content exceeds max-height */
+        }
 	</style>	
 	<link rel="shortcut icon" href="makoto_icon.png">
 	<title>P5X Max Damage Calculator</title>
@@ -136,7 +141,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="cardChoice" onclick="fillCard(event)">Hope and Fixation</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="cardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" style="width: 100%;" id="cardListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterCardlist" onkeyup="filterFunctionCard(event)">
 						</div>
 					</div>
@@ -180,7 +185,7 @@
 					<div class="w3-dropdown-click w3-block">
 						From Wonder
 						<button class="w3-button w3-white w3-block w3-left-align" onclick="fillHtmlDBuffList(event)" id="wDBuffList">Debuff/Buff List</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="wDBuffListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" style="width: 100%;" id="wDBuffListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterwDBuffList" onkeyup="filterFunctionDBuff(event)">
 						</div>
 					</div>
@@ -217,7 +222,7 @@
 						<div class="w3-dropdown-click w3-block w3-margin-bottom" style="background-color: rgba(0, 0, 0, 0)">
 							Boss
 							<button class="w3-button w3-white w3-block w3-left-align" id="bossName" onclick="fillBoss(event)">[NTMR] Dominion</button>
-							<div class="w3-dropdown-content w3-bar-block w3-border" id="bossListDiv">
+							<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" id="bossListDiv">
 								<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterBosslist" onkeyup="filterFunctionBoss()">
 							</div>
 						</div>
@@ -305,7 +310,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="p1cardChoice" onclick="fillCard(event)">Creation and Worry</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1cardListDiv" style="width: 100%;">
+						<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" id="p1cardListDiv" style="width: 100%;">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP1Cardlist" onkeyup="filterFunctionCard(event)">
 						</div>
 					</div>
@@ -384,7 +389,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="p2cardChoice" onclick="fillCard(event)">Freedom and Defeat</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="p2cardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" style="width: 100%;" id="p2cardListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterP2Cardlist" onkeyup="filterFunctionCard(event)">
 						</div>
 					</div>
@@ -465,7 +470,7 @@
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						Card Set
 						<button class="w3-button w3-white w3-block w3-left-align" id="navicardChoice" onclick="fillCard(event)">Hope and Labor</button>
-						<div class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;" id="navicardListDiv">
+						<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" style="width: 100%;" id="navicardListDiv">
 							<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterNaviCardlist" onkeyup="filterFunctionCard(event)">
 						</div>
 					</div>
