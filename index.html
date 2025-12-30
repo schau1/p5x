@@ -24,10 +24,6 @@
             white-space: pre-wrap; /* Preserve whitespace and wrap text */
             font-family: monospace; /* Optional: good for output/log text */
         }
-
-        #phyButton {
-            margin-right: 50px;
-        }
 	</style>	
 	<link rel="shortcut icon" href="makoto_icon.png">
 	<title>P5X Max Damage Calculator</title>
@@ -508,12 +504,15 @@
 				</div>
 			</div>
 
-			<div class="w3-row">
-				<div class="w3-half w3-container w3-right-align">
-					<button id="phyButton" class="w3-button w3-teal w3-xlarge" onClick="runCalculation()">Calculate Damage</button>
+			<div class="w3-row w3-margin-top">
+				<div class="w3-third w3-container w3-right-align">
+					<button id="phyButton" class="w3-button w3-teal w3-xlarge" style="width: 250px" onClick="runCalculation()">Calculate Damage</button>
 				</div>
-				<div class="w3-half w3-container w3-left-align">
-					<button id="simButton" class="w3-button w3-teal w3-xlarge" onClick="runSimPersona()">Find Best Persona</button>
+				<div class="w3-third w3-container w3-center">
+					<button id="simButton" class="w3-button w3-teal w3-xlarge" style="width: 250px" onClick="runSimPersona()">Find Best Persona</button>
+				</div>
+				<div class="w3-third w3-container w3-left-align">
+					<button id="cancelBtn" class="w3-button w3-teal w3-xlarge" style="width: 250px" onClick="cancelOperation()">Cancel</button>
 				</div>
 			</div>
 

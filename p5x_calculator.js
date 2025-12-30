@@ -162,16 +162,21 @@ function calculateSkillDamage(atkFinal, dmgMultFinal, enemyDefFinal, critMultFin
 *   @return {array of best combo, score} 
 */
 
-async function bestCombinationYielding(items, k, scoreFn, {
-    yieldEvery = 5000,   // tune this
-    onProgress = null
-} = {}) {
+async function bestCombinationYieldingWithTimer(items, k, scoreFn, {
+    yieldEvery = 5000,   // yield to event loop every N checks
+    reportEveryMs = 250,      // report progress every X ms
+    onProgress = () => { },    // callback
+    shouldStop = () => false  // optional cancel
+} = {})
+{
     let bestScore = -Infinity;
     let bestCombo = null;
     let checked = 0;
 
     const n = items.length;
     const combo = new Array(k);
+
+    let lastReportTime = performance.now();
 
     async function maybeYield() {
         if (checked % yieldEvery === 0) {
@@ -180,7 +185,21 @@ async function bestCombinationYielding(items, k, scoreFn, {
         }
     }
 
+    function maybeReport() {
+        const now = performance.now();
+        if (now - lastReportTime >= reportEveryMs) {
+            lastReportTime = now;
+            onProgress({
+                checked,
+                bestScore,
+                bestCombo
+            });
+        }
+    }
+
     async function dfs(startIndex, depth) {
+        if (shouldStop()) return;
+
         if (depth === k) {
             const score = scoreFn(combo);
             checked++;
@@ -190,10 +209,7 @@ async function bestCombinationYielding(items, k, scoreFn, {
                 bestCombo = combo.slice();
             }
 
-            if (onProgress && checked % yieldEvery === 0) {
-                onProgress({ checked, bestScore });
-            }
-
+            maybeReport();
             await maybeYield();
             return;
         }
@@ -201,10 +217,19 @@ async function bestCombinationYielding(items, k, scoreFn, {
         for (let i = startIndex; i <= n - (k - depth); i++) {
             combo[depth] = items[i];
             await dfs(i + 1, depth + 1);
+            if (shouldStop()) return;
         }
     }
 
     await dfs(0, 0);
+
+    // Final report
+    onProgress({
+        checked,
+        bestScore,
+        bestCombo,
+        done: true
+    });
 
     return { bestCombo, bestScore, checked };
 }

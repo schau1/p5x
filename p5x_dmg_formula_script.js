@@ -91,6 +91,8 @@ let extraMath = [];
 // Verbose output
 let htmlAppliedBuffList = [];
 
+let cancelled = false;
+
 readCardDatabase();
 readSkillDatabase();
 readWeaponDatabase();
@@ -104,6 +106,10 @@ window.addEventListener("click", function (event) {
         }
     });
 });
+
+function cancelOperation() {
+    cancelled = true;
+}
 
 /**
  *   HMTL function, onClick, will run the damage calculation formula with the user input
@@ -233,8 +239,20 @@ function damageFn(personaList) {
  *  to find the best Persona
  */
 function runSimPersona() {
+    var element = document.getElementById("result");
+    // Clear the output if the user wants to
+    if (document.getElementById('checkClrOutput').checked) {
+        element.innerHTML = "";
+    }
+    var item = document.createElement("p");
+    item.innerHTML = "Error::Feature is not supported yet";
+    element.prepend(item);
+    return; // not support yet
+
+
     simCommon();
     let newSkill = [];
+    cancelled = false;
 
     // first, make a new personaSkills list will a combination of all the possible skills
     for (const persona of personaPassive) {
@@ -252,15 +270,35 @@ function runSimPersona() {
 //  damageFn([newSkill[0], newSkill[1], newSkill[2]]);
 
     // Now we find the best 3 skills
-    let result = bestCombinationYielding(newSkill, 3, damageFn, {
-        yieldEvery: 2000,
-        onProgress: ({ checked, bestScore }) => {
-//            console.log("Checked:", checked, "Best:", bestScore);
-        }
-    }).then(result => {
-        // Done. Display the result
-        displaySimResult(result);
+    let result = bestCombinationYieldingWithTimer(newSkill, 3, damageFn, {
+        reportEveryMs: 1000, // update UI twice per second
+        onProgress: ({ checked, bestScore, bestCombo, done }) => {
+/*            console.log(
+                done ? "DONE" : "Progress",
+                "checked:", checked,
+                "best:", bestScore
+            );*/
+
+            displayParcialSimResult(bestCombo, checked);
+
+            if (done) {
+                displaySimResult(bestCombo);
+            }
+        },
+        shouldStop: () => cancelled
     });
+}
+
+function displayParcialSimResult(bestCombo, checked) {
+    var element = document.getElementById("result");
+    // Clear the output if the user wants to
+    if (document.getElementById('checkClrOutput').checked) {
+        element.innerHTML = "";
+    }    
+    var item = document.createElement("p");
+    item.innerHTML = "Progress checked: " + checked + ". Current best: " + bestCombo[0].personaName + "::" + bestCombo[0].personaSkill[1]
+        + ", " + bestCombo[1].personaName + "::" + bestCombo[1].personaSkill[1] + ", " + bestCombo[2].personaName + "::" + bestCombo[2].personaSkill[1];
+    element.prepend(item);
 }
 
 /*
@@ -1364,9 +1402,22 @@ function displaySimResult(result) {
         element.innerHTML = "";
     }
 
-//    console.log(result);
+    if (cancelled) {
+        var item = document.createElement("p");
+        item.innerHTML = "Operation cancelled";
+        element.prepend(item);
+        return
+    }
 
-    for (const persona of result.bestCombo) {
+//    console.log(result);
+    if (!result) {
+        var item = document.createElement("p");
+        item.innerHTML = "Error::No result found";
+        element.prepend(item);
+        return;
+    }
+
+    for (const persona of result) {
         var item = document.createElement("p");
         item.innerHTML = "\t- " + persona.personaName + "::" + persona.personaSkill[0] + " and " + persona.personaSkill[1];
         element.prepend(item);
@@ -2340,6 +2391,8 @@ function readWonderDatabase() {
             data.released = row[i][j++];
             data.source = row[i][j++];
             data.type = row[i][j++];
+            data.skillPersonaType = row[i][j++];     // damage skill or buff skill or debuff skill, used for Wonder only
+            data.activate = row[i][j++];        // how to activate the passive
             data.dbuff = [];
 
             if (data.released == "N" || data.released == "NA") {
