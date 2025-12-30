@@ -140,7 +140,9 @@ function runCalculation() {
     }
 
     displayResult(dmgPerHit, totalMin, totalMax);
-    console.log(iCharInfo);
+    if (DEBUG) {
+        console.log(iCharInfo);
+    }
 }
 
 function removeFullDuplicates(arr) {
@@ -150,7 +152,7 @@ function removeFullDuplicates(arr) {
     for (const obj of arr) {
         const key = JSON.stringify({
             buffName: obj.buffName,
-            charName: obj.charName,
+/*            charName: obj.charName,*/
             dbuff: obj.dbuff,
             value: obj.value,
             condition: obj.condition,
@@ -186,6 +188,8 @@ function damageFn(personaList) {
     for (const persona of personaList) {
         newDbuffList = newDbuffList.concat(persona.dbuff);
     }
+
+//  console.log(personaList)
     newDbuffList = removeFullDuplicates(newDbuffList);
 
     if (newDbuffList.hasDuplicate) {
@@ -193,7 +197,12 @@ function damageFn(personaList) {
         return 0;
     }
 
-    let data = processDBuffList(newDbuffList.unique, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior, iCharInfo.numHit);
+    var numHit = 0;
+    for (const item of iCharInfo.final_skillPerc) {
+        numHit += item.numHit;
+    }
+
+    let data = processDBuffList(newDbuffList.unique, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior, numHit);
 
     simCharInfo.atkFlat += data.atkFlat;
     simCharInfo.atkPerc += data.atkPerc;
@@ -239,18 +248,24 @@ function damageFn(personaList) {
  *  to find the best Persona
  */
 function runSimPersona() {
-    var element = document.getElementById("result");
-    // Clear the output if the user wants to
-    if (document.getElementById('checkClrOutput').checked) {
-        element.innerHTML = "";
+    if (!DEBUG) {
+        var element = document.getElementById("result");
+        // Clear the output if the user wants to
+        if (document.getElementById('checkClrOutput').checked) {
+            element.innerHTML = "";
+        }
+        var item = document.createElement("p");
+        item.innerHTML = "Error::Feature is not supported yet";
+        element.prepend(item);
+        return; // not support yet
     }
-    var item = document.createElement("p");
-    item.innerHTML = "Error::Feature is not supported yet";
-    element.prepend(item);
-    return; // not support yet
-
 
     simCommon();
+
+    if (DEBUG) {
+        console.log(iCharInfo)
+    }
+
     let newSkill = [];
     cancelled = false;
 
@@ -266,6 +281,8 @@ function runSimPersona() {
         }
     }
 
+//    console.log(newSkill);
+
 //  Testing with just 1 item
 //  damageFn([newSkill[0], newSkill[1], newSkill[2]]);
 
@@ -279,7 +296,7 @@ function runSimPersona() {
                 "best:", bestScore
             );*/
 
-            displayParcialSimResult(bestCombo, checked);
+            displayParcialSimResult(bestScore, bestCombo, checked);
 
             if (done) {
                 displaySimResult(bestCombo);
@@ -289,16 +306,32 @@ function runSimPersona() {
     });
 }
 
-function displayParcialSimResult(bestCombo, checked) {
+function displayParcialSimResult(bestScore, bestCombo, checked) {
     var element = document.getElementById("result");
     // Clear the output if the user wants to
     if (document.getElementById('checkClrOutput').checked) {
         element.innerHTML = "";
     }    
     var item = document.createElement("p");
-    item.innerHTML = "Progress checked: " + checked + ". Current best: " + bestCombo[0].personaName + "::" + bestCombo[0].personaSkill[1]
+    item.innerHTML = "Progress checked: " + checked + ". Current best: " + bestScore + "::" + bestCombo[0].personaName + "::" + bestCombo[0].personaSkill[1]
         + ", " + bestCombo[1].personaName + "::" + bestCombo[1].personaSkill[1] + ", " + bestCombo[2].personaName + "::" + bestCombo[2].personaSkill[1];
     element.prepend(item);
+}
+
+
+
+function isValidPassiveCombo(persona, skill) {
+    if ((persona.activate == "Signature") && (skill.type != "Signature")) {
+        return false;
+    }
+    else if ((persona.activate == "Enemy") && ((skill.skillPersonaType != "Debuff") && (skill.skillPersonaType != "Damage"))) {
+        return false;
+    }
+    else if ((persona.activate == "Ally") && ((skill.skillPersonaType != "Buff") && (skill.skillPersonaType != "buff"))) {
+        return false;
+    }
+
+    return true;
 }
 
 /*
@@ -309,7 +342,7 @@ function displayParcialSimResult(bestCombo, checked) {
 *
 */
 function combinePassiveWithSkill(persona, skill) {
-    if (persona.source != "") {
+    if ((persona.source != "") && isValidPassiveCombo(persona, skill)) {
         // first, add the persona passive first
         let item = [];
         const nameList = persona.name.split("::");
@@ -318,7 +351,7 @@ function combinePassiveWithSkill(persona, skill) {
         item.personaSkill.push(nameList[1]);
         item.dbuff = [];
         for (const dbuff of persona.dbuff) {
-            if (dbuff.dbuff != "") {
+            if (dbuff.dbuff != "" && isValidTargetBuff(dbuff.dbuff, dbuff.condition, dbuff.conditionType)) {
                 let buff = [];
                 buff.buffName = nameList[1];
                 buff.charName = item.personaName;
@@ -328,14 +361,19 @@ function combinePassiveWithSkill(persona, skill) {
                 buff.conditionType = dbuff.conditionType;
                 item.dbuff.push(buff);
             }
-
         }
 
         // add the skill
-        item.personaSkill.push(skill.name);
+        const pnameList = skill.name.split("::");
+        if (pnameList.length > 1) {
+            item.personaSkill.push(pnameList[1]);
+        }
+        else {
+            item.personaSkill.push(pnameList[0]);
+        }
 
         for (const dbuff of skill.dbuff) {
-            if (dbuff.dbuff != "") {
+            if (dbuff.dbuff != "" && isValidTargetBuff(dbuff.dbuff, dbuff.condition, dbuff.conditionType)) {
                 let buff = [];
                 buff.buffName = skill.name;
                 buff.charName = "Wonder";
@@ -427,7 +465,9 @@ function simCommon() {
         item.innerHTML = "Error:: Info Not Found";
         element.appendChild(item);
 
-        console.log("runCalculation::skill not found");
+        if (DEBUG) {
+            console.log("runCalculation::skill not found");
+        }
 
         return;
     }
@@ -471,7 +511,9 @@ function simCommon() {
         iCharInfo.atkFlat = iCharInfo.atkFlat - iCharInfo.baseAtk;
         if (iCharInfo.atkFlat < 0) {
             iCharInfo.atkFlat = iCharInfo.baseAtk;
-            console.log("Error::Input Attack is less than base Atk. Using baseAtk as the result.");
+            if (DEBUG) {
+                console.log("Error::Input Attack is less than base Atk. Using baseAtk as the result.");
+            }
         }
     }
     iCharInfo.enemyDefense = convertEnemyNameToDefenseValue(iCharInfo.bossName);
@@ -527,12 +569,16 @@ function simCommon() {
                         iCharInfo.dmgMult += parseFloat(item.multiplier * (iCharInfo.critRate - 100) / 100);
                     }
                     else {
-                        console.log("Extra Math statBuff not handled");
+                        if (DEBUG) {
+                            console.log("Extra Math statBuff not handled");
+                        }
                     }
                 }
             }
             else {
-                console.log("Extra Math statType not handled");
+                if (DEBUG) {
+                    console.log("Extra Math statType not handled");
+                }
             }
         }
     }
@@ -629,7 +675,7 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
             data.skillBehavior = skill.skillBehavior;
 
             // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
-            if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(skill.condition)) {
+            if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(buffList, skill.condition)) {
                 // Invalid skill... this skill doesn't exist
                 skillPercList.push(data);
                 skillPercList.push(data);
@@ -637,7 +683,7 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
                 //            console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
                 return skillPercList;
             }
-            else if ((skill.conditionType == "DBuff") && !IsValidDBuffCondition(skill.condition)) {
+            else if ((skill.conditionType == "DBuff") && !IsValidDBuffCondition(buffList, skill.condition)) {
                 // Invalid skill... this skill doesn't exist
                 skillPercList.push(data);
                 skillPercList.push(data);
@@ -736,11 +782,11 @@ function IsValidDebuffEnemyCondition(conditionName) {
  * @returns true if valid, false if not
  * 
  * */
-function IsValidDBuffCondition(conditionName) {
+function IsValidDBuffCondition(list, conditionName) {
     if (conditionName != "") {
         // this has a requirement, need to go through the buff to see if the user has the buff
-        for (var i = 0; i < buffList.length; i++) {
-            if (buffList[i].buffName.includes(conditionName)) {
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].buffName.includes(conditionName)) {
                 return true;
             }
         }
@@ -769,7 +815,7 @@ function IsValidDBuffCondition(conditionName) {
  * @returns true if valid, false if not
  * 
  * */
-function IsValidAndCondition(name, type, skillName, skill, element, skillBehavior, numHit) {
+function IsValidAndCondition(list, name, type, skillName, skill, element, skillBehavior, numHit) {
     const searchName = name.split('&'); // conditionName
     const searchType = type.split('&'); // conditionType
 
@@ -781,7 +827,7 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
                 if (skillName.includes(searchName[j])) {
                     continue;
                 }
-                else if (!IsValidDBuffCondition(searchName[j])) {
+                else if (!IsValidDBuffCondition(list, searchName[j])) {
                     return false;
                 }
             }
@@ -797,7 +843,7 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
                 }
             }
             else if (searchType[j].includes("Exclusive")) {
-                if (IsValidDBuffCondition(searchName[j])) {
+                if (IsValidDBuffCondition(list, searchName[j])) {
                     // this is exclusive, meaning that if the buff is on the list, we can't use it
                     return false;
                 }
@@ -819,6 +865,11 @@ function IsValidAndCondition(name, type, skillName, skill, element, skillBehavio
             }
             else if (searchType[j].includes("Chance")) {
                 //          not consistent... not sure if we want to include the x% chance to do this
+            }
+            else if (searchType[j].includes("Stack")) {
+                // not consistent... Stack Number of a certain thing... @todo:: Implement this
+//                console.log(searchName)
+//                console.log(searchType)
             }
             else {
                 // not handled... Maybe I need to do something else in the future
@@ -856,6 +907,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
     data.ampSkill = 1;
     let buffConditionMet = true;
     let failBuff = [];  // Just info for now
+    let appliedBuffList = [];
 
     for (var i = 0; i < list.length; i++) {
         buffConditionMet = true;
@@ -869,7 +921,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
             var andResult;
 
             for (var m = 0; m < conditionName.length; m++) {
-                andResult = IsValidAndCondition(conditionName[m], conditionType[m], skillName, skill, element, skillBehavior, numHit);
+                andResult = IsValidAndCondition(list, conditionName[m], conditionType[m], skillName, skill, element, skillBehavior, numHit);
 
                 if (andResult) {
                     // Since this is an OR operation, any true result means the final result is true
@@ -898,12 +950,12 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "ALLIES_ATK_PERC":
                 case "SELF_N_ALLY_ATK_PERC":
                     data.atkPerc += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase ATK Percent", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase ATK Percent", list[i].value]);
                     break;
                 case "ALLY_ATK_PERC_HL":
                     if (skill == "Highlight") {
                         data.atkPerc += list[i].value;
-                        htmlAppliedBuffList.push([list[i].buffName, "Increase ATK Percent for HL", list[i].value]);
+                        appliedBuffList.push([list[i].buffName, "Increase ATK Percent for HL", list[i].value]);
                     }
                     else {
                         failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
@@ -912,7 +964,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "ALLY_DMG_PERC_HL":
                     if (skill == "Highlight") {
                         data.dmgMult += list[i].value;
-                        htmlAppliedBuffList.push([list[i].buffName, "Increase Damage for HL", list[i].value]);
+                        appliedBuffList.push([list[i].buffName, "Increase Damage for HL", list[i].value]);
                     }
                     else {
                         failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
@@ -927,7 +979,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "PARTY_ATK_FLAT":   // fall through
                 case "ALLY_ATK_FLAT":
                     data.atkFlat += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase ATK Flat", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase ATK Flat", list[i].value]);
                     break;
                 case "OOB_SELF_CRIT_MULT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
@@ -940,7 +992,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "ALLY_CRIT_MULT_PERC":
                 case "SELF_N_ALLY_CRIT_MULT_PERC":
                     data.critMult += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase Crit Damage", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase Crit Damage", list[i].value]);
                     break;
                 case "ALLY_CRIT_MULT_PERC_CR_OVER_100":
                     let item = [];
@@ -948,7 +1000,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                     item.statBuff = "CM";
                     item.multiplier = list[i].value;
                     extraMath.push(item);
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
                     break;
                 case "OOB_SELF_CRIT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
@@ -961,7 +1013,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "ALLIES_CRIT_PERC":
                 case "SELF_N_ALLY_CRIT_PERC":
                     data.critRate += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase Crit Rate", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase Crit Rate", list[i].value]);
                     break;
                 case "OOB_SELF_DMG_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
@@ -972,7 +1024,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "PARTY_DMG_PERC":   // fall through
                 case "ALLY_DMG_PERC":
                     data.dmgMult += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase Damage", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase Damage", list[i].value]);
                     break;
                 case "OOB_SELF_PIERCE_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
@@ -984,17 +1036,17 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "ALLY_PIERCE_PERC":
                 case "SELFN_ALLY_PIERCE_PERC":
                     data.pierceRate += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
                     break;
                 case "DEF_DECR_PERC":   // fall through
                 case "DEF_DECR_PERC_AOE":
                     data.defenseReduction += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Decrement Enemy Defense", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Decrement Enemy Defense", list[i].value]);
                     break;
                 case "WINDSWEEP_AOE":   // fall through
                 case "WINDSWEEP":   // fall through
                     data.windswept = true;
-                    htmlAppliedBuffList.push([list[i].buffName, "Windswept", data.windswept]);
+                    appliedBuffList.push([list[i].buffName, "Windswept", data.windswept]);
                     break;
                 case "SHOCKED":    // Elemental Ailments
                 case "ELEMENTAL_AILMENT":
@@ -1010,15 +1062,15 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                     data.critRate += temp[2];
                     data.critMult += temp[3];
                     data.pierceRate += temp[4];
-                    htmlAppliedBuffList.push([list[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
                     break;
                 case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
                     data.extraHit += list[i].value;
-                    htmlAppliedBuffList.push([list[i].buffName, "Extra hit", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Extra hit", list[i].value]);
                     break;
                 case "ALLY_SKILL_AMP_PERC":
                     data.ampSkill += list[i].value/100;
-                    htmlAppliedBuffList.push([list[i].buffName, "Skill Amplification", list[i].value]);
+                    appliedBuffList.push([list[i].buffName, "Skill Amplification", list[i].value]);
                     break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
 //                case "WARM_WELCOME":
@@ -1066,8 +1118,11 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
         }
     }
 
+//    console.log(failBuff);
+
     if (failBuff.length > 0 && verbose) {
         console.log(failBuff);
+        htmlAppliedBuffList = htmlAppliedBuffList.concat(appliedBuffList);
     }
 
     return data;
@@ -1239,7 +1294,9 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role
     }
 
     if (item < 0) {
-        console.log("addSkillBuffToBuffList::" + skillName + " not found");
+        if (DEBUG) {
+            console.log("addSkillBuffToBuffList::" + skillName + " not found");
+        }
         return item; // not found
     }
 
@@ -1294,7 +1351,9 @@ function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl1
                 break;
             default:
                 data.value = 0;
-                console.log("composeBuffData::skillLevel '" + skillLevel + "' not found")
+                if (DEBUG) {
+                    console.log("composeBuffData::skillLevel '" + skillLevel + "' not found");
+                }
                 break;
         }
 
@@ -1503,7 +1562,7 @@ function displayResult(dmgList, min, max) {
         item = document.createElement("ul");
         item.setAttribute('class', "w3-ul w3-left-align w3-large");
         var li = document.createElement("li");
-        li.innerHTML = "Applied Buffs: ";
+        li.innerHTML = "Applied Buffs (" + htmlAppliedBuffList.length + "): ";
         item.appendChild(li);
 
         for (const buff of htmlAppliedBuffList) {
@@ -1729,7 +1788,9 @@ function fillHtmlDbuffList_Common(id) {
             debuffArray = ["Windswept", "Shock", "Burn", "Freeze", "Curse", "Spiritual Ailment"];
             break;
         default:
-            console.log("fillHtmlDBuffList::Cannot find html element");
+            if (DEBUG) {
+                console.log("fillHtmlDBuffList::Cannot find html element");
+            }
             outputDiv = "wDBuffOutputDiv";
             listDiv = "wDBuffListDiv";
             document.getElementById("userFilterwDBuffList").value = '';
@@ -1811,7 +1872,9 @@ function getAtkValueFromAwareness(charStat) {
         case "A6":
             return charStat.a6Atk;
         default:
-            console.log("awareness::Code does not match html value.")
+            if (DEBUG) {
+                console.log("awareness::Code does not match html value.")
+            }
             return charStat.a0Atk;
     }
 }
@@ -1833,7 +1896,9 @@ function convertReforgeLevelTextToValue(text) {
         case "R6":
             return 6;
         default:
-            console.log("convertReforgeLevelTextToValue::Code does not match html value.")
+            if (DEBUG) {
+                console.log("convertReforgeLevelTextToValue::Code does not match html value.")
+            }
             return 0;
     }
 }
@@ -1849,7 +1914,9 @@ function convertSkillLevelTextToValue(text) {
         case "Level 13 Mindscape 5":
             return SKILL_LEVEL_13_MINDSCAPE_5;
         default:
-            console.log("convertSkillLevelTextToValue::Code does not match html value.")
+            if (DEBUG) {
+                console.log("convertSkillLevelTextToValue::Code does not match html value.")
+            }
             return SKILL_LEVEL_10;
     }
 }
@@ -1861,7 +1928,9 @@ function getWeapAtkValueFromAwareness(charStat) {
         case "4*":
             return charStat.weap4Atk;
         default:
-            console.log("weapon::Code does not match html value.")
+            if (DEBUG) {
+                console.log("weapon::Code does not match html value.")
+            }
             return charStat.weap5Atk;
     }
 }
@@ -1902,7 +1971,9 @@ function convertEnemyWeaknessTextToValue(text) {
         case "Weakness":
             return 1.2;
         default:
-            console.log("Code does not match html value.")
+            if (DEBUG) {
+                console.log("Code does not match html value.")
+            }
             return 1;
     }
 }
@@ -1914,7 +1985,9 @@ function convertEnemyNameToDefenseValue(text) {
         }
     }
 
-    console.log("convertEnemyNameToDefenseValue::Code does not match html value.")
+    if (DEBUG) {
+        console.log("convertEnemyNameToDefenseValue::Code does not match html value.")
+    }
 
     return ENEMY_DEFENSE_DEFAULT;
 }
@@ -1926,7 +1999,9 @@ function convertEnemyNameToAdditionaDefenseValue(text) {
         }
     }
 
-    console.log("convertEnemyNameToDefenseValue::Code does not match html value.")
+    if (DEBUG) {
+        console.log("convertEnemyNameToDefenseValue::Code does not match html value.")
+    }
 
     return ENEMY_DEFENSE_ADDITIONAL_DEFAULT;
 }
@@ -2125,7 +2200,9 @@ function fillCard(event) {
             fillHtmlCommon("navicardListDiv", "userFilterNaviCardlist", cardList);
             break;
         default:
-            console.log("fillCard::couldn't find matching html");
+            if (DEBUG) {
+                console.log("fillCard::couldn't find matching html");
+            }
             break;
     } 
 }

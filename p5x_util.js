@@ -275,7 +275,9 @@ function fillListWithOutputPanel(event, debuffArray) {
             document.getElementById("userFilternaviDBuffList").value = '';
             break;
         default:
-            console.log("Error. Defaulting to wDBuffListDiv");
+            if (DEBUG) {
+                console.log("Error. Defaulting to wDBuffListDiv");
+            }
             outputDiv = "wDBuffOutputDiv";
             listDiv = "wDBuffListDiv";
             document.getElementById("userFilterwDBuffList").value = '';
