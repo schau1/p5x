@@ -678,45 +678,42 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
             if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(buffList, skill.condition)) {
                 // Invalid skill... this skill doesn't exist
                 skillPercList.push(data);
-                skillPercList.push(data);
-                skillPercList.push(data);
                 //            console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
-                return skillPercList;
+                //                return skillPercList;
             }
             else if ((skill.conditionType == "DBuff") && !IsValidDBuffCondition(buffList, skill.condition)) {
                 // Invalid skill... this skill doesn't exist
                 skillPercList.push(data);
-                skillPercList.push(data);
-                skillPercList.push(data);
                 //            console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
-                return skillPercList;
+                //                return skillPercList;
             }
+            else {
+                switch (skillLevel) {
+                    case SKILL_LEVEL_10:
+                        data.value = skill.lvl10;
+                        break;
+                    case SKILL_LEVEL_10_MINDSCAPE_5:
+                        data.value = skill.lvl10m5;
+                        break;
+                    case SKILL_LEVEL_13:
+                        data.value = skill.lvl13;
+                        break;
+                    case SKILL_LEVEL_13_MINDSCAPE_5:
+                        data.value = skill.lvl13m5;
+                        break;
+                    default:
+                        data.value = 0;
+                        break;
+                }
+                data.value = data.value / 100 * ampSkill;
+                data.numHit = skill.numHit;
 
-            switch (skillLevel) {
-                case SKILL_LEVEL_10:
-                    data.value = skill.lvl10;
-                    break;
-                case SKILL_LEVEL_10_MINDSCAPE_5:
-                    data.value = skill.lvl10m5;
-                    break;
-                case SKILL_LEVEL_13:
-                    data.value = skill.lvl13;
-                    break;
-                case SKILL_LEVEL_13_MINDSCAPE_5:
-                    data.value = skill.lvl13m5;
-                    break;
-                default:
-                    data.value = 0;
-                    break;
+                if (extraHit) {
+                    data.numHit += extraHit;
+                }
+
+                skillPercList.push(data);
             }
-            data.value = data.value / 100 * ampSkill;
-            data.numHit = skill.numHit;
-
-            if (extraHit) {
-                data.numHit += extraHit;
-            }
-
-            skillPercList.push(data);
         }
         else {
             let data = [];
@@ -1134,7 +1131,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
  * @param   name    name of the buff
  * 
  */
-function addWonderBuffToBuffList(name) {
+function addWonderBuffToBuffList(name, level = 0) {
     var buffItem = wonderList.find(item => item.name == name);
     if (buffItem) {
         // this buff is from Wonder
@@ -1143,7 +1140,21 @@ function addWonderBuffToBuffList(name) {
                 let data = [];
                 data.buffName = buffItem.name;
                 data.charName = "Wonder";
-                data.value = buff.r0;
+                switch (level) {
+                    case 0:
+                        data.value = buff.r0;
+                        break;
+                    case 1:
+                        data.value = buff.r1;
+                        break;
+                    case 2:
+                        data.value = buff.r2;
+                        break;
+                    default:
+                        data.value = buff.r0;
+                        break;
+                }
+
                 data.dbuff = buff.dbuff;
                 data.condition = buff.condition;
                 data.conditionType = buff.conditionType;
@@ -1163,9 +1174,11 @@ function addWonderBuffToBuffList(name) {
  * 
  */
 function addUserSelectedBuffToBuffList() {
+    const level = getWonderSkillLevel();
+
     for (var i = 0; i < htmlDBuffList.length; i++) {        
         // Check wonder list. If found, move to the next item
-        if (addWonderBuffToBuffList(htmlDBuffList[i].name)){
+        if (addWonderBuffToBuffList(htmlDBuffList[i].name, level)){
             continue;
         }
 
@@ -1855,6 +1868,28 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
     return list;
 }
 
+/**
+ * Get Wonder's skill level from the HMTL tag
+ * 
+ * @returns skill level
+ */
+function getWonderSkillLevel() {
+    const skill = document.getElementById('wskillLevelChoice').innerHTML.replaceAll("&amp;", "&");
+    switch (skill) {
+        case "Level 6":
+            return 0;
+        case "Level 7 (A0 J&C)":
+            return 1;
+        case "Level 8 (A6 J&C)":
+            return 2;
+        default:
+            if (DEBUG) {
+                console.log("getWonderSkillLevel::Code does not match html value.")
+            }
+            return 0;
+    }
+}
+
 function getAtkValueFromAwareness(charStat) {
     switch (iCharInfo.awareness) {
         case "A0":
@@ -2431,6 +2466,7 @@ function readSkillDatabase() {
                 dbuff.lvl13 = parseFloat(row[i][j++]);
                 dbuff.lvl13m5 = parseFloat(row[i][j++]);
                 dbuff.numHit = parseFloat(row[i][j++]);
+                if (!dbuff.numHit) { dbuff.numHit = 0; }
                 dbuff.dbuff = row[i][j++];
                 dbuff.condition = row[i][j++];
                 dbuff.conditionType = row[i][j++];
