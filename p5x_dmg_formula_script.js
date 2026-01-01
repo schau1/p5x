@@ -1720,7 +1720,7 @@ function getHtmlInfo() {
     party.awareness = document.getElementById('p1awarenessChoice').innerHTML;
     party.skillLevel = document.getElementById('p1skillLevelChoice').innerHTML;
     party.weapon = document.getElementById('p1weaponChoice').innerHTML;
-    party.reforgeLevel = document.getElementById('p1reforgeChoice').innerHTML;
+    party.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('p1reforgeChoice').innerHTML);
     party.card = document.getElementById('p1cardChoice').innerHTML;
     partyMembers.push(party);
     party = [];
@@ -1728,7 +1728,7 @@ function getHtmlInfo() {
     party.awareness = document.getElementById('p2awarenessChoice').innerHTML;
     party.skillLevel = document.getElementById('p2skillLevelChoice').innerHTML;
     party.weapon = document.getElementById('p2weaponChoice').innerHTML;
-    party.reforgeLevel = document.getElementById('p2reforgeChoice').innerHTML;
+    party.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('p2reforgeChoice').innerHTML);
     party.card = document.getElementById('p2cardChoice').innerHTML;
     partyMembers.push(party);
     party = [];
@@ -1736,7 +1736,7 @@ function getHtmlInfo() {
     party.awareness = document.getElementById('naviawarenessChoice').innerHTML;
     party.skillLevel = document.getElementById('naviskillLevelChoice').innerHTML;
     party.weapon = document.getElementById('naviweaponChoice').innerHTML;
-    party.reforgeLevel = document.getElementById('navireforgeChoice').innerHTML;
+    party.reforgeLevel = convertReforgeLevelTextToValue(document.getElementById('navireforgeChoice').innerHTML);
     party.card = document.getElementById('navicardChoice').innerHTML;
     partyMembers.push(party);
 
@@ -1789,6 +1789,30 @@ function htmlProcessDefDebuff(id, charName, awareness, skillLevel) {
         htmlDBuffList.push(list);
         el = el.nextElementSibling;
     }    
+}
+
+function fillPersona(event) {
+    let dropdown = document.getElementById("pBlkListDiv");
+    var firstChild = dropdown.children[0]; // Save the search Filter
+
+    if (firstChild) {
+        dropdown.textContent = '';        
+        dropdown.appendChild(firstChild); //add back the search field
+    }
+
+    readWonderDatabase();
+
+    let array = [];
+
+    for (const persona of personaPassive) {
+        if (persona.source) {
+            array.push(persona.source);
+        }
+    }
+
+    outputList(dropdown, array, "pBlkListOutputDiv", "pBlkListDiv");
+
+    toggleDropdown("pBlkListDiv");
 }
 
 function FillWonderKnife(event) {
