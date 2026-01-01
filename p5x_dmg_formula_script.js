@@ -93,6 +93,9 @@ let htmlAppliedBuffList = [];
 
 let cancelled = false;
 
+let skillInfo = [];
+
+
 readCardDatabase();
 readSkillDatabase();
 readWeaponDatabase();
@@ -198,11 +201,14 @@ function damageFn(personaList) {
     }
 
     var numHit = 0;
-    for (const item of iCharInfo.final_skillPerc) {
+    for (const item of simCharInfo.final_skillPerc) {
         numHit += item.numHit;
     }
 
-    let data = processDBuffList(newDbuffList.unique, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior, numHit);
+    simCharInfo.final_skillPerc[0].numHit = numHit;
+
+    // Add buffs and debuffs to everything
+    let data = processDBuffList(newDbuffList.unique, simCharInfo.skillName, simCharInfo.skillPos, simCharInfo.final_skillPerc);
 
     simCharInfo.atkFlat += data.atkFlat;
     simCharInfo.atkPerc += data.atkPerc;
@@ -225,6 +231,8 @@ function damageFn(personaList) {
         simCharInfo.final_critStableDomain = calculateCritStableDomain(simCharInfo.critRate, simCharInfo.critMult);
     }    
 
+//    console.log(simCharInfo);
+//    console.log(iCharInfo);
     for (const skill of simCharInfo.final_skillPerc) {
        if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {           
            let dmg = calculateSkillDamage(simCharInfo.final_atk, simCharInfo.final_dmgBonus, simCharInfo.final_defenseReduction, simCharInfo.final_critStableDomain, skill.value, simCharInfo.final_weakness, simCharInfo.finalBonus, OTHER_DMG_BONUS);
@@ -236,9 +244,6 @@ function damageFn(personaList) {
            return dmg[0];   // return the min dmg. should be fine.
        }
     }
-
-//    console.log(simCharInfo);
-//    console.log(iCharInfo);
 
     return 0;
 }
@@ -445,16 +450,16 @@ function simCommon() {
     }
 
     // Get skills and add buffs from the user selected skill (S1/S3) to buff list
-    var skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName, DPS_ROLE);
-    if (skillIndex >= 0) {
+    iCharInfo.skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName, DPS_ROLE);
+    if (iCharInfo.skillIndex >= 0) {
         // Set the skillType (element or support or passive) to element if we have multiple type
-        const element = skillList[skillIndex].skillInfo[0].skillType.split("|");
+        const element = skillList[iCharInfo.skillIndex].skillInfo[0].skillType.split("|");
         for (var item of element) {
             if (item != "Support") {
                 iCharInfo.skillType = item;
             }
         }
-        iCharInfo.skillBehavior = skillList[skillIndex].skillInfo[0].skillBehavior;
+        iCharInfo.skillBehavior = skillList[iCharInfo.skillIndex].skillInfo[0].skillBehavior;
     }
     else {
         var element = document.getElementById("result");
@@ -519,19 +524,11 @@ function simCommon() {
     iCharInfo.enemyDefense = convertEnemyNameToDefenseValue(iCharInfo.bossName);
     iCharInfo.additionalDefCoef = convertEnemyNameToAdditionaDefenseValue(iCharInfo.bossName);
 
-    var totalHit = 0;
-    for (const info of skillList[skillIndex].skillInfo) {
-        // @todo: some skill may have some condition for additional hit...
-        // I need to figure out how to handle it... I may need to do 2 passes...
-        // One to apply the debuff, then get the skill calculation, then one more to
-        // fix anything that skill related...
-        if (isDpsSkill(info.skillType)) {
-            totalHit += info.numHit;
-        }
-    }
+    // Save global info... unfortunately need to be global so it can do simulation later
+    var skillInfo = getSkillInfo(skillList[iCharInfo.skillIndex].skillInfo, iCharInfo.skillLevel);
 
     // Add buffs and debuffs to everything
-    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, iCharInfo.skillType, iCharInfo.skillBehavior, skillList[skillIndex].skillInfo[0].numHit, DEBUG);
+    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, skillInfo, DEBUG);
     iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
@@ -589,12 +586,57 @@ function simCommon() {
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
 
     // Skill Perc should be done after all the buffs is done
-    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[skillIndex].skillInfo, iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
+    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[iCharInfo.skillIndex].skillInfo, iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
 }
+
+/**
+ * Simply get the skillInfo from the database. It does not matter if it's a valid skill or not
+ * 
+ * @param {any} skillInfo       List of all the skill from the database
+ * @param {any} skillLevel      Skill level for minscape
+ * @returns     skillInfoWithLevel
+ */
+function getSkillInfo(skillInfo, skillLevel = SKILL_LEVEL_10) {
+    let skillPercList = [];
+
+    for (const skill of skillInfo) {
+        if ((skill.dbuff == "DMG_SKILL_SINGLE") || (skill.dbuff == "DMG_SKILL_AOE")
+            || skill.dbuff == "DMG_SKILL_DOT_HP" || skill.dbuff == "DMG_SKILL_DOT_HP_TECHNICAL_FLAME_TEMPEST") {
+            let data = [];
+            data.element = skill.skillType;
+            data.dbuff = skill.dbuff;
+            data.skillBehavior = skill.skillBehavior;
+            data.condition = skill.condition;
+            data.conditionType = skill.conditionType;
+            data.numHit = skill.numHit;
+            switch (skillLevel) {
+                case SKILL_LEVEL_10:
+                    data.value = skill.lvl10;
+                    break;
+                case SKILL_LEVEL_10_MINDSCAPE_5:
+                    data.value = skill.lvl10m5;
+                    break;
+                case SKILL_LEVEL_13:
+                    data.value = skill.lvl13;
+                    break;
+                case SKILL_LEVEL_13_MINDSCAPE_5:
+                    data.value = skill.lvl13m5;
+                    break;
+                default:
+                    data.value = 0;
+                    break;
+            }
+            skillPercList.push(data);
+        }
+    }
+
+    return skillPercList;
+}
+
 
 /**
  *  Get Navi stats from HTML and calculate the stats as a percentage of the param
@@ -620,7 +662,9 @@ function initializeData() {
     partyMembers = [];
     htmlAppliedBuffList = [];
     extraMath = [];
+    skillInfo = [];
 
+    iCharInfo.skillIndex = 0;
     iCharInfo.baseAtk = 0;
     iCharInfo.atkFlat = 0;
     iCharInfo.atkPerc = 0;
@@ -668,11 +712,16 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
 
     for (const skill of skillInfo) {
         if ((skill.dbuff == "DMG_SKILL_SINGLE") || (skill.dbuff == "DMG_SKILL_AOE")
-            || skill.dbuff == "DMG_SKILL_DOT_HP") {
+            || skill.dbuff == "DMG_SKILL_DOT_HP" || skill.dbuff == "DMG_SKILL_DOT_HP_TECHNICAL_FLAME_TEMPEST") {
             let data = [];
             data.value = 0;
             data.numHit = 0;
-            data.skillBehavior = skill.skillBehavior;
+            data.skillBehavior = "";
+
+            data.element = skill.skillType;
+            data.dbuff = skill.dbuff;
+            data.condition = skill.condition;
+            data.conditionType = skill.conditionType;
 
             // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
             if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(buffList, skill.condition)) {
@@ -687,7 +736,14 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
                 //            console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
                 //                return skillPercList;
             }
+            else if ((skill.conditionType == "Debuff") && !IsValidDebuffEnemyCondition(buffList, skill.condition)) {
+                // Invalid skill... this skill doesn't exist
+                skillPercList.push(data);
+                //            console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
+                //                return skillPercList;
+            }
             else {
+                data.skillBehavior = skill.skillBehavior;
                 switch (skillLevel) {
                     case SKILL_LEVEL_10:
                         data.value = skill.lvl10;
@@ -715,13 +771,15 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
                 skillPercList.push(data);
             }
         }
-        else {
-            let data = [];
-            data.value = 0;
-            data.numHit = 0;
-            skillPercList.push(data);
-            skillPercList.push(data);
-        }
+    }
+
+    if (!skillPercList){
+        let data = [];
+        data.value = 0;
+        data.numHit = 0;
+        data.skillBehavior = "";
+        skillPercList.push(data);
+        skillPercList.push(data);
     }
 
     return skillPercList;
@@ -890,7 +948,7 @@ function IsValidAndCondition(list, name, type, skillName, skill, element, skillB
 * @param  skill   the skill position (S1, S2, HL)
 * @pram   skillBehavior   how the skill behaves: normal, DoT, Follow
 */
-function processDBuffList(list, skillName, skill, element, skillBehavior = "", numHit=0, verbose=false) {
+function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
     let data = [];
     data.atkFlat = 0;
     data.atkPerc = 0;
@@ -911,14 +969,13 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
 
         // Go through the buff list to make sure we meet the condiditon required required before we add it.
         if (list[i].condition != "") {
-            // What I should do is split OR first, then send it to a function to split AND
-            // and check the AND Result
+            // split OR first, then send it to a function to split AND and check the AND Result
             const conditionName = list[i].condition.split("|");
             const conditionType = list[i].conditionType.split("|");
             var andResult;
 
             for (var m = 0; m < conditionName.length; m++) {
-                andResult = IsValidAndCondition(list, conditionName[m], conditionType[m], skillName, skill, element, skillBehavior, numHit);
+                andResult = IsValidAndCondition(list, conditionName[m], conditionType[m], skillName, skill, skillInfo[0].element, skillInfo[0].skillBehavior, skillInfo[0].numHit);
 
                 if (andResult) {
                     // Since this is an OR operation, any true result means the final result is true
@@ -1089,6 +1146,7 @@ function processDBuffList(list, skillName, skill, element, skillBehavior = "", n
                 case "HEAL_SKILL_SINGLE_FLAT":
                     break;
                 case "PARTY_DEF_PERC":  // fall through, future development
+                case "PARTY_TECHNICAL_MASTERY": // Not sure how this works, I asked Najox... only Matoi and S Marian has this
                 case "PARTY_EHR_PERC":
                 case "ALLY_EHR_PERC":
                 case "ALLY_DEF_PERC":
