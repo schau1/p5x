@@ -93,9 +93,6 @@ let htmlAppliedBuffList = [];
 
 let cancelled = false;
 
-let skillInfo = [];
-
-
 readCardDatabase();
 readSkillDatabase();
 readWeaponDatabase();
@@ -124,7 +121,7 @@ function runCalculation() {
     var totalMin = 0, totalMax = 0;
 
     for (const skill of iCharInfo.final_skillPerc) {
-        if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {
+        if ((skill.numHit > 0) && (skill.skillBehavior != "DoT") && (skill.skillBehavior != "Record")) {
             let dmg = [];
             dmg = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
             dmg.numHit = skill.numHit;
@@ -135,6 +132,13 @@ function runCalculation() {
         }
         else if (skill.skillBehavior == "DoT") {
             var hp =  skill.value * 100;
+            let dmg = [hp, hp, hp]
+            dmg.numHit = skill.numHit;
+            dmg.skillBehavior = skill.skillBehavior;
+            dmgPerHit.push(dmg);
+        }
+        else if (skill.skillBehavior == "Record") {
+            var hp = skill.value * 100;
             let dmg = [hp, hp, hp]
             dmg.numHit = skill.numHit;
             dmg.skillBehavior = skill.skillBehavior;
@@ -662,7 +666,6 @@ function initializeData() {
     partyMembers = [];
     htmlAppliedBuffList = [];
     extraMath = [];
-    skillInfo = [];
 
     iCharInfo.skillIndex = 0;
     iCharInfo.baseAtk = 0;
@@ -1646,18 +1649,21 @@ function displayResult(dmgList, min, max) {
     }
 
     item = document.createElement("p");
-    item.innerHTML = "Final damage on main target: ~" + min + " to ~" + max + " + any DoT (if listed above).";
+    item.innerHTML = "Final damage on main target: ~" + min + " to ~" + max + " + any DoT/recorded damage (if listed above).";
     element.prepend(item);
 
     item = document.createElement("p");
 //    item.innerHTML = "The skill deals ";
 
     for (const dmgPerHit of dmgList) {
-        if (dmgPerHit.skillBehavior != "DoT") {
-            item.innerHTML += "The skill deals ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit, total " + dmgPerHit.numHit + " hit(s). ";
+        if (dmgPerHit.skillBehavior == "DoT") {
+            item.innerHTML += "The skill deals " + dmgPerHit[0] + "% of the enemy's HP " + dmgPerHit.numHit + " time(s). "
+        }
+        else if (dmgPerHit.skillBehavior == "Record") {
+            item.innerHTML += "The skill deals " + dmgPerHit[0] + "% of recorded damage.";
         }
         else {
-            item.innerHTML += "The skill deals " + dmgPerHit[0] + "% of the enemy's HP " + dmgPerHit.numHit + " time(s). "
+            item.innerHTML += "The skill deals ~" + dmgPerHit[0] + " to ~" + dmgPerHit[1] + " per hit, total " + dmgPerHit.numHit + " hit(s). ";
         }
     }
 

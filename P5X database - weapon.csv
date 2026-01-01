@@ -80,7 +80,7 @@ Firecalming Lazuki,Matoi,5*,36,47,OOB_SELF_EHR_PERC,,,,66,68,SELF_ATK_PERC,EHR,S
 Abyssal Thorn,Matoi,4*,12,16,OOB_SELF_ATK_PERC,,,,24,31.2,SELF_EHR_PERC,4,Stack,,,,,,,,,,,,,,
 Seraph’s Heart,Crow,5*,30,39,OOB_SELF_ATK_PERC,,,,21,27.3,PARTY_ATK_PERC,Clarity|Chaos,DBuff|DBuff,,30,39,SELF_CRIT_MULT_PERC,2&Detective Partner, Stack&DBuff,,,,,,,,
 Quasar Saber,Crow,4*,9.6,12.8,SELF_DMG_PERC,Almighty,Element,,22,29,SELF_ATK_PERC,Truth,DBuff,,,,,,,,,,,,,,
-Victory Declaration,Turbo,5*,15,20,OOB_SELF_SPD_PERC,,,,100,130,SELF_ATK_PERC,,,,17,22,PARTY_DMG_PERC,Velocity,DBuff,,,,,,,,
+Victory Declaration,Turbo,5*,15,20,OOB_SELF_SPD_PERC,,,,100,130,SELF_ATK_PERC,,,,17,22,PARTY_DMG_PERC,Velocity,,,,,,,,,
 Trailblazing Pioneer,Turbo,4*,12,16,OOB_SELF_ATK_PERC,,,,18,23.4,SELF_DMG_PERC,Quantum Transmission,,,,,,,,,,,,,,,
 "Midnight Sun, Starlit Prophecies",Luce,5*,30,39,OOB_SELF_ATK_PERC,,,,11,11,PARTY_DMG_PERC,Blessing,DBuff,,42,42,SELF_ATK_PERC,Improv,DBuff,,21,21,ALLIES_ATK_PERC,Improv,DBuff,,
 Vowed Coronation,Luce,4*,24,24,OOB_SELF_ATK_PERC,,,,18.9,18.9,SELF_EHR_PERC,,,,18.9,18.9,SELF_ATK_PERC,,,,,,,,,,
