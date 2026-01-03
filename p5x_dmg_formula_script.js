@@ -35,8 +35,6 @@ const MAX_NUM_DATABASE_EFFECT = 6;  // database has 6 effects right now
 const MAX_NUM_CARD_DATABASE_EFFECT = 9;  // card database has 9 effects right now
 const MAX_NUM_WEAP_DATABASE_EFFECT = 4; // weapon database has 4 effects
 
-
-
 const NAV_BUFF_PERC = 0.20;     // Used for now. Once I do party member, I can remove this and get the correct value
 
 // The base critical rate is 5%, and the base Critical DMG(Mult) is 150%, meaning there’s a 5% chance to deal 1.5x damage.
@@ -83,6 +81,7 @@ let partyMembers = [];
 
 // store a list of all the buff/debuff that will be processed by the app as part of the calculation
 let buffList = [];
+//let secPassBuffList = [];       // 2nd pass buff list to take care of any buff that impact skills directly
 
 // store a list of all the buff/debuff that the user enters
 let htmlDBuffList = [];
@@ -179,6 +178,12 @@ function removeFullDuplicates(arr) {
         }
     }
 
+/*    if (!hasDuplicate) {
+        console.log(arr)
+        console.log(map)
+        console.log(hasDuplicate)
+    }*/
+
     return {
         unique: [...map.values()],
         hasDuplicate
@@ -202,7 +207,7 @@ function damageFn(personaList) {
         newDbuffList = newDbuffList.concat(persona.dbuff);
     }
 
-//  console.log(personaList)
+//    console.log(newDbuffList)
     newDbuffList = removeFullDuplicates(newDbuffList);
 
     if (newDbuffList.hasDuplicate) {
@@ -227,6 +232,7 @@ function damageFn(personaList) {
     simCharInfo.dmgMult += data.dmgMult;
     simCharInfo.pierceRate += data.pierceRate;
     simCharInfo.ampSkill += data.ampSkill;
+    simCharInfo.technicalMastery = data.technicalMastery;
     simCharInfo.defenseReduction += data.defenseReduction;
     if (data.windswept) {
         simCharInfo.windswept = data.windswept;
@@ -296,20 +302,27 @@ function runSimPersona() {
         }
     }
 
-//    console.log(newSkill);
+/*    console.log(newSkill);
 
-//  Testing with just 1 item
-//  damageFn([newSkill[0], newSkill[1], newSkill[2]]);
+    let temp = []
+    //  Testing with just 1 item
+    for (const skill of newSkill) {
+//        console.log(skill)
+        if (skill.personaSkill[0] == "Rebellion" || skill.personaSkill[1] == "Rebellion")        { temp.push(skill) }
+    }
+
+    temp.push(newSkill[0])
+    console.log(temp)*/
 
     // Now we find the best 3 skills
-    let result = bestCombinationYieldingWithTimer(newSkill, 3, damageFn, {
+    let result = bestCombinationYieldingWithTimer(/*temp*/newSkill, 3, damageFn, {
         reportEveryMs: 1000, // update UI twice per second
         onProgress: ({ checked, bestScore, bestCombo, done }) => {
-/*            console.log(
-                done ? "DONE" : "Progress",
-                "checked:", checked,
-                "best:", bestScore
-            );*/
+//            console.log(
+//                done ? "DONE" : "Progress",
+//                "checked:", checked,
+//                "best:", bestScore
+//            );
 
             displayParcialSimResult(bestScore, bestCombo, checked);
 
@@ -380,17 +393,20 @@ function combinePassiveWithSkill(persona, skill) {
 
         // add the skill
         const pnameList = skill.name.split("::");
+        var skillName = "";
         if (pnameList.length > 1) {
+            skillName = pnameList[1];
             item.personaSkill.push(pnameList[1]);
         }
         else {
+            skillName = pnameList[0];
             item.personaSkill.push(pnameList[0]);
         }
 
         for (const dbuff of skill.dbuff) {
             if (dbuff.dbuff != "" && isValidTargetBuff(dbuff.dbuff, dbuff.condition, dbuff.conditionType)) {
                 let buff = [];
-                buff.buffName = skill.name;
+                buff.buffName = skillName;
                 buff.charName = "Wonder";
                 buff.value = dbuff.r0;
                 buff.dbuff = dbuff.dbuff;
@@ -550,6 +566,7 @@ function simCommon() {
     iCharInfo.myriad_song = data.myriad_song;
     iCharInfo.extraHit = data.extraHit;
     iCharInfo.ampSkill = data.ampSkill;
+    iCharInfo.technicalMastery = data.technicalMastery;
 
     // testing:
     /*    iCharInfo.baseAtk = 1200 + 600;
@@ -570,9 +587,9 @@ function simCommon() {
     // Final Skill calculation
     if (extraMath.length > 0) {
         for (const item of extraMath) {
-            if (item.statType = "CR") {
+            if (item.statType == "CR") {
                 if (iCharInfo.critRate > 100) {
-                    if (item.statBuff = "CM") {
+                    if (item.statBuff == "CM") {
                         iCharInfo.dmgMult += parseFloat(item.multiplier * (iCharInfo.critRate - 100) / 100);
                     }
                     else {
@@ -581,6 +598,19 @@ function simCommon() {
                         }
                     }
                 }
+            }
+            else if (item.statType == "Backdraft") {
+                //                var mastery = 1 + (iCharInfo.technicalMastery / 10) / 100;  // 1% per 10 points
+                // I think it may be addition... else it's super weak.
+                // @todo: I'm not counting the technical buff if it's triggered by the party muber who also has mastery...
+                // backdraft is ok since it's just skill dmg... but Iceburn may be an issue... but then it's 50% chance??? so maybe counting half is appropriate
+                var mastery = (iCharInfo.technicalMastery / 10); // 1% per 10 points
+                iCharInfo.dmgMult += item.multiplier + mastery;
+            }
+            else if (item.statType == "Iceburn") {
+                //                var mastery = 1 + (iCharInfo.technicalMastery / 20) / 100;  // 1% per 20 points
+                var mastery = (iCharInfo.technicalMastery / 20); // 1% per 20 points
+                iCharInfo.dmgMult += item.multiplier + mastery;
             }
             else {
                 if (DEBUG) {
@@ -724,24 +754,24 @@ function updateSkillPerc(skillInfo, extraHit, ampSkill) {
         // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
         if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(buffList, skill.condition)) {
             // Invalid skill... this skill doesn't exist
-            if (DEBUG) {
+/*            if (DEBUG) {
                 console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
                 console.log(skill);
-            }
+            }*/
         }
         else if ((skill.conditionType == "DBuff") && !IsValidDBuffCondition(buffList, skill.condition)) {
             // Invalid skill... this skill doesn't exist
-            if (DEBUG) {
+/*            if (DEBUG) {
                 console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
                 console.log(skill);
-            }
+            }*/
         }
         else if ((skill.conditionType == "Debuff") && !IsValidDebuffEnemyCondition(buffList, skill.condition)) {
             // Invalid skill... this skill doesn't exist
-            if (DEBUG) {
+/*            if (DEBUG) {
                 console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
                 console.log(skill);
-            }
+            }*/
         }
         else {
             skill.value = skill.value / 100 * ampSkill;
@@ -999,6 +1029,23 @@ function IsValidAndCondition(list, name, type, skillName, skill, element, skillB
 }
 
 
+function process2ndPassDBuffList(list, skillInfo) {
+    var ampSkill = 1;
+
+    for (const skill of skillInfo) {
+        for (const buff of list) {
+            switch (list[i].dbuff) {
+                case "ALLY_SKILL_AMP_PERC":
+                    data.ampSkill += list[i].value/100;
+                    skill.value = skill.value * ampSkill;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
 /* 
 * Check the entered list to add up all the values in the buff list
 * This will also check the condition to make sure it is ok before it can be added.
@@ -1021,9 +1068,11 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
     data.windswept = false;
     data.extraHit = 0;
     data.ampSkill = 1;
+    data.technicalMastery = 0;
     let buffConditionMet = true;
     let failBuff = [];  // Just info for now
     let appliedBuffList = [];
+    let item = [];
 
     for (var i = 0; i < list.length; i++) {
         buffConditionMet = true;
@@ -1109,14 +1158,6 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                     data.critMult += list[i].value;
                     appliedBuffList.push([list[i].buffName, "Increase Crit Damage", list[i].value]);
                     break;
-                case "ALLY_CRIT_MULT_PERC_CR_OVER_100":
-                    let item = [];
-                    item.statType = "CR";
-                    item.statBuff = "CM";
-                    item.multiplier = list[i].value;
-                    extraMath.push(item);
-                    appliedBuffList.push([list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
-                    break;
                 case "OOB_SELF_CRIT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
                         failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
@@ -1187,9 +1228,52 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                     data.ampSkill += list[i].value/100;
                     appliedBuffList.push([list[i].buffName, "Skill Amplification", list[i].value]);
                     break;
+                case "ALLY_CRIT_MULT_PERC_CR_OVER_100":
+                    item = [];
+                    item.statType = "CR";
+                    item.statBuff = "CM";
+                    item.multiplier = list[i].value;
+                    extraMath.push(item);
+                    appliedBuffList.push([list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
+                    break;
+                case "PARTY_TECHNICAL_MASTERY":
+                case "ALLY_TECHNICAL_MASTERY":
+                    // A character only procs TECHNICAL if their kit says so - so Nuke is fake and maybe Ann's technical too...
+                    // Skill Master: Influences the potency of additional TECHNICAL effects. For every 100 points gained (values below 100 scale proportionally):
+                    // “Backdraft”/"Frigid Bolt": Skill damage bonus increases by 10 %.
+                    // “Cold Thunder”: Skill damage bonus increases by 10 %.
+                    // “Flames of Ice”: Weakness effect for Fire / Ice increases by 5 %.
+                    // “Flame Tempest”: Additional damage increases by 6 %.
+                    // “Ice Seal”: Base activation rate increases by 2.5 %.
+                    data.technicalMastery += list[i].value;
+                    appliedBuffList.push([list[i].buffName, "Technical Mastery", list[i].value]);
+                    break;
+                case "TECHNICAL_BACKDRAFT":
+                case "TECHNICAL_FRIGID_BOLT":
+                case "TECHNICAL_COLD_THUNDER":  // I think cold thunder and frigid bolt are the same thing: ice hitting target with shocked
+                    // When triggering [Backdraft], increases TECHNICAL effects by 20% - already accounted for in Skill database on backdraft %
+                    // increasing skill damage by 2 %.
+                    // IMPORTANT: Technical needs to get mastery bonus applied so we can't apply them here yet...
+                    item = [];
+                    item.statType = "Backdraft";
+                    item.statBuff = "SDMG";
+                    item.multiplier = list[i].value;
+                    extraMath.push(item);
+                    appliedBuffList.push([list[i].buffName, "Increase Technical Skill Damage", list[i].value]);
+                    break;
+                case "TECHNICAL_FLAMES_OF_ICE":
+                case "TECHNICAL_ICE_BURN":
+                    // causing the target to take 5% increased Fire/Ice damage for 2 turns with a base probability of 50%.
+                    item = [];
+                    item.statType = "Iceburn";
+                    item.statBuff = "DMG";
+                    item.multiplier = list[i].value;
+                    extraMath.push(item);
+                    appliedBuffList.push([list[i].buffName, "Increase Fire/Ice DMG Taken", list[i].value]);
+                    break;
+                case "TECHNICAL_ICE_SEAL":
+                    break;
                 case "SEES": // fall through, do nothing, they're simple buffs that have no value
-//                case "WARM_WELCOME":
-//                case "FURIOUS_PURSUE":
                 case "NO_VALUE_BUFF":
                 case "HIGHLIGHT_CHARGE_INC":    // increase highlight
                 case "PARTY_DMG_TAKEN_DEC":     // decrease dmg taken
@@ -1739,10 +1823,26 @@ function displayResult(dmgList, min, max) {
     while (firstChild) {
         item.innerHTML += firstChild.innerHTML + " ";
         firstChild = firstChild.nextElementSibling;
-    }   
-
+    }
     element.prepend(item);
 
+    if (USE_STAT_SCREEN) {
+        if (parseFloat(document.getElementById('spaceCritRate').value) < BASE_CRIT_RATE) {
+            item = document.createElement("p");
+            item.style.fontWeight = "bold";
+            item.style.color = "blue";
+            item.innerHTML = "WARNING: Crit Rate is less than minimum expected value. Using 5% as default."
+            element.prepend(item);
+        }
+
+        if (parseFloat(document.getElementById('spaceCritMult').value) < BASE_CRIT_MULT) {
+            item = document.createElement("p");
+            item.style.fontWeight = "bold";
+            item.style.color = "blue";
+            item.innerHTML = "WARNING: Crit Mult is less than minimum expected value. Using 150% as default."
+            element.prepend(item);
+        }
+    }
     item = document.createElement("p");
     item.innerHTML = "---------------- RESULT ------------------";
     element.prepend(item);
@@ -1761,6 +1861,15 @@ function getHtmlInfo() {
     iCharInfo.dmgMult = 0 + parseFloat(document.getElementById('spaceDmgMult').value);
     iCharInfo.critRate = 0 + parseFloat(document.getElementById('spaceCritRate').value);
     iCharInfo.critMult = 0 + parseFloat(document.getElementById('spaceCritMult').value);
+    if (USE_STAT_SCREEN) {
+        if (iCharInfo.critRate < BASE_CRIT_RATE) {
+            iCharInfo.critRate = BASE_CRIT_RATE; // The base critical rate is 5%, and the base Critical DMG(Mult) is 150%, meaning there’s a 5% chance to deal 1.5x damage. 
+        }
+
+        if (iCharInfo.critMult < BASE_CRIT_MULT) {
+            iCharInfo.critMult = BASE_CRIT_MULT; // The base critical rate is 5%, and the base Critical DMG(Mult) is 150%, meaning there’s a 5% chance to deal 1.5x damage.
+        }
+    }
     iCharInfo.pierceRate = 0 + parseFloat(document.getElementById('spacePierce').value);  
 
     iCharInfo.weakness = document.getElementById('enemyElemWeakness').innerHTML;

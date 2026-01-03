@@ -46,9 +46,10 @@
 		<p>3. For any ability that has no max, assume max stat from other Skill. For example, 5 stacks of Bloom increases ATK based on 8% own CRIT DMG over 100%. This ability has no max. The calculator will assume CRIT DMG 338% at LVL10 and 418% at LVL 13 and so on.</p>
 		<p>4. If something has a chance to happen, assume it will always happen if you pick that option. If something randomly gives an effect, assume the first effect (future improvement).</p>
 		<p>5. Some skills require certain debuff on the boss such as Freeze or Burn to activate. Make sure you select those in Debuff List under Boss Info.</p>
-		<p>6. Certain skills require certain buffs to activate. Please make sure you select those and that you can fulfill the requirements for those buffs. Some buffs also require some other buffs not existing. If you select both, there is no error checking yet (future improvement) so you may see both buffs apply when only one should.</p>
-		<p>7. The final calculation may also be off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, more stats from your support than expected (#3 assumption as stated above), unclear translation (increased by x% - interpreted as multiplication instead of addition), and of course bugs. <b>Use this as something to compare builds with the same baseline instead of as an absolute number calculator.</b> For example, use it to compare Wonder's knives and see if it's worth getting one reforged with your limited currency or use it to see which card set is better. Just play the game if the exact number is what you need.</p>
-		<p>8. This tool was created out of love for the Persona 3 Protagonist (Makoto Yuki). As a result, it only contains useful characters already released and a good amount of characters (except Makoto and his supports) are not well-tested (expect some bugs especially on DPS characters not yet released on GL). The tool also only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). The Makoto's #2 biggest fan is still working on adding the rest of the characters and testing everything, but they are unpaid and not a web developer (ugly UI proved it), so it may take some time.</p>
+		<p>6. Skill Amp is not calculated for supports (only for the dmg skill) since it's near impossible to know which skill it should apply since the buff only lasts 2 turns and your support may have 3 turns.</p>
+		<p>7. Certain skills require certain buffs to activate. Please make sure you select those and that you can fulfill the requirements for those buffs. Some buffs also require some other buffs not existing. If you select both, there is no error checking yet (future improvement) so you may see both buffs apply when only one should.</p>
+		<p>8. The final calculation may also be off due to the following factors: Bonus from Thieves' Den not accounted for, rounding errors, more stats from your support than expected (#3 assumption as stated above), unclear translation (increased by x% - interpreted as multiplication instead of addition), and of course bugs. <b>Use this as something to compare builds with the same baseline instead of as an absolute number calculator.</b> For example, use it to compare Wonder's knives and see if it's worth getting one reforged with your limited currency or use it to see which card set is better. Just play the game if the exact number is what you need.</p>
+		<p>9. This tool was created out of love for the Persona 3 Protagonist (Makoto Yuki). As a result, it only contains useful characters already released and a good amount of characters (except Makoto and his supports) are not well-tested (expect some bugs especially on DPS characters not yet released on GL since I can't test their mechanics such as Technical Mastery). The tool also only calculates damage for DPS that scales with ATK (Assassins and Sweepers but not Fox). The Makoto's #2 biggest fan is still working on adding the rest of the characters and testing everything, but they are unpaid and not a web developer (ugly UI proved it), so it may take some time.</p>
 	</div>
 
 	<div>
@@ -71,7 +72,7 @@
 
 					<div class="dropdown-label">Awareness</div>
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
-						<button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice" onclick="show(event)">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="awarenessChoice" onclick="show(event)">A1</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="awarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -138,7 +139,7 @@
 					<input class="w3-input w3-margin-bottom" type="number" value="27" id="spaceCritRate">
 
 					<label for="spaceCritMult">Crit Damage Mult %</label>
-					<input class="w3-input w3-margin-bottom" type="number" value="30" id="spaceCritMult">
+					<input class="w3-input w3-margin-bottom" type="number" value="180" id="spaceCritMult">
 
 					<label for="spacePierce">Pierce Rate %</label>
 					<input class="w3-input w3-margin-bottom" type="number" value="6" id="spacePierce">
@@ -276,7 +277,7 @@
 
 					<div class="dropdown-label">Awareness</div>
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
-						<button class="w3-button w3-white w3-block w3-left-align" id="p1awarenessChoice" onclick="show(event)">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p1awarenessChoice" onclick="show(event)">A1</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p1awarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -382,7 +383,7 @@
 
 					<div class="dropdown-label">Awareness</div>
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
-						<button class="w3-button w3-white w3-block w3-left-align" id="p2awarenessChoice" onclick="show(event)">A0</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="p2awarenessChoice" onclick="show(event)">A1</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="p2awarenessListDiv">
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 							<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
@@ -462,7 +463,7 @@
 
 						<div class="dropdown-label">Awareness</div>
 						<div class="w3-dropdown-click w3-block w3-margin-bottom">
-							<button class="w3-button w3-white w3-block w3-left-align" id="naviawarenessChoice" onclick="show(event)">A0</button>
+							<button class="w3-button w3-white w3-block w3-left-align" id="naviawarenessChoice" onclick="show(event)">A1</button>
 							<div class="w3-dropdown-content w3-bar-block w3-border" id="naviawarenessListDiv">
 								<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A0</a>
 								<a class="w3-bar-item w3-button" onclick="awarenessHandling(event)">A1</a>
