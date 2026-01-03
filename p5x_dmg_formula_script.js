@@ -198,11 +198,34 @@ function removeFullDuplicates(arr) {
 *
 *   @return     damage score of this combo
 */
-function damageFn(personaList) {
+function damageFn(harmony, personaList) {
     // Add buffs and debuffs to everything
     let newDbuffList = [];
-    let simCharInfo = structuredClone(iCharInfo);
+    let simCharInfo = [];
 
+    if (harmony.isRequired) {
+        var found = false;
+        var foundPersona = false;
+
+        for (const item of personaList) {
+            if (item.element == harmony.element) {
+                found = true;
+            }
+
+            if (harmony.persona == "") {
+                foundPersona = true;
+            }
+            else if (harmony.persona == item.personaName) {
+                foundPersona = true;
+            }
+        }
+
+        if (!found || !foundPersona) {
+            return 0;
+        }
+    }
+
+    simCharInfo = structuredClone(iCharInfo);
     for (const persona of personaList) {
         newDbuffList = newDbuffList.concat(persona.dbuff);
     }
@@ -213,7 +236,7 @@ function damageFn(personaList) {
     if (newDbuffList.hasDuplicate) {
         // if it has duplicate, most likely it's bad anyway, so do this to reduce the time it takes
         return 0;
-    }
+    }  
 
     var numHit = 0;
     for (const item of simCharInfo.final_skillPerc) {
@@ -281,6 +304,9 @@ function runSimPersona() {
         return; // not support yet
     }
 
+    // Remove any input item from Wonder if we're to run simulation, so we don't have extra persona
+    document.getElementById('wDBuffOutputDiv').innerHTML = "";
+
     simCommon();
 
     if (DEBUG) {
@@ -290,10 +316,54 @@ function runSimPersona() {
     let newSkill = [];
     cancelled = false;
 
+    let harmony = [];
+
+
+    // check to see what the user wants to do
+    const allPersona = document.getElementById('checkGlPersona').checked;
+    const p2wSkill = document.getElementById('p2wSkil').checked;
+    harmony.isRequired = document.getElementById('matchElementPersona').checked;
+    harmony.element = iCharInfo.charElement;
+    // get the persona we must have
+    harmony.persona = document.getElementById('pMustList').innerHTML;
+    if (harmony.persona == "None") { harmony.persona = ""; }
+
+    let blackListPersona = [];
+    let blackListSkill = [];
+    // get the list of all the persona we're not interested in
+    var el = document.getElementById('pBlkListOutputDiv').firstElementChild;
+    while (el) {
+        if (el.innerHTML != harmony.persona) {
+            // if it's a must have persona, it must not be in the black list
+            blackListPersona.push(el.innerHTML);
+        }
+        el = el.nextElementSibling;
+    }
+
     // first, make a new personaSkills list will a combination of all the possible skills
     for (const persona of personaPassive) {
         for (const skill of personaSkill) {
-            if ((skill.source == "") || persona.name.includes(skill.source)){
+            // Don't combine passive skill that has no owner.
+            if ((skill.source == "") || persona.name.includes(skill.source)) {
+                if ((skill.type == "Passive") && skill.source == "") {
+                    continue;
+                }
+                if (!p2wSkill && skill.released == "P2W") {
+                    continue;
+                }
+                if (blackListPersona.length > 0 && blackListPersona.includes(persona.source)) {
+                    continue;                    
+                }
+                if (!allPersona && persona.released == "N") {
+                    continue;
+                }
+
+                if ((harmony.persona != "") && (persona.source == harmony.persona) && skill.type != "Signature") {
+                    // if we are forcing a persona, the signature must be important so we must include the signature skill
+                    // @todo: Need to make sure that even the passive cannot active, we still use signature skill
+                    continue;
+                }
+
                 let item = combinePassiveWithSkill(persona, skill);
                 if (item) {
                     newSkill.push(item);
@@ -302,8 +372,8 @@ function runSimPersona() {
         }
     }
 
-/*    console.log(newSkill);
-
+//    console.log(newSkill);
+    /*
     let temp = []
     //  Testing with just 1 item
     for (const skill of newSkill) {
@@ -315,7 +385,7 @@ function runSimPersona() {
     console.log(temp)*/
 
     // Now we find the best 3 skills
-    let result = bestCombinationYieldingWithTimer(/*temp*/newSkill, 3, damageFn, {
+    let result = bestCombinationYieldingWithTimer(harmony, newSkill, 3, damageFn, {
         reportEveryMs: 1000, // update UI twice per second
         onProgress: ({ checked, bestScore, bestCombo, done }) => {
 //            console.log(
@@ -375,6 +445,7 @@ function combinePassiveWithSkill(persona, skill) {
         let item = [];
         const nameList = persona.name.split("::");
         item.personaName = nameList[0];
+        item.element = persona.element;
         item.personaSkill = [];
         item.personaSkill.push(nameList[1]);
         item.dbuff = [];
@@ -448,6 +519,7 @@ function simCommon() {
             iCharInfo.hiddenCritMult = charStatList[i].hiddenCritMult;
             iCharInfo.role = charStatList[i].role;
             iCharInfo.isSees = ((charStatList[i].isSees == 'Y') || (charStatList[i].isSees == 'y')) ? true : false;
+            iCharInfo.charElement = charStatList[i].element;
         }
     }
 
@@ -706,6 +778,7 @@ function initializeData() {
     htmlAppliedBuffList = [];
     extraMath = [];
 
+    iCharInfo.charElement = "";
     iCharInfo.skillIndex = 0;
     iCharInfo.baseAtk = 0;
     iCharInfo.atkFlat = 0;
@@ -1996,6 +2069,29 @@ function FillWonderKnife(event) {
     toggleDropdown(id);
 }
 
+function fillMustPersona(event) {
+    let dropdown = document.getElementById("pBlkListDiv");
+    var firstChild = dropdown.children[0]; // Save the search Filter
+
+    if (firstChild) {
+        dropdown.textContent = '';
+        dropdown.appendChild(firstChild); //add back the search field
+    }
+
+    readWonderDatabase();
+
+    let array = [];
+    array.push({ ["name"]: "None"});
+
+    for (const persona of personaPassive) {
+        if (persona.source) {
+            array.push({ ["name"]: persona.source });
+        }
+    }
+
+    fillHtmlCommon("pMustListDiv", "userFilterpMustList", array);
+}
+
 function fillHtmlDbuffList_Common(id) {
     var outputDiv = "", listDiv = "", debuffArray = [];
     let dropdown = document.getElementById(id);
@@ -2548,6 +2644,7 @@ function readCharStatDatabase() {
             data.charName = row[i][j++];
             data.released = row[i][j++];
             data.role = row[i][j++];
+            data.element = row[i][j++];
             data.isSees = row[i][j++];
 
             data.recStatLvl10 = parseFloat(row[i][j++]);
@@ -2759,13 +2856,14 @@ function readWonderDatabase() {
 
             data.name = row[i][j++];
             data.released = row[i][j++];
+            data.element = row[i][j++];
             data.source = row[i][j++];
             data.type = row[i][j++];
             data.skillPersonaType = row[i][j++];     // damage skill or buff skill or debuff skill, used for Wonder only
             data.activate = row[i][j++];        // how to activate the passive
             data.dbuff = [];
 
-            if (data.released == "N" || data.released == "NA") {
+            if (data.released == "NA") {
                 continue;
             }
 

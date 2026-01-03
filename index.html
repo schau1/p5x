@@ -169,7 +169,7 @@
 					<h3 class="w3-green w3-center">Wonder</h3>
 					<div class="dropdown-label">Skill Level</div>
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
-						<button class="w3-button w3-white w3-block w3-left-align" id="wskillLevelChoice" onclick="show(event)">Level 6</button>
+						<button class="w3-button w3-white w3-block w3-left-align" id="wskillLevelChoice" onclick="show(event)">Level 7 (A0 J&C)</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="wskillLevelChoiceDiv">
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 6</a>
 							<a class="w3-bar-item w3-button" onclick="replaceHeaderWithOptionName(event)">Level 7 (A0 J&C)</a>
@@ -225,7 +225,7 @@
 						</div>
 					</div>
 
-					<div class="dropdown-label">Stable Domain</div>
+					<div class="dropdown-label">Stable Domain/Can Crit</div>
 					<div class="w3-dropdown-click w3-block w3-margin-bottom">
 						<button class="w3-button w3-white w3-block w3-left-align" id="critChoice" onclick="show(event)">Yes</button>
 						<div class="w3-dropdown-content w3-bar-block w3-border" id="critChoiceDiv">
@@ -356,9 +356,14 @@
 							<label class="w3-large w3-tooltip" for="matchElementPersona">Match Dps Element</label>
 						</div>
 
+						<div>
+							<input type="checkbox" id="p2wSkil" class="w3-large w3-margin-bottom">
+							<label class="w3-large w3-tooltip" for="p2wSkil">Include P2W Skill Card</label>
+						</div>
+
 						<div class="dropdown-label">Persona Blacklist</div>
 						<div class="w3-dropdown-click w3-block w3-margin-bottom">
-							<button class="w3-button w3-white w3-block w3-left-align" id="pBlkList" onclick="fillPersona(event)">Zaou-Gongen</button>
+							<button class="w3-button w3-white w3-block w3-left-align" style="min-height: 30px;" id="pBlkList" onclick="fillPersona(event)"></button>
 							<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" style="width: 100%;" id="pBlkListDiv">
 								<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterpBlkList" onkeyup="filterFunctionName(event)">
 							</div>
@@ -367,6 +372,14 @@
 						<div class="w3-panel">
 							<ul class="w3-ul w3-border w3-white" id="pBlkListOutputDiv">
 							</ul>
+						</div>
+
+						<div class="dropdown-label">Persona Must Have</div>
+						<div class="w3-dropdown-click w3-block w3-margin-bottom">
+							<button class="w3-button w3-white w3-block w3-left-align" style="min-height: 30px;" id="pMustList" onclick="fillMustPersona(event)"></button>
+							<div class="w3-dropdown-content w3-bar-block w3-border custom-scrollbar" style="width: 100%;" id="pMustListDiv">
+								<input class="w3-input w3-padding" type="text" placeholder="Search.." id="userFilterpMustList" onkeyup="filterFunctionName(event)">
+							</div>
 						</div>
 					</div>
 				</div>

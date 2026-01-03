@@ -162,7 +162,7 @@ function calculateSkillDamage(atkFinal, dmgMultFinal, enemyDefFinal, critMultFin
 *   @return {array of best combo, score} 
 */
 
-async function bestCombinationYieldingWithTimer(items, k, scoreFn, {
+async function bestCombinationYieldingWithTimer(harmony, items, k, scoreFn, {
     yieldEvery = 5000,   // yield to event loop every N checks
     reportEveryMs = 250,      // report progress every X ms
     onProgress = () => { },    // callback
@@ -201,7 +201,7 @@ async function bestCombinationYieldingWithTimer(items, k, scoreFn, {
         if (shouldStop()) return;
 
         if (depth === k) {
-            const score = scoreFn(combo);
+            const score = scoreFn(harmony, combo);
             checked++;
 
             if (score > bestScore) {
