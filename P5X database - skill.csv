@@ -415,7 +415,7 @@ Matoi,Passive,A0,Pressure::Passive,Passive,,27.00,27.00,27.00,27.00,,PARTY_DMG_P
 Matoi,Buff,A0,Drowning::S1,Support,,24.00,24.00,24.00,24.00,,PARTY_DMG_PERC,4,Stack,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Matoi,Buff,A6,Drowning::S1,Support,,36.00,36.00,36.00,36.00,,PARTY_DMG_PERC,6,Stack,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Matoi,Buff,A0,Ice Seal::Freeze,Support,,0.00,0.00,0.00,0.00,,TECHNICAL_ICE_SEAL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-Matoi,Buff,A0,Ice Technical,Support,,2.00,2.00,2.00,2.00,,TECHNICAL_FRIGID_BOLT,Shock&Ice,Debuff&Element,,,5.00,5.00,5.00,5.00,,PARTY_DMG_PERC,Ice&Burn|Fire&Burn,Element&Debuf|Element&Debuf,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Matoi,Buff,A0,Ice Technical,Support,,2.00,2.00,2.00,2.00,,TECHNICAL_FRIGID_BOLT,Shock&Ice,Debuff&Element,,,5.00,5.00,5.00,5.00,,TECHNICAL_ICE_BURN,Ice&Burn|Fire&Burn,Element&Debuf|Element&Debuf,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Crow,S1,A0,Vow of Justice::S1,Bless,Normal,93.20,102.80,98.90,108.50,1,DMG_SKILL_AOE,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Crow,S2,A0,Unjust Hunting Ground::S2,Curse|Support,Normal,116.50,128.50,123.70,135.60,1,DMG_SKILL_AOE,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Crow,S3,A0,Golden Arrow Rain - Annihilate::S3,Almighty,Record,19.50,21.50,20.70,22.70,1,DMG_SKILL_AOE,,,Almighty,Follow,77.40,85.30,82.20,90.10,4,DMG_SKILL_SINGLE,4,Stack,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

@@ -20,6 +20,7 @@ const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use charact
 
 const ENEMY_DEFENSE_DEFAULT = 363.2;  // doesn't have it - use Dominion value instead
 const ENEMY_DEFENSE_ADDITIONAL_DEFAULT = 158.4; // doesn't have it - use NTMR value instead
+const NUM_ENEMY_AOE = 5;        // assume 5 target for simulation if it's an AOE fight
 
 const FINAL_DMG_BONUS = 1.40;  // In certain gimmicks or boss battles, there are forms where final damage increases or decreases based on conditions. 
 const OTHER_DMG_BONUS = 1; // In certain gimmicks or boss battles, there are forms where final damage increases or decreases based on conditions. 
@@ -257,7 +258,9 @@ function damageFn(harmony, personaList) {
     simCharInfo.ampSkill += data.ampSkill;
     simCharInfo.technicalMastery = data.technicalMastery;
     simCharInfo.defenseReduction += data.defenseReduction;
+    simCharInfo.defenseReductionAoe += data.defenseReductionAoe;
     if (data.windswept) {
+        // Since this is called the 2nd time, don't overwrite windswept status unless it's true
         simCharInfo.windswept = data.windswept;
     }
 
@@ -265,6 +268,7 @@ function damageFn(harmony, personaList) {
     simCharInfo.final_atk = calculateAtkFinal(simCharInfo.baseAtk, simCharInfo.atkFlat, simCharInfo.atkPerc);
     simCharInfo.final_dmgBonus = calculateDmgBonusFinal(simCharInfo.dmgMult);
     simCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReduction);
+    simCharInfo.final_defenseReductionAoe = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReductionAoe);
     simCharInfo.final_weakness = convertEnemyWeaknessTextToValue(simCharInfo.weakness);
     if (simCharInfo.includeCrit == "Yes") {
         simCharInfo.final_critStableDomain = calculateCritStableDomain(simCharInfo.critRate, simCharInfo.critMult);
@@ -275,6 +279,16 @@ function damageFn(harmony, personaList) {
     for (const skill of simCharInfo.final_skillPerc) {
        if ((skill.numHit > 0) && skill.skillBehavior != "DoT") {           
            let dmg = calculateSkillDamage(simCharInfo.final_atk, simCharInfo.final_dmgBonus, simCharInfo.final_defenseReduction, simCharInfo.final_critStableDomain, skill.value, simCharInfo.final_weakness, simCharInfo.finalBonus, OTHER_DMG_BONUS);
+
+           if (simCharInfo.role == "Sweeper") {
+               // if Sweeper, assume 5 targets and that the skill is AOE...
+               let dmg2 = calculateSkillDamage(simCharInfo.final_atk, simCharInfo.final_dmgBonus, simCharInfo.final_defenseReductionAoe, simCharInfo.final_critStableDomain, skill.value, simCharInfo.final_weakness, simCharInfo.finalBonus, OTHER_DMG_BONUS);
+
+//               console.log(simCharInfo);
+
+               return dmg[0] + dmg2[0] * NUM_ENEMY_AOE;
+           }
+
 
 //         Testing with our original without wonder buff
 //         let dmg2 = calculateSkillDamage(iCharInfo.final_atk, iCharInfo.final_dmgBonus, iCharInfo.final_defenseReduction, iCharInfo.final_critStableDomain, skill.value, iCharInfo.final_weakness, iCharInfo.finalBonus, OTHER_DMG_BONUS);
@@ -639,6 +653,7 @@ function simCommon() {
     iCharInfo.extraHit = data.extraHit;
     iCharInfo.ampSkill = data.ampSkill;
     iCharInfo.technicalMastery = data.technicalMastery;
+    iCharInfo.defenseReductionAoe += data.defenseReductionAoe;
 
     // testing:
     /*    iCharInfo.baseAtk = 1200 + 600;
@@ -722,7 +737,7 @@ function getSkillInfo(skillInfo, skillLevel = SKILL_LEVEL_10) {
         if ((skill.dbuff == "DMG_SKILL_SINGLE") || (skill.dbuff == "DMG_SKILL_AOE")
             || skill.dbuff == "DMG_SKILL_DOT_HP" || skill.dbuff == "DMG_SKILL_DOT_HP_TECHNICAL_FLAME_TEMPEST") {
             let data = [];
-            data.element = skill.skillType;
+            data.element = skill.skillType.split('|')[0];
             data.dbuff = skill.dbuff;
             data.skillBehavior = skill.skillBehavior;
             data.condition = skill.condition;
@@ -788,6 +803,7 @@ function initializeData() {
     iCharInfo.additionalDefCoef = 0;
     iCharInfo.pierceRate = 0;
     iCharInfo.defenseReduction = 0;
+    iCharInfo.defenseReductionAoe = 0;
     iCharInfo.windswept = false;
     iCharInfo.critRate = 0;
     iCharInfo.critMult = 0;
@@ -1138,6 +1154,7 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
     data.dmgMult = 0;
     data.pierceRate = 0;
     data.defenseReduction = 0;
+    data.defenseReductionAoe = 0;
     data.windswept = false;
     data.extraHit = 0;
     data.ampSkill = 1;
@@ -1267,8 +1284,9 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                     data.pierceRate += list[i].value;
                     appliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
                     break;
-                case "DEF_DECR_PERC":   // fall through
-                case "DEF_DECR_PERC_AOE":
+                case "DEF_DECR_PERC_AOE":   // fall through
+                    data.defenseReductionAoe += list[i].value;
+                case "DEF_DECR_PERC":
                     data.defenseReduction += list[i].value;
                     appliedBuffList.push([list[i].buffName, "Decrement Enemy Defense", list[i].value]);
                     break;
