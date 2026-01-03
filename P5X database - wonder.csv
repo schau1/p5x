@@ -74,7 +74,7 @@ Chernobog::Deathly Silence,,Chernobog,Passive,Passive,Signature,34.9,34.9,34.9,3
 Chernobog::Verdict of Agony,,Chernobog,Signature,Damage,,15,15,15,15,15,15,15,EHR_DECR_PERC,,,10,10,10,10,10,10,10,DEF_DECR_PERC,,,8,8,8,8,8,8,8,PARTY_DMG_PERC,3,Stack,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Chernobog::Highlight,,Chernobog,Highlight,Damage,,19.6,21,22.3,22.3,22.3,22.3,22.3,PARTY_DMG_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Shiva::Karmic Alteration,,Shiva,Passive,Passive,,29.1,29.1,29.1,29.1,29.1,29.1,29.1,SELF_ATK_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-Shiva::Dance of Destruction,,Shiva,Signature,Damage,,45,45,45,45,45,45,45,DEF_DECR_PERC,2,Stack,18,18,18,18,18,18,18,SELF_CRIT_MULT_PERC,Psy&3,Element&Stack,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Shiva::Dance of Destruction,,Shiva,Signature,Damage,,45,45,45,45,45,45,45,DEF_DECR_PERC,2,Stack,18,18,18,18,18,18,18,PARTY_CRIT_MULT_PERC,Psy&3,Element&Stack,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Shiva::Highlight,,Shiva,Highlight,Damage,,19.6,21,22.3,22.3,22.3,22.3,22.3,PARTY_DMG_PERC,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Okuninushi::Ruler's Majesty,,Okuninushi,Passive,Passive,,12.5,12.5,12.5,12.5,12.5,12.5,12.5,SELF_CRIT_PERC,,,25.5,25.5,25.5,25.5,25.5,25.5,25.5,PARTY_DMG_PERC,Psy&3,Element&Stack,10,10,10,10,10,10,10,PARTY_DMG_PERC,Psy,Element,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Alice::Undying Curse,,Alice,Passive,Passive,,34.9,34.9,34.9,34.9,34.9,34.9,34.9,SELF_EHR_PERC,,,18,18,18,18,18,18,18,PARTY_DMG_PERC,Curse,Element,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

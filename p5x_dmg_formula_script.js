@@ -99,13 +99,19 @@ readWeaponDatabase();
 readWonderDatabase();
 readBossDatabase();
 
-window.addEventListener("click", function (event) {
+function closeDropdownOnOutside(e) {
     document.querySelectorAll(".w3-dropdown-content").forEach(dropdown => {
-        if (!dropdown.parentElement.contains(event.target)) {
+        if (!dropdown.parentElement.contains(e.target)) {
             dropdown.classList.remove("w3-show");
         }
     });
-});
+}
+
+// Desktop
+document.addEventListener("click", closeDropdownOnOutside);
+
+// Mobile (critical)
+document.addEventListener("touchstart", closeDropdownOnOutside, { passive: true });
 
 function cancelOperation() {
     cancelled = true;
@@ -590,7 +596,10 @@ function simCommon() {
     iCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(iCharInfo.enemyDefense, iCharInfo.additionalDefCoef, iCharInfo.windswept, iCharInfo.pierceRate, iCharInfo.defenseReduction);
 
     // Skill Perc should be done after all the buffs is done
-    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[iCharInfo.skillIndex].skillInfo, iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
+//    iCharInfo.final_skillPerc = calculateSkillPerc(skillList[iCharInfo.skillIndex].skillInfo, iCharInfo.skillLevel, iCharInfo.extraHit, iCharInfo.ampSkill);
+
+    iCharInfo.final_skillPerc = updateSkillPerc(skillInfo, iCharInfo.extraHit, iCharInfo.ampSkill);
+
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
@@ -706,6 +715,55 @@ function initializeData() {
     iCharInfo.extraHit = 0; // if something modify a dps skill and gives it 1 more hit
     iCharInfo.ampSkill = 1; // multiply with skill. this is for ability that changes skill percentage
 }
+
+
+function updateSkillPerc(skillInfo, extraHit, ampSkill) {
+    let skillPercList = [];
+
+    for (const skill of skillInfo) {
+        // if the condition is not fulfilled, this skill dmg doesn't exist, just quit
+        if ((skill.conditionType == "Exclusive") && IsValidDBuffCondition(buffList, skill.condition)) {
+            // Invalid skill... this skill doesn't exist
+            if (DEBUG) {
+                console.log("calculateSkillPerc::Invalid Skill::Check if skill evolves to a different skill");
+                console.log(skill);
+            }
+        }
+        else if ((skill.conditionType == "DBuff") && !IsValidDBuffCondition(buffList, skill.condition)) {
+            // Invalid skill... this skill doesn't exist
+            if (DEBUG) {
+                console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
+                console.log(skill);
+            }
+        }
+        else if ((skill.conditionType == "Debuff") && !IsValidDebuffEnemyCondition(buffList, skill.condition)) {
+            // Invalid skill... this skill doesn't exist
+            if (DEBUG) {
+                console.log("calculateSkillPerc::Invalid Skill::Check if skill requires a buff to be active");
+                console.log(skill);
+            }
+        }
+        else {
+            skill.value = skill.value / 100 * ampSkill;
+
+            if (extraHit) {
+                skill.numHit += extraHit;
+            }
+
+            skillPercList.push(skill);
+        }
+    }
+
+    if (skillPercList) {
+        return skillPercList;
+    }
+    else {
+        return skillInfo;
+    }
+
+}
+
+
 // Return a list of skill percentage for the skill and its follow up
 // @param   skillLevel - the level of the skill: Level 10 skill or Level 13 skill etc
 // @param   skill - item containing the skill from the database
@@ -1672,7 +1730,7 @@ function displayResult(dmgList, min, max) {
     item = document.createElement("p");
     item.innerHTML = "Skill:: " + iCharInfo.skillName + ". Party::" + iCharInfo.charName + "::" + iCharInfo.awareness + "R" + iCharInfo.reforgeLevel + " " + iCharInfo.weapon + ". ";
     for (const party of partyMembers) {
-        item.innerHTML += party.charName + "::" + party.awareness + party.reforgeLevel + " " + party.weapon + ". ";
+        item.innerHTML += party.charName + "::" + party.awareness + "R" + party.reforgeLevel + " " + party.weapon + ". ";
     }
 
     var firstChild = document.getElementById('wDBuffOutputDiv').firstElementChild;
@@ -2298,10 +2356,12 @@ function toggleDarkMode() {
     if (document.getElementById('checkLightMode').checked) {
         element.style.backgroundColor = '#FFE4C4';
         element.style.color = 'midnightblue';
+        element.style.backgroundImage = "url('makoto_bg.jpg')";
     }
     else {
         element.style.backgroundColor = '#0D181C';
         element.style.color = '#F5ECDC';
+        element.style.backgroundImage = '';
     }
 }
 
