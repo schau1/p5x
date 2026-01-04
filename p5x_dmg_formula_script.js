@@ -14,7 +14,7 @@
 
 // python -m http.server
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
