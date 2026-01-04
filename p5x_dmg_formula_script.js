@@ -253,10 +253,10 @@ function damageFn(harmony, personaList) {
     simCharInfo.atkPerc += data.atkPerc;
     simCharInfo.critMult += data.critMult;
     simCharInfo.critRate += data.critRate;
-    simCharInfo.dmgMult += data.dmgMult;
+    simCharInfo.dmgMultAoe += data.dmgMultAoe;
+    simCharInfo.dmgMult += data.dmgMult + data.dmgMultAoe;
     simCharInfo.pierceRate += data.pierceRate;
-    simCharInfo.ampSkill += data.ampSkill;
-    simCharInfo.technicalMastery = data.technicalMastery;
+//    simCharInfo.technicalMastery = data.technicalMastery;
     simCharInfo.defenseReduction += data.defenseReduction;
     simCharInfo.defenseReductionAoe += data.defenseReductionAoe;
     if (data.windswept) {
@@ -267,6 +267,7 @@ function damageFn(harmony, personaList) {
     // Final stats calculation
     simCharInfo.final_atk = calculateAtkFinal(simCharInfo.baseAtk, simCharInfo.atkFlat, simCharInfo.atkPerc);
     simCharInfo.final_dmgBonus = calculateDmgBonusFinal(simCharInfo.dmgMult);
+    simCharInfo.final_dmgBonusAoe = calculateDmgBonusFinal(simCharInfo.dmgMultAoe);
     simCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReduction);
     simCharInfo.final_defenseReductionAoe = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReductionAoe);
     simCharInfo.final_weakness = convertEnemyWeaknessTextToValue(simCharInfo.weakness);
@@ -282,10 +283,10 @@ function damageFn(harmony, personaList) {
 
            if (simCharInfo.role == "Sweeper") {
                // if Sweeper, assume 5 targets and that the skill is AOE...
-               let dmg2 = calculateSkillDamage(simCharInfo.final_atk, simCharInfo.final_dmgBonus, simCharInfo.final_defenseReductionAoe, simCharInfo.final_critStableDomain, skill.value, simCharInfo.final_weakness, simCharInfo.finalBonus, OTHER_DMG_BONUS);
-
+               let dmg2 = calculateSkillDamage(simCharInfo.final_atk, simCharInfo.final_dmgBonusAoe, simCharInfo.final_defenseReductionAoe, simCharInfo.final_critStableDomain, skill.value, simCharInfo.final_weakness, simCharInfo.finalBonus, OTHER_DMG_BONUS);
 //               console.log(simCharInfo);
-
+  //             console.log(newDbuffList)
+    //           console.log(dmg[0] + dmg2[0] * NUM_ENEMY_AOE)
                return dmg[0] + dmg2[0] * NUM_ENEMY_AOE;
            }
 
@@ -386,16 +387,29 @@ function runSimPersona() {
         }
     }
 
-//    console.log(newSkill);
-    /*
+  
     let temp = []
     //  Testing with just 1 item
-    for (const skill of newSkill) {
+/*    for (const skill of newSkill) {
 //        console.log(skill)
-        if (skill.personaSkill[0] == "Rebellion" || skill.personaSkill[1] == "Rebellion")        { temp.push(skill) }
+        if (skill.personaSkill[0] == "Spirit Wave" || skill.personaSkill[1] == "Spirit Wave") { temp.push(skill) }
     }
 
-    temp.push(newSkill[0])
+    for (const skill of newSkill) {
+        //        console.log(skill)
+        if (skill.personaSkill[0] == "Dance of Destruction" || skill.personaSkill[1] == "Dance of Destruction") { temp.push(skill) }
+    }*/
+
+  //  console.log(newSkill);   
+ /*   temp.push(newSkill[68]) // oku
+    temp.push(newSkill[67]) // shiva
+    temp.push(newSkill[7])  // dino rebell
+    temp.push(newSkill[8])  // dino rev
+    temp.push(newSkill[14]) // domin cohension
+    temp.push(newSkill[39]) // succubus reb
+    temp.push(newSkill[40]) // succubus reb
+    temp.push(newSkill[100]) // melchizedek shining
+
     console.log(temp)*/
 
     // Now we find the best 3 skills
@@ -645,15 +659,16 @@ function simCommon() {
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
     iCharInfo.critRate += data.critRate;
-    iCharInfo.dmgMult += data.dmgMult;
+    iCharInfo.dmgMult += data.dmgMult + data.dmgMultAoe;
+    iCharInfo.dmgMultAoe += data.dmgMultAoe;
     iCharInfo.pierceRate += data.pierceRate;
     iCharInfo.defenseReduction += data.defenseReduction;
+    iCharInfo.defenseReductionAoe += data.defenseReductionAoe;
     iCharInfo.windswept = data.windswept;
     iCharInfo.myriad_song = data.myriad_song;
     iCharInfo.extraHit = data.extraHit;
     iCharInfo.ampSkill = data.ampSkill;
     iCharInfo.technicalMastery = data.technicalMastery;
-    iCharInfo.defenseReductionAoe += data.defenseReductionAoe;
 
     // testing:
     /*    iCharInfo.baseAtk = 1200 + 600;
@@ -799,6 +814,7 @@ function initializeData() {
     iCharInfo.atkFlat = 0;
     iCharInfo.atkPerc = 0;
     iCharInfo.dmgMult = 0;
+    iCharInfo.dmgMultAoe = 0;
     iCharInfo.enemyDefense = 0;
     iCharInfo.additionalDefCoef = 0;
     iCharInfo.pierceRate = 0;
@@ -1152,6 +1168,7 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
     data.critMult = 0;
     data.critRate = 0;
     data.dmgMult = 0;
+    data.dmgMultAoe = 0;
     data.pierceRate = 0;
     data.defenseReduction = 0;
     data.defenseReductionAoe = 0;
@@ -1243,6 +1260,7 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                 case "SELF_CRIT_MULT_PERC":   // fall through
                 case "ALLIES_CRIT_MULT_PERC":   // fall through
                 case "PARTY_CRIT_MULT_PERC":   // fall through
+                case "PARTY_CRIT_MULT_PERC_AOE":
                 case "ALLY_CRIT_MULT_PERC":
                 case "SELF_N_ALLY_CRIT_MULT_PERC":
                     data.critMult += list[i].value;
@@ -1258,6 +1276,7 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                 case "ALLY_CRIT_PERC":
                 case "ALLIES_CRIT_PERC":
                 case "SELF_N_ALLY_CRIT_PERC":
+                case "PARTY_CRIT_PERC_AOE": // critical take rate
                     data.critRate += list[i].value;
                     appliedBuffList.push([list[i].buffName, "Increase Crit Rate", list[i].value]);
                     break;
@@ -1271,6 +1290,10 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                 case "ALLY_DMG_PERC":
                     data.dmgMult += list[i].value;
                     appliedBuffList.push([list[i].buffName, "Increase Damage", list[i].value]);
+                    break;
+                case "PARTY_DMG_PERC_AOE":   // fall through
+                    data.dmgMultAoe += list[i].value;
+                    appliedBuffList.push([list[i].buffName, "Increase Damage to all foes", list[i].value]);
                     break;
                 case "OOB_SELF_PIERCE_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
@@ -1318,6 +1341,8 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
                 case "ALLY_SKILL_AMP_PERC":
                     data.ampSkill += list[i].value/100;
                     appliedBuffList.push([list[i].buffName, "Skill Amplification", list[i].value]);
+                    break;
+                case "PARTY_DMG_PERC_AMP":  // future persona... not sure what to do::total dmg taken amp
                     break;
                 case "ALLY_CRIT_MULT_PERC_CR_OVER_100":
                     item = [];
