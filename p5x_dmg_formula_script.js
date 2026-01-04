@@ -307,7 +307,7 @@ function damageFn(harmony, personaList) {
  *  to find the best Persona
  */
 function runSimPersona() {
-    if (!DEBUG) {
+ /*   if (!DEBUG) {
         var element = document.getElementById("result");
         // Clear the output if the user wants to
         if (document.getElementById('checkClrOutput').checked) {
@@ -317,7 +317,7 @@ function runSimPersona() {
         item.innerHTML = "Error::Feature is not supported yet";
         element.prepend(item);
         return; // not support yet
-    }
+    }*/
 
     // Remove any input item from Wonder if we're to run simulation, so we don't have extra persona
     document.getElementById('wDBuffOutputDiv').innerHTML = "";
