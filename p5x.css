@@ -1,0 +1,48 @@
+body {
+    background-color: #0D181C;
+    background-blend-mode: multiply;
+    background-position: top center;
+    color: #F5ECDC;
+}
+
+p {
+    font-size: 1.2em; /* 1 * 16 = 16px */
+}
+
+#result {
+    width: 100%; /* Adjust width as needed */
+    height: 550px; /* Set a fixed height */
+    border: 1px solid #ccc; /* Add a border for visibility */
+    overflow: auto; /* Add scrollbars when content exceeds height */
+    padding: 10px;
+    white-space: pre-wrap; /* Preserve whitespace and wrap text */
+    font-family: monospace; /* Optional: good for output/log text */
+}
+
+.custom-scrollbar {
+    max-height: 250px; /* Set the maximum visible height */
+    overflow-y: auto; /* Enable vertical scrolling when content exceeds max-height */
+}
+
+.dropdown-label {
+    margin-bottom: 2px;
+}
+
+.skill-item {
+    display: flex !important;
+    align-items: center;
+}
+
+.skill-label {
+    white-space: nowrap;
+}
+
+.skill-input-wrapper {
+    margin-left: auto; /* push input to the right */
+    width: 70px;
+}
+
+    .skill-input-wrapper input {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }

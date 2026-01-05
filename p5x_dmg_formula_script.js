@@ -247,7 +247,7 @@ function damageFn(harmony, personaList) {
     simCharInfo.final_skillPerc[0].numHit = numHit;
 
     // Add buffs and debuffs to everything
-    let data = processDBuffList(newDbuffList.unique, simCharInfo.skillName, simCharInfo.skillPos, simCharInfo.final_skillPerc);
+    let data = processDBuffList(newDbuffList.unique, simCharInfo.skillName, simCharInfo.skillPos, simCharInfo.final_skillPerc, iCharInfo.role,);
 
     simCharInfo.atkFlat += data.atkFlat;
     simCharInfo.atkPerc += data.atkPerc;
@@ -576,7 +576,7 @@ function simCommon() {
     }
 
     // Get skills and add buffs from the user selected skill (S1/S3) to buff list
-    iCharInfo.skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName, DPS_ROLE);
+    iCharInfo.skillIndex = addSkillBuffToBuffList(iCharInfo.charName, iCharInfo.awareness, iCharInfo.skillLevel, iCharInfo.skillName, 0, DPS_ROLE);
     if (iCharInfo.skillIndex >= 0) {
         // Set the skillType (element or support or passive) to element if we have multiple type
         const element = skillList[iCharInfo.skillIndex].skillInfo[0].skillType.split("|");
@@ -654,7 +654,7 @@ function simCommon() {
     var skillInfo = getSkillInfo(skillList[iCharInfo.skillIndex].skillInfo, iCharInfo.skillLevel);
 
     // Add buffs and debuffs to everything
-    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, skillInfo, DEBUG);
+    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, skillInfo, iCharInfo.role, DEBUG);
     iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
@@ -1051,6 +1051,35 @@ function IsValidDBuffCondition(list, conditionName) {
 }
 
 /**
+ *  Check to see the user inflicted debuff/buff is found in the buff list and is valid
+ *  It goes through the full buffList and look for the buff in the buffList 
+ * 
+ * @param   conditionName   the name of the condition we're looking for
+ * @param   stack           Stack requirement for the condition we found
+ * 
+ * @returns true if valid, false if not
+ * 
+ * */
+function IsValidDBuffStackCondition(list, conditionName, stack=0) {
+    if (conditionName != "") {
+        // this has a requirement, need to go through the buff to see if the user has the buff
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].buffName.includes(conditionName)) {
+                if (list[i].stack >= stack) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    else {
+        // it does not have a requirement, so it's fine.
+        return true;
+    }
+}
+
+/**
  *  This function handles the NAND (&) operation in the database
  *  It goes through the full buffList and look for the buff in the buffList
  *  Both of the conditions need to be valid for it to return true
@@ -1066,7 +1095,7 @@ function IsValidDBuffCondition(list, conditionName) {
  * @returns true if valid, false if not
  * 
  * */
-function IsValidAndCondition(list, name, type, skillName, skill, element, skillBehavior, numHit) {
+function IsValidAndCondition(list, name, type, skillName, skill, element, skillBehavior, numHit, role) {
     const searchName = name.split('&'); // conditionName
     const searchType = type.split('&'); // conditionType
 
@@ -1117,10 +1146,22 @@ function IsValidAndCondition(list, name, type, skillName, skill, element, skillB
             else if (searchType[j].includes("Chance")) {
                 //          not consistent... not sure if we want to include the x% chance to do this
             }
+            else if (searchType[j] == "Role") {
+                if (role != searchName[j]) {
+                    return false;
+                }
+            }
             else if (searchType[j].includes("Stack")) {
+                const stackInfo = searchName[j].split('::')
+                if (stackInfo.length >= 2) {
+                    const stackRequired = parseInt(stackInfo[1]);
+                    if (!IsValidDBuffStackCondition(list, stackInfo[0], stackRequired)) {
+                        return false;
+                    }
+                }
+
                 // not consistent... Stack Number of a certain thing... @todo:: Implement this
-//                console.log(searchName)
-//                console.log(searchType)
+
             }
             else {
                 // not handled... Maybe I need to do something else in the future
@@ -1161,7 +1202,7 @@ function process2ndPassDBuffList(list, skillInfo) {
 * @param  skill   the skill position (S1, S2, HL)
 * @pram   skillBehavior   how the skill behaves: normal, DoT, Follow
 */
-function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
+function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", verbose=false) {
     let data = [];
     data.atkFlat = 0;
     data.atkPerc = 0;
@@ -1192,7 +1233,7 @@ function processDBuffList(list, skillName, skill, skillInfo, verbose=false) {
             var andResult;
 
             for (var m = 0; m < conditionName.length; m++) {
-                andResult = IsValidAndCondition(list, conditionName[m], conditionType[m], skillName, skill, skillInfo[0].element, skillInfo[0].skillBehavior, skillInfo[0].numHit);
+                andResult = IsValidAndCondition(list, conditionName[m], conditionType[m], skillName, skill, skillInfo[0].element, skillInfo[0].skillBehavior, skillInfo[0].numHit, role);
 
                 if (andResult) {
                     // Since this is an OR operation, any true result means the final result is true
@@ -1514,7 +1555,7 @@ function addUserSelectedBuffToBuffList() {
         // to avoid duplicate
         htmlDBuffList = htmlDBuffList.filter(item => item.name !== iCharInfo.skillName);
 
-        const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, role);
+        const item = addSkillBuffToBuffList(htmlDBuffList[i].charName, htmlDBuffList[i].awareness, htmlDBuffList[i].skillLevel, htmlDBuffList[i].name, htmlDBuffList[i].stack, role);
         // check skillList next
         if (item) {
             continue;
@@ -1553,6 +1594,7 @@ function addBossStatusToBuffList(weakness) {
         data.dbuff = "NO_VALUE_BUFF";
         data.condition = ""
         data.conditionType = "";
+        data.stack = 0;
         buffList.push(data);
     }
 }
@@ -1564,7 +1606,7 @@ function addCardToBuffList(name, charName, role) {
             for (const cardInfo of card.cardInfo) {
                 // Not a dps, then check buff to make sure we don't add self buff
                 if (((role == DPS_ROLE) && (cardInfo.dbuff != "")) || ((role != DPS_ROLE) && isValidTargetBuff(cardInfo.dbuff, cardInfo.condition, cardInfo.conditionType))) {
-                    let data = composeBuffData(cardInfo.dbuff, charName, SKILL_LEVEL_10, name, cardInfo.value, 0, 0, 0, cardInfo.condition, cardInfo.conditionType)
+                    let data = composeBuffData(cardInfo.dbuff, charName, SKILL_LEVEL_10, name, cardInfo.value, 0, 0, 0, cardInfo.condition, cardInfo.conditionType, 0)
                     if (data.buffName) {
                         buffList.push(data);
                     }
@@ -1585,6 +1627,7 @@ function addSelfPassiveSkillToBuffList(charInfo) {
         data.dbuff = "NO_VALUE_BUFF";   // these are added as a condition to trigger other buffs
         data.condition = "";
         data.conditionType = "";
+        data.stack = 0;
 
         buffList.push(data);
     }
@@ -1604,7 +1647,7 @@ function addSelfPassiveSkillToBuffList(charInfo) {
 // Since I count by awarenss lowest to highest, the database better be in this order or it will break the code...
 
 
-function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role) {
+function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, stack=0, role) {
     var item = -1;
     // Since I count by awarenss lowest to highest, the database better be in this order or it will break the code...
     for (var i = 0; i < skillList.length; i++) {
@@ -1647,7 +1690,7 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role
         for (const skillInfo of skillList[current].skillInfo) {
             if ((role == DPS_ROLE) || isValidTargetBuff(skillInfo.dbuff, skillInfo.condition, skillInfo.conditionType)) {
                 let data = composeBuffData(skillInfo.dbuff, charName, skillLevel, skillList[current].skillName, skillInfo.lvl10,
-                    skillInfo.lvl10m5, skillInfo.lvl13, skillInfo.lvl13m5, skillInfo.condition, skillInfo.conditionType);
+                    skillInfo.lvl10m5, skillInfo.lvl13, skillInfo.lvl13m5, skillInfo.condition, skillInfo.conditionType, stack);
                 if (data.buffName) {
                     buffList.push(data);
                 }
@@ -1661,7 +1704,7 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, role
 }
     
 // Trash function, but at least it's less copy and paste making it less prone to bug
-function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5, condition, conditionType) {
+function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl13, lvl13m5, condition, conditionType, stack = 0) {
     let data = [];
 
     if ((dbuff != "") && !(dbuff.includes("DMG_SKILL_SINGLE") || dbuff.includes("DMG_SKILL_AOE")
@@ -1692,6 +1735,7 @@ function composeBuffData(dbuff, charName, skillLevel, name, lvl10, lvl10m5, lvl1
         data.dbuff = dbuff;
         data.condition = condition;
         data.conditionType = conditionType;
+        data.stack = stack;
     }
 
     return data;
@@ -1711,6 +1755,7 @@ function addWeaponBuffToBuffList(charName, rarity, reforge, role) {
                     data.dbuff = info.dbuff;
                     data.condition = info.condition;
                     data.conditionType = info.conditionType;
+                    data.stack = 0;
                     buffList.push(data);
                 }
             }
@@ -1732,6 +1777,7 @@ function addWonderWeaponToBuffList(name, reforge) {
                     data.dbuff = buff.dbuff;
                     data.condition = buff.condition;
                     data.conditionType = buff.conditionType;
+                    data.stack = 0;
                     buffList.push(data);
                 }
             }
@@ -2066,6 +2112,18 @@ function htmlProcessDefDebuff(id, charName, awareness, skillLevel) {
     while (el) {
         let list = [];
         list.name = el.innerHTML.replaceAll("&amp;", "&");
+        list.stack = 0;
+
+        // Look for stack
+        const match = list.name.match(/\((\d+)\)/);
+        if (match) {
+            let newString = list.name.replace("::"+match[0], "")
+            if (newString) {
+                list.name = newString;
+            }
+            list.stack = parseInt(match[1], 10);
+        }
+
         list.charName = charName.replaceAll("&amp;", "&");
         list.awareness = awareness;
         list.skillLevel = skillLevel;
@@ -2192,7 +2250,7 @@ function fillHtmlDbuffList_Common(id) {
         case "bossDBuffListDiv":
             outputDiv = "bossDBuffOutputDiv";
             listDiv = "bossDBuffListDiv";
-            debuffArray = ["Windswept", "Shock", "Burn", "Freeze", "Curse", "Spiritual Ailment"];
+            debuffArray = [["Windswept", false], ["Shock", false], ["Burn", false], ["Freeze", false], ["Curse", false], ["Spiritual Ailment", false], ["Down", false]];
             break;
         default:
             if (DEBUG) {
@@ -2205,12 +2263,31 @@ function fillHtmlDbuffList_Common(id) {
     }
 
     if (debuffArray.length != 0) {
-        debuffArray = [...new Set(debuffArray)];
-
-        outputList(dropdown, debuffArray, outputDiv, listDiv);
+        debuffArray = removeDBuffDuplicates(debuffArray);
+//        outputList(dropdown, debuffArray, outputDiv, listDiv);
+        outputListWithInput(dropdown, debuffArray, outputDiv, listDiv);
     }
 
     toggleDropdown(id);
+}
+
+function removeDBuffDuplicates(arr) {
+    const map = new Map();
+
+    for (const obj of arr) {
+        const key = obj[0]; // Use name as key
+
+        if (map.has(key)) {
+            // Compare obj[1] with the stored value
+            if (obj[2] > map.get(key)[2]) {
+                map.set(key, obj); // Update if new value is greater
+            }
+        } else {
+            map.set(key, obj);
+        }
+    }
+
+    return [...map.values()];
 }
 
 function fillHtmlDBuffList(event) {
@@ -2234,7 +2311,7 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
         for (const skill of skillList) {
             if (skill.charName == charName) {
                 if ((skill.skillInfo[0].skillType.includes("Support")) && (skill.awareness <= awareness)) {
-                    list.push(skill.skillName);
+                    list.push([skill.skillName, false]);
                 }
                 else if ((skill.skillPos == "Passive") && (skill.awareness <= awareness)) {
                     // We add passive during the process... so maybe don't do it again
@@ -2253,12 +2330,16 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
                     addItemToListNoButton(skill.skillName, outputDiv);
                 }
                 else {
-                    list.push(skill.skillName);
+                    var stack = skill.maxStack;
+                    if (stack && stack > 0) {
+                        stack = true;
+                    }                    
+                    list.push([skill.skillName, stack, skill.maxStack]);
                 }
             }
         }
     }
-
+    
     return list;
 }
 
@@ -2852,6 +2933,7 @@ function readSkillDatabase() {
             data.skillPos = row[i][j++];
             data.awareness = row[i][j++];
             data.skillName = row[i][j++];
+            data.maxStack = parseInt(row[i][j++], 10);
             data.skillInfo = [];
 
             for (var dbuffItem = 0; dbuffItem < MAX_NUM_DATABASE_EFFECT; dbuffItem++) {
@@ -2932,7 +3014,7 @@ function readWonderDatabase() {
             }
             else {
                 if (data.type != "Debuff") {
-                    htmlWonderDbList.push(data.name);
+                    htmlWonderDbList.push([data.name, false]);
                 }
 
                 if ((data.type == "Passive") && (data.source != "")) {  // don't add general passive since it can be learnt by anyone
@@ -2942,7 +3024,6 @@ function readWonderDatabase() {
                     personaSkill.push(data);
                 }
             }
-
         }
     }
 
