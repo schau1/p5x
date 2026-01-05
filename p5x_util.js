@@ -316,6 +316,91 @@ function outputList(dropdown, itemArray, outputDiv, listDiv) {
     }
 }
 
+/**
+ * Output the list to the the dropdown list. The first element in the array should be the name to output,
+ * and the 2nd one indicates whether we allow the user to enter a number next to the name.
+ * @param {any} dropdown
+ * @param {any} itemArray
+ * @param {any} outputDiv
+ * @param {any} listDiv
+ */
+function outputListWithInput(dropdown, itemArray, outputDiv, listDiv) {
+    for (var i = 0; i < itemArray.length; i++) {
+        var item = document.createElement("a");
+        item.setAttribute('class', 'w3-bar-item w3-button');
+        item.innerHTML = itemArray[i][0];
+
+        if (itemArray[i][1]) {
+            addDropdownItem(itemArray[i][0], itemArray[i][2], dropdown, outputDiv, listDiv);
+        }
+        else {
+            item.onclick = function () {
+                addItemToList(this, outputDiv, listDiv);
+            };
+
+            dropdown.appendChild(item);
+        }
+    }
+}
+
+function addDropdownItem(label, suggestNumber, dropdown, outputDiv, listDiv) {
+    var output = document.getElementById(outputDiv);
+    var el = output.firstChild;
+    var add = true;
+
+    while (el) {
+        if (el.innerHTML == label) {
+            add = false;
+            break;
+        }
+        el = el.nextSibling;
+    }
+
+    if (!add) {
+        return;
+    }
+    
+    // Item container
+    const item = document.createElement("div");
+    item.className = "w3-bar-item w3-button skill-item";
+    item.onclick = (e) => selectItem(label, e, outputDiv, listDiv);
+
+    // Text
+    const text = document.createElement("span");
+    text.className = "skill-label";
+    text.textContent = label;
+
+    // Input wrapper (CRITICAL for W3.CSS)
+    const inputWrapper = document.createElement("div");
+    inputWrapper.className = "skill-input-wrapper";
+
+    // Input
+    const input = document.createElement("input");
+    input.type = "number";
+    input.className = "w3-input w3-border";
+    input.placeholder = suggestNumber;
+
+    // Prevent input from triggering selection
+    input.addEventListener("click", e => e.stopPropagation());
+    input.addEventListener("keydown", e => e.stopPropagation());
+
+    // Assemble
+    inputWrapper.appendChild(input);
+    item.appendChild(text);
+    item.appendChild(input);
+    dropdown.appendChild(item);
+}
+
+function selectItem(name, event, outputDiv, listDiv) {
+    const item = event.currentTarget;
+    const input = item.querySelector("input");
+
+    var value = input ? input.value : null;
+    if (!value) { value = input.placeholder; } // default value  
+
+    addItemToList(item.querySelector("span"), outputDiv, listDiv, value);
+}
+
 function addItemToListNoButton(name, outputDiv) {
     var output = document.getElementById(outputDiv);
     var item = document.createElement("li");
@@ -337,13 +422,13 @@ function addItemToListNoButton(name, outputDiv) {
     }
 }
 
-function addItemToList(cell, outputDiv, listDiv) {
+function addItemToList(cell, outputDiv, listDiv, value = 0) {
     var output = document.getElementById(outputDiv);
     var el = output.firstChild;
     var add = true;
 
     while (el) {
-        if (el.innerHTML == cell.innerHTML) {
+        if (el.innerHTML && el.innerHTML.includes(cell.innerHTML)) {
             add = false;
             break;
         }
@@ -363,7 +448,12 @@ function addItemToList(cell, outputDiv, listDiv) {
     if (add) {
         var item = document.createElement("li");
         item.setAttribute('class', 'w3-block w3-left-align');
-        item.innerHTML = cell.innerHTML;
+        if (value != 0) {
+            item.innerHTML = cell.innerHTML + "::(" + value + ")";
+        }
+        else {
+            item.innerHTML = cell.innerHTML;
+        }
         item.onclick = function () {
             removeItemFromList(this, outputDiv);
         };
