@@ -654,7 +654,7 @@ function simCommon() {
     var skillInfo = getSkillInfo(skillList[iCharInfo.skillIndex].skillInfo, iCharInfo.skillLevel);
 
     // Add buffs and debuffs to everything
-    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, skillInfo, iCharInfo.role, DEBUG);
+    let data = processDBuffList(buffList, iCharInfo.skillName, iCharInfo.skillPos, skillInfo, iCharInfo.role, true);
     iCharInfo.atkFlat += data.atkFlat;
     iCharInfo.atkPerc += data.atkPerc;
     iCharInfo.critMult += data.critMult;
@@ -1478,8 +1478,11 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
 //    console.log(failBuff);
 
     if (failBuff.length > 0 && verbose) {
-        console.log(failBuff);
         htmlAppliedBuffList = htmlAppliedBuffList.concat(appliedBuffList);
+    }
+
+    if (DEBUG) {
+        console.log(failBuff);
     }
 
     return data;
@@ -1903,39 +1906,6 @@ function displayResult(dmgList, min, max) {
         return;
     }
 
-    if (document.getElementById('chkDetailOutput').checked) {
-        item = document.createElement("ul");
-        item.setAttribute('class', "w3-ul w3-left-align w3-large");
-        var li = document.createElement("li");
-        li.innerHTML = "Stats (applied ONLY while using this skill): ";
-        item.appendChild(li);
-        li = document.createElement("li");
-        li.innerHTML = "Atk: " + iCharInfo.final_atk.toFixed(1);
-//        item.appendChild(li);
-//        li = document.createElement("li");
-        li.innerHTML += "\t\t\t\tDmg Mult: " + iCharInfo.dmgMult.toFixed(1) + "%";
-        item.appendChild(li);
-        li = document.createElement("li");
-        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(1) + "%";
-//        item.appendChild(li);
-//        li = document.createElement("li");
-        li.innerHTML += "\t\t\tCrit Mult: " + iCharInfo.critMult.toFixed(1) + "%";
-        item.appendChild(li);
-        li = document.createElement("li");
-        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(1) + "%";
-//        item.appendChild(li);
-//        li = document.createElement("li");
-        li.innerHTML += "\t\t\tDefense Reduction: " + iCharInfo.final_defenseReduction.toFixed(1);
-        item.appendChild(li);
-        if (iCharInfo.final_defenseReduction == 1) {
-            li = document.createElement("li");
-            li.innerHTML = "Too many defense down. You hit the max limit. Consider using less defense reduction ability.";
-            item.appendChild(li);
-        }
-        item.appendChild(li);
-        element.prepend(item);
-    }
-
     if (document.getElementById('chkDBuffOutput').checked) {
         item = document.createElement("ul");
         item.setAttribute('class', "w3-ul w3-left-align w3-large");
@@ -1949,6 +1919,39 @@ function displayResult(dmgList, min, max) {
             item.appendChild(li);
         }
 
+        element.prepend(item);
+    }
+
+    if (document.getElementById('chkDetailOutput').checked) {
+        item = document.createElement("ul");
+        item.setAttribute('class', "w3-ul w3-left-align w3-large");
+        var li = document.createElement("li");
+        li.innerHTML = "Stats (applied ONLY while using this skill): ";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Atk: " + iCharInfo.final_atk.toFixed(1);
+        //        item.appendChild(li);
+        //        li = document.createElement("li");
+        li.innerHTML += "\t\t\t\tDmg Mult: " + iCharInfo.dmgMult.toFixed(1) + "%";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(1) + "%";
+        //        item.appendChild(li);
+        //        li = document.createElement("li");
+        li.innerHTML += "\t\t\tCrit Mult: " + iCharInfo.critMult.toFixed(1) + "%";
+        item.appendChild(li);
+        li = document.createElement("li");
+        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(1) + "%";
+        //        item.appendChild(li);
+        //        li = document.createElement("li");
+        li.innerHTML += "\t\t\tDefense Reduction: " + iCharInfo.final_defenseReduction.toFixed(1);
+        item.appendChild(li);
+        if (iCharInfo.final_defenseReduction == 1) {
+            li = document.createElement("li");
+            li.innerHTML = "Too many defense down. You hit the max limit. Consider using less defense reduction ability.";
+            item.appendChild(li);
+        }
+        item.appendChild(li);
         element.prepend(item);
     }
 
