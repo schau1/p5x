@@ -64,13 +64,13 @@ Technomage Ultra FS,Oracle,5*,30,39,OOB_SELF_ATK_PERC,,,,10,13,ALLY_ATK_PERC,Wea
 Cyberdeck Pro,Oracle,4*,12,16,OOB_SELF_ATK_PERC,,,,10,13,PARTY_DMG_PERC,Virus,DBuff,,,,,,,,,,,,,,
 Spina Sacramenti,Cherish,5*,45,59,SELF_DEF_PERC,,,,30,40,SELF_SKILL_PERC,,,,16,21,ALLY_DMG_PERC,,,,,,,,,,
 Spina Caritatis,Cherish,4*,8.7,11.3,SELF_SKILL_PERC,,,,13.7,17.8,SELF_SKILL_PERC,HP < 60%,,,,,,,,,,,,,,,
-Last Quarter,Noir,5*,36,47,SELF_EHR_PERC,,,,24,31,SELF_DMG_PERC,Psy,Element,,102,129,SELF_ATK_PERC,Thoughtful Round,DBuff,,,,,,,,"3 stacks... I could do 1 stack, 2 stack, 3 stack but do I want to do that?? I need to think about it"
+Last Quarter,Noir,5*,36,47,SELF_EHR_PERC,,,,24,31,SELF_DMG_PERC,Psy,Element,,102,129,SELF_ATK_PERC,Round,DBuff,,,,,,,,"3 stacks... I could do 1 stack, 2 stack, 3 stack but do I want to do that?? I need to think about it"
 Gilgamess Axe,Noir,4*,12,16,OOB_SELF_ATK_PERC,,,,9.9,12.9,SELF_ATK_PERC,"Debuffed enemy, 3 foes",,,9.9,12.9,SELF_EHR_PERC,,,,,,,,,,
 Reve de Cygnes,Mont-Swan,5*,30,39,OOB_SELF_ATK_PERC,,,,16.2,21,SELF_CRIT_PERC,3|3,Stack|Stack,,27,35,SELF_DMG_PERC,Wind|Ice,Element|Element,,,,,,,,
 Fille de Boree,Mont-Swan,4*,12,16,OOB_SELF_ATK_PERC,,,,18,23,SELF_ATK_PERC,,,,,,,,,,,,,,,,
 Household Terror,Howler,5*,36,47,OOB_SELF_EHR_PERC,,,,18,23,SELF_EHR_PERC,Fire|Follow,Element|Skill_Behavior,,33.3,43.3,DEF_DECR_PERC,Warm Welcome,DBuff,,16.6,21.6,DEF_DECR_PERC_AOE,Furious Pursue,DBuff,,
 Howling Hunter,Howler,4*,12,16,OOB_SELF_ATK_PERC,,,,22,28.5,SELF_EHR_PERC,,,,,,,,,,,,,,,,
-Aurelian Twilight,Violet,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,21,27,SELF_ATK_PERC,1,Stack,,16.8,22.2,SELF_DMG_PERC,Awakening&2,DBuff&Stack,,30,39,SELF_DMG_PERC,Highlight,Self Skill,,
+Aurelian Twilight,Violet,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,21,27,SELF_ATK_PERC,1,Stack,,8.4,11.1,SELF_DMG_PERC,Awakening,StkDepMultUpd,,30,39,SELF_DMG_PERC,Highlight&Awakening::2,Self Skill&Stack,,
 Sword of Sinai,Violet,4*,12,16,OOB_SELF_ATK_PERC,,,,24,31,SELF_DMG_PERC,2,Stack,,,,,,,,,,,,,,
 "Dancing Crane, Wintry Aroma",Wind-Vast,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,13.2,17.2,ALLIES_CRIT_MULT_PERC,,,,13.2,17.2,SELF_DMG_PERC,,,,,,SELF_DMG_PERC,,,,Assume Max SP of 200
 "Sunny Day, Fleeting Sparrows",Wind-Vast,4*,12,16,OOB_SELF_ATK_PERC,,,,8.7,11.3,SELF_CRIT_PERC,"S1, S2, HL",Skill,,,,,,,,,,,,,,

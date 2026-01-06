@@ -1264,12 +1264,23 @@ function updateDBuffList(list, skillName, skill, skillInfo, role = "Assassin", c
                 findAndUpdateBuffValue(list, item.condition, item.value, MULT);
             }
 
-            if (item.conditionType == "StkDepMultUpd") {
-                const stack = getInputStackFromBuff(list, item.condition);
+            if ((item.conditionType == "StkDepMultUpd") || (item.conditionType == "StkDepMultUpdMax")) {
+                var stack = getInputStackFromBuff(list, item.condition);
+                if ((stack > item.stack) && (item.conditionType == "StkDepMultUpdMax")) {
+                    stack = item.stack;
+                }
                 item.value = stack * item.value;
-            }
 
-            newList.push(item);
+                if (item.value != 0) {
+                    newList.push(item);
+                }
+                else {
+                    failBuff.push(item);
+                }
+            }
+            else {
+                newList.push(item);
+            }
         }
         else {
             failBuff.push(item);
@@ -1314,7 +1325,7 @@ function findAndUpdateBuffValue(list, buffName, value, operation) {
 
 function getInputStackFromBuff(list, buffName) {
     for (const item of list) {
-        if (item.buffName.includes(buffName)) {
+        if (item.buffName.includes(buffName)) {     
             return item.stack;
         }
     }
@@ -1825,11 +1836,27 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, stac
     }
 
     while ((skillList[current].awareness == skillList[item].awareness) && (skillList[current].skillName == skillList[item].skillName)) {
-        if (stack > skillList[current].stack) {
-            stack = skillList[current].stack;
+        if (stack > skillList[current].maxStack) {
+            stack = skillList[current].maxStack;
+        }
+        else if (stack == 0) {
+            stack = skillList[current].maxStack;
         }
 
         for (const skillInfo of skillList[current].skillInfo) {
+            if (skillInfo.conditionType.includes("StackAdd")) {
+                const index = buffList.findIndex(element => element.buffName == skillInfo.condition);
+                if (index < 0) {
+                    let data = composeBuffData("NO_VALUE_BUFF", charName, SKILL_LEVEL_10, skillInfo.condition, 0, 0, 0, 0, "", "", stack);
+                    if (data.buffName) {
+                        buffList.push(data);
+                    }
+                }
+                else {
+                    buffList[index].stack += stack;
+                }
+            }
+
             if ((role == DPS_ROLE) || isValidTargetBuff(skillInfo.dbuff, skillInfo.condition, skillInfo.conditionType)) {
                 let data = composeBuffData(skillInfo.dbuff, charName, skillLevel, skillList[current].skillName, skillInfo.lvl10,
                     skillInfo.lvl10m5, skillInfo.lvl13, skillInfo.lvl13m5, skillInfo.condition, skillInfo.conditionType, stack);
@@ -1841,7 +1868,7 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, stac
 
         current++;
     }
-    
+
     return item;   // save the index - probably needed for later to calculate skill damage
 }
     
@@ -2073,22 +2100,22 @@ function displayResult(dmgList, min, max) {
         li.innerHTML = "Stats (applied ONLY while using this skill): ";
         item.appendChild(li);
         li = document.createElement("li");
-        li.innerHTML = "Atk: " + iCharInfo.final_atk.toFixed(1);
+        li.innerHTML = "Atk: " + iCharInfo.final_atk.toFixed(2);
         //        item.appendChild(li);
         //        li = document.createElement("li");
-        li.innerHTML += "\t\t\t\tDmg Mult: " + iCharInfo.dmgMult.toFixed(1) + "%";
+        li.innerHTML += "\t\t\t\tDmg Mult: " + iCharInfo.dmgMult.toFixed(2) + "%";
         item.appendChild(li);
         li = document.createElement("li");
-        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(1) + "%";
+        li.innerHTML = "Crit Rate: " + iCharInfo.critRate.toFixed(2) + "%";
         //        item.appendChild(li);
         //        li = document.createElement("li");
-        li.innerHTML += "\t\t\tCrit Mult: " + iCharInfo.critMult.toFixed(1) + "%";
+        li.innerHTML += "\t\t\tCrit Mult: " + iCharInfo.critMult.toFixed(2) + "%";
         item.appendChild(li);
         li = document.createElement("li");
-        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(1) + "%";
+        li.innerHTML = "Pierce Rate: " + iCharInfo.pierceRate.toFixed(2) + "%";
         //        item.appendChild(li);
         //        li = document.createElement("li");
-        li.innerHTML += "\t\t\tDefense Reduction: " + iCharInfo.final_defenseReduction.toFixed(1);
+        li.innerHTML += "\t\t\tDefense Reduction: " + iCharInfo.final_defenseReduction.toFixed(2);
         item.appendChild(li);
         if (iCharInfo.final_defenseReduction == 1) {
             li = document.createElement("li");
@@ -3104,7 +3131,9 @@ function readSkillDatabase() {
                 dbuff.dbuff = row[i][j++];
                 dbuff.condition = row[i][j++];
                 dbuff.conditionType = row[i][j++];
-                data.skillInfo.push(dbuff);
+                if (dbuff.dbuff != "") {
+                    data.skillInfo.push(dbuff);
+                }
             }
 
             skillList.push(data);
@@ -3159,7 +3188,9 @@ function readWonderDatabase() {
                 dbuff.dbuff = row[i][j++];
                 dbuff.condition = row[i][j++];
                 dbuff.conditionType = row[i][j++];
-                data.dbuff.push(dbuff);
+                if (dbuff.dbuff != "") {
+                    data.dbuff.push(dbuff);
+                }
             }
 
             wonderList.push(data);
