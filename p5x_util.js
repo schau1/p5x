@@ -397,6 +397,7 @@ function selectItem(name, event, outputDiv, listDiv) {
 
     var value = input ? input.value : null;
     if (!value) { value = input.placeholder; } // default value  
+    else if (value == 0) { value = 1; } // enforce min
 
     addItemToList(item.querySelector("span"), outputDiv, listDiv, value);
 }
