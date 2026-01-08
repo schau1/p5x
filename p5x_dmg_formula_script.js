@@ -34,7 +34,7 @@ const BOSS_FILE_NAME = encodeURIComponent("P5X database - boss.csv");
 const FILE_NUM_SKIP_LINE = 2;   // skip the first 2 lines of the csv file
 const MAX_NUM_DATABASE_EFFECT = 6;  // database has 6 effects right now
 const MAX_NUM_CARD_DATABASE_EFFECT = 9;  // card database has 9 effects right now
-const MAX_NUM_WEAP_DATABASE_EFFECT = 4; // weapon database has 4 effects
+const MAX_NUM_WEAP_DATABASE_EFFECT = 5; // weapon database has 4 effects
 
 const NAV_BUFF_PERC = 0.20;     // Used for now. Once I do party member, I can remove this and get the correct value
 
@@ -888,6 +888,11 @@ function updateSkillPerc(skillInfo, extraHit, ampSkill) {
             }*/
         }
         else {
+            if (skill.conditionType == "StkDepMultUpd") {
+                var stack = getInputStackFromBuff(buffList, skill.condition);
+                skill.value = stack * skill.value;
+            }
+
             skill.value = skill.value / 100 * ampSkill;
 
             if (extraHit) {
@@ -1324,9 +1329,16 @@ function findAndUpdateBuffValue(list, buffName, value, operation) {
 }
 
 function getInputStackFromBuff(list, buffName) {
+    const searchName = buffName.split('+'); // conditionName
+    var addItem = 0;
+    if (searchName.length >= 2) {
+        // have a stack;
+        addItem = parseInt(searchName[1]);
+    }
+
     for (const item of list) {
-        if (item.buffName.includes(buffName)) {     
-            return item.stack;
+        if (item.buffName.includes(searchName[0])) {
+            return item.stack + addItem;
         }
     }
 
@@ -2068,6 +2080,12 @@ function displayResult(dmgList, min, max) {
 
     //    var item = document.createElement("p");
     var item;
+    if (dmgList.length == 0) {
+        item = document.createElement("p");
+        item.innerHTML = "Error: Invalid Skill. Skill may requires a buff to be active or has evolved to a different skill. Please check skill condition.";
+        element.prepend(item);
+        return;     
+    }
 
     if (dmgList[0].skillBehavior != "DoT" && dmgList[0][0] == 0) {
         item = document.createElement("p");
