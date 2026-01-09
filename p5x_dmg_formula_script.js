@@ -1499,7 +1499,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                 case "SELF_PIERCE_PERC":   // fall through
                 case "PARTY_PIERCE_PERC":   // fall through
                 case "ALLY_PIERCE_PERC":
-                case "SELFN_ALLY_PIERCE_PERC":
+                case "SELF_N_ALLY_PIERCE_PERC":
                     data.pierceRate += list[i].value;
                     appliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
                     break;
@@ -2137,7 +2137,7 @@ function displayResult(dmgList, min, max) {
         item.appendChild(li);
         if (iCharInfo.final_defenseReduction == 1) {
             li = document.createElement("li");
-            li.innerHTML = "Too many defense down. You hit the max limit. Consider using less defense reduction ability.";
+            li.innerHTML = "Too many defenses down. You hit the max limit. Consider using less defense reduction ability.";
             item.appendChild(li);
         }
         item.appendChild(li);
