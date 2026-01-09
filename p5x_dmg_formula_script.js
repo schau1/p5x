@@ -1847,7 +1847,7 @@ function addSkillBuffToBuffList(charName, awareness, skillLevel, skillName, stac
         }
     }
 
-    while ((skillList[current].awareness == skillList[item].awareness) && (skillList[current].skillName == skillList[item].skillName)) {
+    while (skillList[current] && (skillList[current].awareness == skillList[item].awareness) && (skillList[current].skillName == skillList[item].skillName)) {
         if (stack > skillList[current].maxStack) {
             stack = skillList[current].maxStack;
         }
