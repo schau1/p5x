@@ -72,7 +72,7 @@ Household Terror,Howler,5*,36,47,OOB_SELF_EHR_PERC,,,,18,23,SELF_EHR_PERC,Fire|F
 Howling Hunter,Howler,4*,12,16,OOB_SELF_ATK_PERC,,,,22,28.5,SELF_EHR_PERC,,,,,,,,,,,,,,,,,,,,,,
 Aurelian Twilight,Violet,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,21,27,SELF_ATK_PERC,1,Stack,,8.4,11.1,SELF_DMG_PERC,Awakening,StkDepMultUpd,,30,39,SELF_DMG_PERC,Highlight&Awakening::2,Self Skill&Stack,,,,,,,,
 Sword of Sinai,Violet,4*,12,16,OOB_SELF_ATK_PERC,,,,24,31,SELF_DMG_PERC,2,Stack,,,,,,,,,,,,,,,,,,,,
-"Dancing Crane, Wintry Aroma",Wind-Vast,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,13.2,17.2,ALLIES_CRIT_MULT_PERC,,,,13.2,17.2,SELF_DMG_PERC,,,,,,SELF_DMG_PERC,,,,Assume Max SP of 200,,,,,,Assume Max SP of 200
+"Dancing Crane, Wintry Aroma",Wind-Vast,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,13.2,17.2,ALLIES_CRIT_MULT_PERC,,,,13.2,17.2,SELF_DMG_PERC,,,,,,,,,,Assume Max SP of 200,,,,,,Assume Max SP of 200
 "Sunny Day, Fleeting Sparrows",Wind-Vast,4*,12,16,OOB_SELF_ATK_PERC,,,,8.7,11.3,SELF_CRIT_PERC,"S1, S2, HL",Skill,,,,,,,,,,,,,,,,,,,,
 Shining Sun,Rin-Lion Dance,5*,30,39,OOB_SELF_ATK_PERC,,,,16,21,SELF_CRIT_PERC,S2,Self Skill,,34,44,SELF_DMG_PERC,Fire&Technical,Element&Skill_Behavior,,,,,,,,,,,,,,
 Timely Snow,Rin-Lion Dance,4*,12,16,OOB_SELF_ATK_PERC,,,,22,29,SELF_ATK_PERC,Follow,Skill_Behavior,,,,,,,,,,,,,,,,,,,,
@@ -109,5 +109,5 @@ Voltaic Heart,Blitz,4*,12,16,OOB_SELF_ATK_PERC,,,,22.5,29.2,SELF_ATK_PERC,Down,I
 ,Fuuka,4*,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 ,Luce-Notte,5*,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 ,Luce-Notte,4*,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-Warden's Judgement,Justine & Caroline,5*,30,39,OOB_SELF_ATK_PERC,,,,10,13,SELF_DESIRE_LVL,Two Masks As One,DBuff,,13,17,PARTY_CRIT_PERC,S1|S2,Skill|Skill,,13,17,SELF_DMG_PERC,S1|S2,Skill|Skill,,,,,,,,
+Warden's Judgement,Justine & Caroline,5*,30,39,OOB_SELF_ATK_PERC,,,,10,13,SELF_DESIRE_LVL,Two Masks As One,DBuff,,26,34,PARTY_CRIT_MULT_PERC,Facade,,,26,34,PARTY_DMG_PERC,Facade,,,,,,,,,
 Deliverance of Strength,Justine & Caroline,4*,12,16,OOB_SELF_ATK_PERC,,,,22,29,SELF_ATK_PERC,Two Masks As One,DBuff,,,,,,,,,,,,,,,,,,,,
