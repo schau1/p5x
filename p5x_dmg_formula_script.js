@@ -1408,7 +1408,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
             switch (list[i].dbuff) {
                 case "OOB_SELF_ATK_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_ATK_PERC":   // fall through
@@ -1417,40 +1417,40 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                 case "ALLIES_ATK_PERC":
                 case "SELF_N_ALLY_ATK_PERC":
                     data.atkPerc += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase ATK Percent", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase ATK Percent", list[i].value]);
                     break;
                 case "ALLY_ATK_PERC_HL":
                     if (skill == "Highlight") {
                         data.atkPerc += list[i].value;
-                        appliedBuffList.push([list[i].buffName, "Increase ATK Percent for HL", list[i].value]);
+                        appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase ATK Percent for HL", list[i].value]);
                     }
                     else {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
                     }
                     break;
                 case "ALLY_DMG_PERC_HL":
                     if (skill == "Highlight") {
                         data.dmgMult += list[i].value;
-                        appliedBuffList.push([list[i].buffName, "Increase Damage for HL", list[i].value]);
+                        appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Damage for HL", list[i].value]);
                     }
                     else {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
                     }
                     break;
                 case "OOB_SELF_ATK_FLAT":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_ATK_FLAT":   // fall through
                 case "PARTY_ATK_FLAT":   // fall through
                 case "ALLY_ATK_FLAT":
                     data.atkFlat += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase ATK Flat", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase ATK Flat", list[i].value]);
                     break;
                 case "OOB_SELF_CRIT_MULT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_CRIT_MULT_PERC":   // fall through
@@ -1460,11 +1460,11 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                 case "ALLY_CRIT_MULT_PERC":
                 case "SELF_N_ALLY_CRIT_MULT_PERC":
                     data.critMult += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase Crit Damage", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Crit Damage", list[i].value]);
                     break;
                 case "OOB_SELF_CRIT_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_CRIT_PERC":   // fall through
@@ -1474,26 +1474,26 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                 case "SELF_N_ALLY_CRIT_PERC":
                 case "PARTY_CRIT_PERC_AOE": // critical take rate
                     data.critRate += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase Crit Rate", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Crit Rate", list[i].value]);
                     break;
                 case "OOB_SELF_DMG_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_DMG_PERC":   // fall through
                 case "PARTY_DMG_PERC":   // fall through
                 case "ALLY_DMG_PERC":
                     data.dmgMult += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase Damage", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Damage", list[i].value]);
                     break;
                 case "PARTY_DMG_PERC_AOE":   // fall through
                     data.dmgMultAoe += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase Damage to all foes", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Damage to all foes", list[i].value]);
                     break;
                 case "OOB_SELF_PIERCE_PERC":   // out of battle
                     if (USE_STAT_SCREEN) {
-                        failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
+                        failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Counted"]);
                         break;              // if use stat screen, bonus already accounted for, so don't add again.
                     }                       // if not, fall through
                 case "SELF_PIERCE_PERC":   // fall through
@@ -1501,18 +1501,18 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                 case "ALLY_PIERCE_PERC":
                 case "SELF_N_ALLY_PIERCE_PERC":
                     data.pierceRate += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Increase Pierce Rate", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Pierce Rate", list[i].value]);
                     break;
                 case "DEF_DECR_PERC_AOE":   // fall through
                     data.defenseReductionAoe += list[i].value;
                 case "DEF_DECR_PERC":
                     data.defenseReduction += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Decrement Enemy Defense", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Decrement Enemy Defense", list[i].value]);
                     break;
                 case "WINDSWEEP_AOE":   // fall through
                 case "WINDSWEEP":   // fall through
                     data.windswept = true;
-                    appliedBuffList.push([list[i].buffName, "Windswept", data.windswept]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Windswept", data.windswept]);
                     break;
                 case "SHOCKED":    // Elemental Ailments
                 case "ELEMENTAL_AILMENT":
@@ -1528,15 +1528,15 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     data.critRate += temp[2];
                     data.critMult += temp[3];
                     data.pierceRate += temp[4];
-                    appliedBuffList.push([list[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase all Stats by X% Navi Stats", buffList[i].value]);
                     break;
                 case "SELF_SKILL_HIT_INC":  // add the number of hits to the skill
                     data.extraHit += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Extra hit", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Extra hit", list[i].value]);
                     break;
                 case "ALLY_SKILL_AMP_PERC":
                     data.ampSkill += list[i].value/100;
-                    appliedBuffList.push([list[i].buffName, "Skill Amplification", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Skill Amplification", list[i].value]);
                     break;
                 case "BUFF_SKILL_AMP_PERC": // oyakann...@todo need to figure out how to do this
                     break;
@@ -1548,7 +1548,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     item.statBuff = "CM";
                     item.multiplier = list[i].value;
                     extraMath.push(item);
-                    appliedBuffList.push([list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Crit Damage With Crit Rate Multiplier", list[i].value]);
                     break;
                 case "PARTY_TECHNICAL_MASTERY":
                 case "ALLY_TECHNICAL_MASTERY":
@@ -1560,7 +1560,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     // “Flame Tempest”: Additional damage increases by 6 %.
                     // “Ice Seal”: Base activation rate increases by 2.5 %.
                     data.technicalMastery += list[i].value;
-                    appliedBuffList.push([list[i].buffName, "Technical Mastery", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Technical Mastery", list[i].value]);
                     break;
                 case "TECHNICAL_BACKDRAFT":
                 case "TECHNICAL_FRIGID_BOLT":
@@ -1573,7 +1573,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     item.statBuff = "SDMG";
                     item.multiplier = list[i].value;
                     extraMath.push(item);
-                    appliedBuffList.push([list[i].buffName, "Increase Technical Skill Damage", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Technical Skill Damage", list[i].value]);
                     break;
                 case "TECHNICAL_FLAMES_OF_ICE":
                 case "TECHNICAL_ICE_BURN":
@@ -1583,7 +1583,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     item.statBuff = "DMG";
                     item.multiplier = list[i].value;
                     extraMath.push(item);
-                    appliedBuffList.push([list[i].buffName, "Increase Fire/Ice DMG Taken", list[i].value]);
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Increase Fire/Ice DMG Taken", list[i].value]);
                     break;
                 case "TECHNICAL_ICE_SEAL":
                     break;
@@ -1628,7 +1628,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
         }
         else {
             // for debugging purpose
-            failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
+            failBuff.push([list[i].buffName, list[i].charName, list[i].dbuff, list[i].condition, list[i].conditionType, "Failed"]);
         }
     }
 
@@ -2096,6 +2096,8 @@ function displayResult(dmgList, min, max) {
     }
 
     if (document.getElementById('chkDBuffOutput').checked) {
+        htmlAppliedBuffList.sort((a, b) => a[0].localeCompare(b[0]));
+
         item = document.createElement("ul");
         item.setAttribute('class', "w3-ul w3-left-align w3-large");
         var li = document.createElement("li");
