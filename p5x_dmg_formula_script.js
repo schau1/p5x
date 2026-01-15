@@ -14,7 +14,7 @@
 
 // python -m http.server
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
@@ -1191,7 +1191,12 @@ function IsValidAndCondition(list, name, type, skillName, skill, element, skillB
                 }
             }
             else if (searchType[j] == "Role") {
-                if (role != searchName[j]) {
+                if (searchName[j] == "Dps") {
+                    if (!isValidRole(role, DPS_ROLE)) {
+                        return false;
+                    }
+                }
+                else if (role != searchName[j]) {
                     return false;
                 }
             }
