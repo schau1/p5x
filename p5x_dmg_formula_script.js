@@ -33,6 +33,7 @@ const WONDER_FILE_NAME = encodeURIComponent("P5X database - wonder.csv");
 const BOSS_FILE_NAME = encodeURIComponent("P5X database - boss.csv");
 const FILE_NUM_SKIP_LINE = 2;   // skip the first 2 lines of the csv file
 const MAX_NUM_DATABASE_EFFECT = 6;  // database has 6 effects right now
+const MAX_NUM_SKILL_DATABASE_EFFECT = 7;  // skill database has 7 effects right now
 const MAX_NUM_CARD_DATABASE_EFFECT = 9;  // card database has 9 effects right now
 const MAX_NUM_WEAP_DATABASE_EFFECT = 5; // weapon database has 4 effects
 
@@ -3138,7 +3139,7 @@ function readSkillDatabase() {
 
             data.skillInfo = [];
 
-            for (var dbuffItem = 0; dbuffItem < MAX_NUM_DATABASE_EFFECT; dbuffItem++) {
+            for (var dbuffItem = 0; dbuffItem < MAX_NUM_SKILL_DATABASE_EFFECT; dbuffItem++) {
                 var dbuff = [];
                 dbuff.skillType = row[i][j++];    // support or fire or passive
                 dbuff.skillBehavior = row[i][j++];    // support or fire or passive
