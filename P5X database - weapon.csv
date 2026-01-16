@@ -20,7 +20,7 @@ Hiver Eternel,Mont,5*,36.3,47.2,OOB_SELF_CRIT_MULT_PERC,,,,46,68,SELF_DMG_PERC,F
 Chant Celeste,Mont,4*,12,16,OOB_SELF_ATK_PERC,,,,24,31,SELF_DMG_PERC,Ice,Element,,,,,,,,,,,,,,,,,,,,
 Quasar,Closer,5*,24.2,31.5,SELF_DMG_PERC,Electric,Element,,33,48,SELF_ATK_PERC,Thundercloud&3,,,10,14.6,PARTY_DMG_PERC,Thundercloud&3&Electric,DBuff&Stack&Element,,,,,,,,,,,,,,
 Crime and Punishment,Closer,4*,12,16,OOB_SELF_ATK_PERC,,,,20,26,SELF_ATK_PERC,Shocked,Debuff,,,,,,,,,,,,,,,,,,,,
-Final Buster,Leon,5*,30,39,OOB_SELF_ATK_PERC,,,,16,21,ALLY_ATK_PERC,S2|S3,Skill|Skill,,16,21,ALLY_CRIT_PERC,Power of Friendship::2,Stack,,10,13,SELF_SKILL_PERC,S2,Skill,,,,,,,,
+Final Buster,Leon,5*,30,39,OOB_SELF_ATK_PERC,,,,16,21,ALLY_ATK_PERC,S2|S3,Skill|Skill,,16,21,ALLY_CRIT_MULT_PERC,Power of Friendship::2,Stack,,10,13,SELF_SKILL_PERC,S2,Skill,,,,,,,,
 Justice Lance,Leon,4*,8.8,11.4,SELF_SKILL_PERC,S2,,,9,11.7,ALLY_ATK_PERC,,,,80,80,ALLY_ATK_PERC,Every 20% HP loss,,,,,,,,,,,,,,,
 Fallen Angel Wing,Cattle,5*,22,28.5,SELF_HEAL_PERC,,,,18,23.6,SELF_HEAL_REC_PERC,Starfire::4,Stack,,66,87,ALLY_ATK_PERC,Starfire::3,Stack,,,,,,,,,,,,,,
 Lava Flame,Cattle,4*,12,16,OOB_SELF_ATK_PERC,,,,27.6,36,SELF_HEAL_PERC,Starfire::4,Stack,,,,,,,,,,,,,,,,,,,,
