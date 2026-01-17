@@ -14,7 +14,7 @@
 
 // python -m http.server
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
@@ -553,6 +553,60 @@ function simCommon() {
             iCharInfo.role = charStatList[i].role;
             iCharInfo.isSees = ((charStatList[i].isSees == 'Y') || (charStatList[i].isSees == 'y')) ? true : false;
             iCharInfo.charElement = charStatList[i].element;
+
+            if (iCharInfo.skillLevel == SKILL_LEVEL_13_MINDSCAPE_5 || iCharInfo.skillLevel == SKILL_LEVEL_10_MINDSCAPE_5) {
+                switch (charStatList[i].stat1m5Buff) {
+                    case "SELF_ATK_PERC":
+                        iCharInfo.atkPerc += charStatList[i].stat1m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase ATK Percent", charStatList[i].stat1m5Value]);
+                        break;
+                    case "SELF_DMG_PERC":
+                        iCharInfo.dmgMult += charStatList[i].stat1m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Damage", charStatList[i].stat1m5Value]);
+                        break;
+                    case "SEFL_CRIT_PERC":
+                        iCharInfo.critRate += charStatList[i].stat1m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Crit Rate", charStatList[i].stat1m5Value]);
+                        break;
+                    case "SELF_CRIT_MULT_PERC":
+                        iCharInfo.critMult += charStatList[i].stat1m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Crit Damage", charStatList[i].stat1m5Value]);
+                        break;
+                    case "SELF_PIERCE_PERC":
+                        iCharInfo.pierceRate += charStatList[i].stat1m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Pierce Rate", charStatList[i].stat1m5Value]);
+                        break;
+                    default:
+                        break;
+                }
+
+                switch (charStatList[i].stat2m5Buff) {
+                    case "SELF_ATK_PERC":
+                        iCharInfo.atkPerc += charStatList[i].stat2m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase ATK Percent", charStatList[i].stat2m5Value]);
+                        break;
+                    case "SELF_DMG_PERC":
+                        iCharInfo.dmgMult += charStatList[i].stat2m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Damage", charStatList[i].stat2m5Value]);
+                        break;
+                    case "SEFL_CRIT_PERC":
+                        iCharInfo.critRate += charStatList[i].stat2m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Crit Rate", charStatList[i].stat2m5Value]);
+                        break;
+                    case "SELF_CRIT_MULT_PERC":
+                        iCharInfo.critMult += charStatList[i].stat2m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Crit Damage", charStatList[i].stat2m5Value]);
+                        break;
+                    case "SELF_PIERCE_PERC":
+                        iCharInfo.pierceRate += charStatList[i].stat2m5Value;
+                        htmlAppliedBuffList.push([iCharInfo.charName + "::Mindscape 5", "Increase Pierce Rate", charStatList[i].stat2m5Value]);
+                        break;
+                    default:
+                        break;
+                }
+
+                console.log(htmlAppliedBuffList)
+            }
         }
     }
 
@@ -2975,10 +3029,10 @@ function readCharStatDatabase() {
             data.element = row[i][j++];
             data.isSees = row[i][j++];
 
-            data.recStatLvl10 = parseFloat(row[i][j++]);
-            data.recStatLvl10m5 = parseFloat(row[i][j++]);
-            data.recStatLvl13 = parseFloat(row[i][j++]);
-            data.recStatLvl13m5 = parseFloat(row[i][j++]);
+            data.stat1m5Value = parseFloat(row[i][j++]);
+            data.stat1m5Buff = row[i][j++];
+            data.stat2m5Value = parseFloat(row[i][j++]);
+            data.stat2m5Buff = row[i][j++];
             data.scale = row[i][j++];
 
             data.a0Hp = parseFloat(row[i][j++]);
