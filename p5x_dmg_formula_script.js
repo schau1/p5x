@@ -2156,7 +2156,14 @@ function displayResult(dmgList, min, max) {
     }
 
     if (document.getElementById('chkDBuffOutput').checked) {
-        htmlAppliedBuffList.sort((a, b) => a[0].localeCompare(b[0]));
+        if (document.getElementById('chkSortDBuffOutput').checked) {
+            //          sort by buff
+            htmlAppliedBuffList.sort((a, b) => a[1].localeCompare(b[1]));
+        }
+        else {
+            //          sort by name
+            htmlAppliedBuffList.sort((a, b) => a[0].localeCompare(b[0]));
+        }
 
         item = document.createElement("ul");
         item.setAttribute('class', "w3-ul w3-left-align w3-large");
