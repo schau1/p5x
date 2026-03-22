@@ -14,7 +14,7 @@
 
 // python -m http.server
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 const USE_STAT_SCREEN = 1;      // 0 means use card summary, 1 means use character summary
 
@@ -276,6 +276,7 @@ function damageFn(harmony, personaList) {
     simCharInfo.final_defenseReduction = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReduction);
     simCharInfo.final_defenseReductionAoe = calculateEnemyDefenseFinal(simCharInfo.enemyDefense, simCharInfo.additionalDefCoef, simCharInfo.windswept, simCharInfo.pierceRate, simCharInfo.defenseReductionAoe);
     simCharInfo.final_weakness = convertEnemyWeaknessTextToValue(simCharInfo.weakness);
+
     if (simCharInfo.includeCrit == "Yes") {
         simCharInfo.final_critStableDomain = calculateCritStableDomain(simCharInfo.critRate, simCharInfo.critMult);
     }    
@@ -733,6 +734,7 @@ function simCommon() {
     iCharInfo.extraHit = data.extraHit;
     iCharInfo.ampSkill = data.ampSkill;
     iCharInfo.technicalMastery = data.technicalMastery;
+    iCharInfo.weaknessAdjustment = data.weaknessAdjustment / 100;
 
     // testing:
     /*    iCharInfo.baseAtk = 1200 + 600;
@@ -797,6 +799,20 @@ function simCommon() {
     iCharInfo.final_skillPerc = updateSkillPerc(skillInfo, iCharInfo.extraHit, iCharInfo.ampSkill);
 
     iCharInfo.final_weakness = convertEnemyWeaknessTextToValue(iCharInfo.weakness);
+
+    if (iCharInfo.weaknessAdjustment > 0) {
+        if (iCharInfo.final_weakness < 1) {
+            iCharInfo.final_weakness = 1;
+        }
+        else if (iCharInfo.final_weakness == 1) {
+            iCharInfo.final_weakness = 1.2;
+        }
+        else if (iCharInfo.final_weakness == 1.2) {
+            iCharInfo.final_weakness += iCharInfo.weaknessAdjustment;
+        }
+    }
+
+
     if (iCharInfo.includeCrit == "Yes") {
         iCharInfo.final_critStableDomain = calculateCritStableDomain(iCharInfo.critRate, iCharInfo.critMult);
     }
@@ -913,6 +929,7 @@ function initializeData() {
     iCharInfo.myriad_song = false;  // may not really use it, but just in case I want to display the double damage
     iCharInfo.extraHit = 0; // if something modify a dps skill and gives it 1 more hit
     iCharInfo.ampSkill = 1; // multiply with skill. this is for ability that changes skill percentage
+    iCharInfo.weaknessAdjustment = 0;
 }
 
 
@@ -1061,6 +1078,7 @@ function calculateSkillPerc(skillInfo, skillLevel, extraHit, ampSkill) {
  * */
 function IsValidDebuffEnemyCondition(conditionName) {
     if (conditionName != "") {
+        console.log(buffList)
         for (var i = 0; i < buffList.length; i++) {
             if ((conditionName == "Any") && (buffList[i].buffName != "")) {
                 return true;
@@ -1083,7 +1101,11 @@ function IsValidDebuffEnemyCondition(conditionName) {
             }
             else if (buffList[i].buffName == conditionName) {
                 return true;
-            }           
+            }         
+
+            if (conditionName == "Down") {
+                console.log("Donw")
+            }
         }
         return false;
     }
@@ -1434,6 +1456,7 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
     let failBuff = [];  // Just info for now
     let appliedBuffList = [];
     let item = [];
+    data.weaknessAdjustment = 0;
 
     for (var i = 0; i < list.length; i++) {
         buffConditionMet = true;
@@ -1579,6 +1602,8 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     break;
                 case "NON_ELEMENTAL_AILMENT": // other status
                     break;
+                case "DOWN":
+                    break;
                 case "SPIRITUAL_AILMENT":   // ???
                     break;
                 case "PARTY_ALL_PERC": // add a percertage of stats to the character - like Navi stats
@@ -1680,6 +1705,10 @@ function processDBuffList(list, skillName, skill, skillInfo, role = "Assassin", 
                     break;
                 case "MYRIAD_SONG":
                     data.myriad_song = true;
+                    break;
+                case "PARTY_ENHANCED_WEAKNESS":
+                    data.weaknessAdjustment += list[i].value;
+                    appliedBuffList.push([list[i].charName + "::" + list[i].buffName, "Enhanced Weakness", list[i].value]);
                     break;
                 default:
                     failBuff.push([list[i].buffName, list[i].dbuff, list[i].condition, list[i].conditionType, "N/A"]);
@@ -2563,7 +2592,15 @@ function getSkillNameListFromDatabaseAndAddItemtoHmtmList(awareness, charName, r
 
     charName = charName.replaceAll("&amp;", "&");
 
-    if (role == DPS_ROLE) {
+    if (charName == "Wonder") {
+        addItemToListWithButton("Cleasing Flame::Flame's Inferno", outputDiv);
+        addItemToListWithButton("Tarukaja", outputDiv);        
+        addItemToListWithButton("Dionysus::Feast of the Frenzied", outputDiv);
+        addItemToListWithButton("Zaou-Gongen::Three Ages' Salvation", outputDiv);
+        addItemToListWithButton("Zaou-Gongen::Fury Incarnate", outputDiv);
+        addItemToListWithButton("Matarukaja", outputDiv);        
+    }
+    else if (role == DPS_ROLE) {
         // only add passive, buff and support
         // if a dps skill hits and gives a self-buff that last more than just that one dps turn
         // it will be record as a buff in the skill database. For example, if Surf 'n' Shine gives
@@ -2745,6 +2782,8 @@ function convertEnemyWeaknessTextToValue(text) {
             return 0.5;
         case "Weakness":
             return 1.2;
+        case "Enhanced Weakness":
+            return 1.45;
         default:
             if (DEBUG) {
                 console.log("Code does not match html value.")

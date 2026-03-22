@@ -423,6 +423,31 @@ function addItemToListNoButton(name, outputDiv) {
     }
 }
 
+function addItemToListWithButton(name, outputDiv) {
+    var output = document.getElementById(outputDiv);
+    var item = document.createElement("li");
+    var el = output.firstChild;
+    var add = true;
+
+    while (el) {
+        if (el.innerHTML == name) {
+            add = false;
+            break;
+        }
+        el = el.nextSibling;
+    }
+    if (add) {
+        item.setAttribute('class', 'w3-block w3-left-align w3-light-gray');
+        item.innerHTML = name;
+
+        item.onclick = function () {
+            removeItemFromList(this, outputDiv);
+        };
+
+        output.appendChild(item);
+    }
+}
+
 function addItemToList(cell, outputDiv, listDiv, value = 0) {
     var output = document.getElementById(outputDiv);
     var el = output.firstChild;

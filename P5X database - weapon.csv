@@ -113,3 +113,5 @@ Warden's Judgement,Justine & Caroline,5*,30,39,OOB_SELF_ATK_PERC,,,,10,13,SELF_D
 Deliverance of Strength,Justine & Caroline,4*,12,16,OOB_SELF_ATK_PERC,,,,22,29,SELF_ATK_PERC,Two Masks As One,DBuff,,,,,,,,,,,,,,,,,,,,
 Balmung,Junpei,5*,30,39,OOB_SELF_HP_PERC,,,,12,15.6,SELF_DMG_DOWN,Hero Focus,DBuff,,30.6,39.8,PARTY_CRIT_MULT_PERC,Power Swing,DBuff,,,,,,,,,,,,,,
 Buster Blade,Junpei,4*,12,16,OOB_SELF_HP_PERC,,,,22,29,SELF_HP_PERC,,,,,,,,,,,,,,,,,,,,,,
+Dagger of Protection,Koromaru,5*,36,47,SELF_EHR_PERC,,,,11.3,14.7,PARTY_ATK_PERC,,,,18.1,23.5,PARTY_CRIT_MULT_PERC,Attribute Downgrade,DBuff,,,,,,,,,,,,,,
+Howl,Koromaru,4*,12,16,OOB_SELF_ATK_PERC,,,,17.6,23.2,SELF_DMG_PERC,,,,,,,,,,,,,,,,,,,,,,
