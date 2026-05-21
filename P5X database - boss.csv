@@ -1,31 +1,32 @@
-Name,Stage,Defense,Additional Defense
-[NTMR] Yatsufusa,NTMR,1279.9,105.9
-[NTMR] Fafnir,NTMR,1279.9,105.9
-[NTMR] Dominion,NTMR,363.2,158.4
-[NTMR] Dominion/Power,NTMR,182,158.4
-[NTMR] Dominion/Angel,NTMR,182,158.4
-[NTMR] Dominion/Archangel,NTMR,363.2,158.4
-[NTMR] Dominion/Principality,NTMR,363.2,158.4
-[NTMR] Atavaka,NTMR,1279.9,158.4
-[NTMR] Vishnu,NTMR,820.7,158.4
-[NTMR] Vishnu/Mini,NTMR,363.2,158.4
-[NTMR] Baal,NTMR,1279.9,158.4
-[NTMR] Kartikeya,NTMR,669,158.4
-[NTMR] Kartikeya/Jatayu,NTMR,363.2,158.4
-[NTMR] Kartikeya/Horus,NTMR,363.2,158.4
-[NTMR] Kartikeya/Yatagarasu,NTMR,363.2,158.4
-[NTMR] Yatsukamizu Omitsunu,NTMR,1279.9,158.4
-[NTMR] Mara,NTMR,820.7,158.4
-[NTMR] Mara/Decarabia,NTMR,363.2,158.4
-[NTMR] Surt,NTMR,820.7,158.4
-[NTMR] Surt/Jack-o'-Lantern,NTMR,363.2,158.4
-[NTMR] Nidhoggr,NTMR,669,158.4
-[NTMR] Nidhoggr/Yurlungur,NTMR,363.2,158.4
-[SoS] Baphomet,SoS,855,163.2
-[SoS] Cu Chulainn,SoS,855,163.2
-[SoS] Oberon/Titania,SoS,860,163.2
-[SoS] Dominion,SoS,376,163.2
-[SoS] Surt,SoS,855,163.2
-[SoS] Bishamonten/Others,SoS,567,163.2
-[SoS] Melchizedek,SoS,1493,163.2
-[SoS] Seiryu,SoS,213,163.2
+Info taken from Lufel.net. Thank you.,,,,
+Name,Stage,Defense,100% + Additional Defense Coefficient,Additional Defense
+[NTMR] Yatsufusa,NTMR,1279.9,205.9,105.9
+[NTMR] Fafnir,NTMR,1279.9,205.9,105.9
+[NTMR] Dominion,NTMR,363.2,258.4,158.4
+[NTMR] Dominion/Power,NTMR,182,258.4,158.4
+[NTMR] Dominion/Angel,NTMR,182,258.4,158.4
+[NTMR] Dominion/Archangel,NTMR,363.2,258.4,158.4
+[NTMR] Dominion/Principality,NTMR,363.2,258.4,158.4
+[NTMR] Atavaka,NTMR,1279.9,258.4,158.4
+[NTMR] Vishnu,NTMR,820.7,258.4,158.4
+[NTMR] Vishnu/Mini,NTMR,363.2,258.4,158.4
+[NTMR] Baal,NTMR,1279.9,258.4,158.4
+[NTMR] Kartikeya,NTMR,669,258.4,158.4
+[NTMR] Kartikeya/Jatayu,NTMR,363.2,258.4,158.4
+[NTMR] Kartikeya/Horus,NTMR,363.2,258.4,158.4
+[NTMR] Kartikeya/Yatagarasu,NTMR,363.2,258.4,158.4
+[NTMR] Yatsukamizu Omitsunu,NTMR,1279.9,258.4,158.4
+[NTMR] Mara,NTMR,820.7,258.4,158.4
+[NTMR] Mara/Decarabia,NTMR,363.2,258.4,158.4
+[NTMR] Surt,NTMR,820.7,258.4,158.4
+[NTMR] Surt/Jack-o'-Lantern,NTMR,363.2,258.4,158.4
+[NTMR] Nidhoggr,NTMR,669,258.4,158.4
+[NTMR] Nidhoggr/Yurlungur,NTMR,363.2,258.4,158.4
+[SoS] Baphomet,SoS,855,263.2,163.2
+[SoS] Cu Chulainn,SoS,855,263.2,163.2
+[SoS] Oberon/Titania,SoS,860,263.2,163.2
+[SoS] Dominion,SoS,376,263.2,163.2
+[SoS] Surt,SoS,855,263.2,163.2
+[SoS] Bishamonten/Others,SoS,567,263.2,163.2
+[SoS] Melchizedek,SoS,1493,263.2,163.2
+[SoS] Seiryu,SoS,213,263.2,163.2
